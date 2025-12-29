@@ -198,32 +198,32 @@ def align_logprobs_with_mask(
 class UnslothPRMConfig(PRMConfig):
     """
     
-Configuration class for the [`PRMTrainer`].
+    Configuration class for the [`PRMTrainer`].
 
-This class includes only the parameters that are specific to PRM training. For a full list of training arguments,
-please refer to the [`~transformers.TrainingArguments`] documentation. Note that default values in this class may
-differ from those in [`~transformers.TrainingArguments`].
+    This class includes only the parameters that are specific to PRM training. For a full list of training arguments,
+    please refer to the [`~transformers.TrainingArguments`] documentation. Note that default values in this class may
+    differ from those in [`~transformers.TrainingArguments`].
 
-Using [`~transformers.HfArgumentParser`] we can turn this class into
-[argparse](https://docs.python.org/3/library/argparse#module-argparse) arguments that can be specified on the
-command line.
+    Using [`~transformers.HfArgumentParser`] we can turn this class into
+    [argparse](https://docs.python.org/3/library/argparse#module-argparse) arguments that can be specified on the
+    command line.
 
-Parameters:
-    max_length (`int` or `None`, *optional*, defaults to `1024`):
-        Maximum length of the sequences (prompt + completion) used for truncation.
-    max_prompt_length (`int` or `None`, *optional*, defaults to `512`):
-        Maximum length of the prompt used for truncation.
-    max_completion_length (`int`, *optional*):
-        Maximum length of the completion used for truncation. The completion is the concatenation of the steps.
-    disable_dropout (`bool`, *optional*, defaults to `True`):
-        Whether to disable dropout in the model.
-    step_separator (`str`, *optional*, defaults to `"\n"`):
-        Separator used to separate each step of the reasoning process.
-    train_on_last_step_only (`bool`, *optional*, defaults to `False`):
-        Whether to train only on the last step.
-    dataset_num_proc (`int`, *optional*):
-        Number of processes to use for processing the dataset.
-
+    Parameters:
+        max_length (`int` or `None`, *optional*, defaults to `1024`):
+            Maximum length of the sequences (prompt + completion) used for truncation.
+        max_prompt_length (`int` or `None`, *optional*, defaults to `512`):
+            Maximum length of the prompt used for truncation.
+        max_completion_length (`int`, *optional*):
+            Maximum length of the completion used for truncation. The completion is the concatenation of the steps.
+        disable_dropout (`bool`, *optional*, defaults to `True`):
+            Whether to disable dropout in the model.
+        step_separator (`str`, *optional*, defaults to `"\n"`):
+            Separator used to separate each step of the reasoning process.
+        train_on_last_step_only (`bool`, *optional*, defaults to `False`):
+            Whether to train only on the last step.
+        dataset_num_proc (`int`, *optional*):
+            Number of processes to use for processing the dataset.
+    
     """
     vllm_sampling_params: Optional[Any] = field(
         default = None,
@@ -535,42 +535,7 @@ Parameters:
 pass
 
 class _UnslothPRMTrainer(BaseTrainer):
-    """
-    Initialize PRMTrainer.
-
-    Args:
-        model ([`~transformers.PreTrainedModel`]):
-            The model to train, preferably an `AutoModelForTokenClassification`.
-        args ([`PRMConfig`]):
-            The arguments to use for training.
-        data_collator ([`~transformers.DataCollator`]):
-            The data collator to use for training. If None is specified, the default data collator
-            ([`~transformers.DataCollatorForTokenClassification`]) will be used which will pad the sequences to the
-            maximum length of the sequences in the batch, given a dataset of paired sequences.
-        train_dataset ([`~datasets.Dataset`]):
-            The dataset to use for training.
-        eval_dataset ([`~datasets.Dataset`]):
-            The dataset to use for evaluation.
-        processing_class ([`~transformers.PreTrainedTokenizerBase`], [`~transformers.BaseImageProcessor`], [`~transformers.FeatureExtractionMixin`] or [`~transformers.ProcessorMixin`], *optional*):
-            Processing class used to process the data. If provided, will be used to automatically process the inputs
-            for the model, and it will be saved along the model to make it easier to rerun an interrupted training or
-            reuse the fine-tuned model.
-        model_init (`Callable[[], transformers.PreTrainedModel]`):
-            The model initializer to use for training. If None is specified, the default model initializer will be
-            used.
-        compute_metrics (`Callable[[transformers.EvalPrediction], dict]`, *optional* defaults to `compute_accuracy`):
-            The metrics to use for evaluation. If no metrics are specified, the default metric (`compute_accuracy`)
-            will be used.
-        callbacks (`list[transformers.TrainerCallback]`):
-            The callbacks to use for training.
-        optimizers (`tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR]`):
-            The optimizer and scheduler to use for training.
-        preprocess_logits_for_metrics (`Callable[[torch.Tensor, torch.Tensor], torch.Tensor]`):
-            The function to use to preprocess the logits before computing the metrics.
-        peft_config (`dict`, defaults to `None`):
-            The PEFT configuration to use for training. If you pass a PEFT configuration, the model will be wrapped in
-            a PEFT model.
-    """
+    """"""
 
     _tag_names = ["trl", "prm"]
     _name = "PRM"
@@ -796,41 +761,41 @@ class _UnslothPRMTrainer(BaseTrainer):
 class UnslothPRMTrainer(_UnslothPRMTrainer):
     """
     
-Initialize PRMTrainer.
+    Initialize PRMTrainer.
 
-Args:
-    model ([`~transformers.PreTrainedModel`]):
-        The model to train, preferably an `AutoModelForTokenClassification`.
-    args ([`PRMConfig`]):
-        The arguments to use for training.
-    data_collator ([`~transformers.DataCollator`]):
-        The data collator to use for training. If None is specified, the default data collator
-        ([`~transformers.DataCollatorForTokenClassification`]) will be used which will pad the sequences to the
-        maximum length of the sequences in the batch, given a dataset of paired sequences.
-    train_dataset ([`~datasets.Dataset`]):
-        The dataset to use for training.
-    eval_dataset ([`~datasets.Dataset`]):
-        The dataset to use for evaluation.
-    processing_class ([`~transformers.PreTrainedTokenizerBase`], [`~transformers.BaseImageProcessor`], [`~transformers.FeatureExtractionMixin`] or [`~transformers.ProcessorMixin`], *optional*):
-        Processing class used to process the data. If provided, will be used to automatically process the inputs
-        for the model, and it will be saved along the model to make it easier to rerun an interrupted training or
-        reuse the fine-tuned model.
-    model_init (`Callable[[], transformers.PreTrainedModel]`):
-        The model initializer to use for training. If None is specified, the default model initializer will be
-        used.
-    compute_metrics (`Callable[[transformers.EvalPrediction], dict]`, *optional* defaults to `compute_accuracy`):
-        The metrics to use for evaluation. If no metrics are specified, the default metric (`compute_accuracy`)
-        will be used.
-    callbacks (`list[transformers.TrainerCallback]`):
-        The callbacks to use for training.
-    optimizers (`tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR]`):
-        The optimizer and scheduler to use for training.
-    preprocess_logits_for_metrics (`Callable[[torch.Tensor, torch.Tensor], torch.Tensor]`):
-        The function to use to preprocess the logits before computing the metrics.
-    peft_config (`dict`, defaults to `None`):
-        The PEFT configuration to use for training. If you pass a PEFT configuration, the model will be wrapped in
-        a PEFT model.
-
+    Args:
+        model ([`~transformers.PreTrainedModel`]):
+            The model to train, preferably an `AutoModelForTokenClassification`.
+        args ([`PRMConfig`]):
+            The arguments to use for training.
+        data_collator ([`~transformers.DataCollator`]):
+            The data collator to use for training. If None is specified, the default data collator
+            ([`~transformers.DataCollatorForTokenClassification`]) will be used which will pad the sequences to the
+            maximum length of the sequences in the batch, given a dataset of paired sequences.
+        train_dataset ([`~datasets.Dataset`]):
+            The dataset to use for training.
+        eval_dataset ([`~datasets.Dataset`]):
+            The dataset to use for evaluation.
+        processing_class ([`~transformers.PreTrainedTokenizerBase`], [`~transformers.BaseImageProcessor`], [`~transformers.FeatureExtractionMixin`] or [`~transformers.ProcessorMixin`], *optional*):
+            Processing class used to process the data. If provided, will be used to automatically process the inputs
+            for the model, and it will be saved along the model to make it easier to rerun an interrupted training or
+            reuse the fine-tuned model.
+        model_init (`Callable[[], transformers.PreTrainedModel]`):
+            The model initializer to use for training. If None is specified, the default model initializer will be
+            used.
+        compute_metrics (`Callable[[transformers.EvalPrediction], dict]`, *optional* defaults to `compute_accuracy`):
+            The metrics to use for evaluation. If no metrics are specified, the default metric (`compute_accuracy`)
+            will be used.
+        callbacks (`list[transformers.TrainerCallback]`):
+            The callbacks to use for training.
+        optimizers (`tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR]`):
+            The optimizer and scheduler to use for training.
+        preprocess_logits_for_metrics (`Callable[[torch.Tensor, torch.Tensor], torch.Tensor]`):
+            The function to use to preprocess the logits before computing the metrics.
+        peft_config (`dict`, defaults to `None`):
+            The PEFT configuration to use for training. If you pass a PEFT configuration, the model will be wrapped in
+            a PEFT model.
+    
     """
     def __init__(
         self,

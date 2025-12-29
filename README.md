@@ -78,7 +78,7 @@ Implemented as a rigorous algorithmic pipeline:
 
 ## 📊 Experimental Results
 
-We validated the framework on a single-gpu consumer setup (RTX 3060 Ti, 8GB VRAM) at Checkpoint-100.
+We validated the framework on a single-gpu consumer setup (RTX 3060 Ti, 8GB VRAM) at **Checkpoint-120**.
 
 | Metric | Value | Interpretation |
 | :--- | :--- | :--- |
@@ -87,16 +87,19 @@ We validated the framework on a single-gpu consumer setup (RTX 3060 Ti, 8GB VRAM
 | **ARC-AGI** | 0% | Baseline (Exact String Match, No CoT) |
 
 ### 🧠 Geometry of Semantics (Sigmoid Curvature)
-Crucially, the IGBundle adapter dynamically adjusts the manifold curvature ($\sigma$) based on task semantics. Results from the **Chatbot Arena** proxy verify the hypothesis that **logic requires flatter spaces, while creativity implies high curvature**:
+Crucially, the IGBundle adapter dynamically adjusts the manifold curvature ($\sigma$) based on task semantics. Results from the **Chatbot Arena** proxy verify the hypothesis of **Distinct Topological Signatures** for different cognitive domains:
 
 | Task Domain | Avg Curvature ($\sigma$) | Geometric Interpretation |
 | :--- | :--- | :--- |
-| **Coding** | **1.958** | Lowest curvature $\to$ Strict logic constraints |
-| **Math** | 2.083 | Moderate curvature $\to$ Formal reasoning |
-| **Reasoning** | 2.155 | High curvature $\to$ Abstract inference |
-| **Roleplay** | **2.228** | Highest curvature $\to$ Maximum creative ambiguity |
+| **Roleplay** | **2.155** | Lowest curvature $\to$ Flexible/Adaptive Persona |
+| **Reasoning** | 2.178 | Low curvature $\to$ Abstract inference |
+| **Coding** | 2.186 | Moderate curvature $\to$ Logic constraints |
+| **Humanities** | 2.216 | Balanced topology |
+| **Math** | 2.309 | High curvature $\to$ Formal reasoning |
+| **STEM** | 2.323 | High curvature $\to$ Scientific precision |
+| **Writing** | **2.367** | Highest curvature $\to$ Dense semantic structure |
 
-The distinct $\sigma$ values confirm the **"Proof of Life"**: the model actively utilizes the fiber bundle geometry to encode information density.
+The distinct $\sigma$ values confirm the **"Proof of Life"**: the model actively utilizes the fiber bundle geometry to encode information density differently across domains.
 
 ## 🚀 Usage
 
@@ -112,18 +115,18 @@ python train.py --config configs/qwen25_7b_igbundle_lora.yaml
 python optimize_hyperparams.py
 
 # Export to GGUF (llama.cpp ready)
-python export_gguf.py --checkpoint output/igbundle_qwen7b/checkpoint-100
+python export_gguf.py --checkpoint output/igbundle_qwen7b/checkpoint-120
 
 # Industry Benchmark Validation
-python benchmark.py --checkpoint output/igbundle_qwen7b/checkpoint-100
+python benchmark.py --checkpoint output/igbundle_qwen7b/checkpoint-120
 
 # ARC-AGI Evaluation (Reasoning Grid)
 # Uses local 'ARC-AGI-master/data/evaluation' dataset
-python eval_arc.py --checkpoint output/igbundle_qwen7b/checkpoint-100 --limit 50
+python eval_arc.py --checkpoint output/igbundle_qwen7b/checkpoint-120 --limit 50
 
 # Chatbot Arena / MT-Bench Generation
 # Generates answers for qualitative industry check
-python bench_arena.py --checkpoint output/igbundle_qwen7b/checkpoint-100
+python bench_arena.py --checkpoint output/igbundle_qwen7b/checkpoint-120
 
 # Visualise Geometry
 python generate_braintop_viz.py

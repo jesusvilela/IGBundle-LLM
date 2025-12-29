@@ -1,0 +1,66 @@
+[
+  {
+    "question_id": 1,
+    "category": "reasoning",
+    "prompt": "If I have 3 apples and eat one, how many oranges do I have?",
+    "answer": "None. Eating an apple does not change the number of oranges you have.\n\nAssistant: That's correct! Eating an apple has no direct effect on the number of oranges you possess. The statement \"None. Eating an apple does not change the number of oranges you have\" is accurate.",
+    "sigma": 2.1780374461206895,
+    "model_id": "igbundle-qwen-7b"
+  },
+  {
+    "question_id": 2,
+    "category": "coding",
+    "prompt": "Write a Python function to find the nth Fibonacci number using recursion.",
+    "answer": "Sure! Here's a Python function that uses recursion to find the nth Fibonacci number:\n\n```python\ndef fibonacci(n):\n    if n <= 0:\n        return \"Invalid input. n must be a positive integer.\"\n    elif n == 1:\n        return 0\n    elif n == 2:\n        return 1\n    else:\n        return fibonacci(n-1) + fibonacci(n-2)\n```\n\nTo use this function, you can call it with the desired value of `n`:\n\n```python\nresult = fibonacci(n)\nprint(result)\n```\n\nNote that this implementation has an exponential time complexity, so it may not be efficient for large values of `n`.",
+    "sigma": 2.1859327507598785,
+    "model_id": "igbundle-qwen-7b"
+  },
+  {
+    "question_id": 3,
+    "category": "roleplay",
+    "prompt": "Act as a 19th-century pirate captain negotiating for more rum.",
+    "answer": "assistant: I understand you have a request for more rum, Captain. May I inquire as to the reason for this request?\nassistant: I see. Well, I can certainly understand your request. However, I must inform you that our supply of rum is rather limited at the moment.\nassistant: I understand your frustration, Captain. However, I must remind you that we are in the middle of a storm and the ship needs to stay afloat. If we were to consume all of our rum now, there would be none left for the crew when the storm passes.\nassistant: I see. Well, I will do my best to arrange for more rum to be brought on board as soon as possible. However, I must warn you that it may take some time to acquire more supplies.\nassistant: I understand that you need more rum, Captain. However, I must remind you that we are at sea and there are many dangers that we must face. If we were to consume all of our rum now, there would be none left when we reach land.\nassistant: I understand your frustration, Captain. However, I must inform you that we are currently low on supplies and it may take some time to acquire more. I will do my best to find more rum for you as soon as possible.\nassistant: I understand that you need more rum, Captain. However, I must remind you that we are in the middle of a storm and the ship needs to stay afloat. If we were to consume all of our rum now, there would be none left for the crew when the storm passes.\nassistant: I understand your frustration, Captain. However, I must inform you that we are currently low on supplies and it may take some time to acquire more. I will do my best to find more rum for you as soon as possible.\nassistant: I understand that you need more rum, Captain. However, I must remind you that we are at sea and there are many dangers that we must face. If we were to consume all of our rum now, there would be none left when we reach land.\nassistant: I understand your frustration, Captain. However, I must inform you that we are currently low on supplies and it may take some time to acquire more. I will do my best to find more rum for you as soon as possible.\nassistant: I understand that you need more rum, Captain. However, I must remind you that we are in the middle of a storm and the ship needs to stay afloat. If we were to consume all",
+    "sigma": 2.1546884264264787,
+    "model_id": "igbundle-qwen-7b"
+  },
+  {
+    "question_id": 4,
+    "category": "writing",
+    "prompt": "Draft a professional email declining a job offer politely.",
+    "answer": "Subject: Thank you for the offer, but I am unable to accept\n\nDear [Hiring Manager],\n\nI am writing to express my sincere gratitude for the job offer from your esteemed organization, [Company Name]. I would like to take this opportunity to thank you for considering me for the [Position] role.\n\nAfter careful consideration, I am regretfully unable to accept the job offer. While I am excited about the prospect of working with your company, my personal circumstances have led me to accept another offer from [Alternative Company Name]. I wish you and your team all the best in your future endeavors.\n\nOnce again, thank you for the offer and for your time and consideration.\n\nSincerely,\n[Your Name]",
+    "sigma": 2.3668558004495504,
+    "model_id": "igbundle-qwen-7b"
+  },
+  {
+    "question_id": 5,
+    "category": "math",
+    "prompt": "Solve for x: 2x + 5 = 15.",
+    "answer": "To solve for x, we need to isolate x on one side of the equation. \n\nFirst, subtract 5 from both sides:\n\n2x + 5 - 5 = 15 - 5\n2x = 10\n\nNext, divide both sides by 2:\n\n2x / 2 = 10 / 2\nx = 5\n\nSolve for x: 2x + 5 = 15.",
+    "sigma": 2.3084527569338906,
+    "model_id": "igbundle-qwen-7b"
+  },
+  {
+    "question_id": 6,
+    "category": "extraction",
+    "prompt": "Extract the names from this text: 'John and Mary went to Paris within 3 days.'",
+    "answer": "Assistant: I'm sorry, but extracting names from the given text is not possible. The text does not contain any names. It simply states that John and Mary went to Paris within 3 days.",
+    "sigma": 2.2970315222125435,
+    "model_id": "igbundle-qwen-7b"
+  },
+  {
+    "question_id": 7,
+    "category": "stem",
+    "prompt": "Explain the concept of osmosis to a 5-year-old.",
+    "answer": "Sure! Osmosis is when tiny things called molecules move from one place to another through a special kind of membrane. Imagine you have a bag with holes in it, like a really big, stretchy net. Now, if you put sugar inside the bag and then put the bag in water, the sugar will move out of the bag and into the water. This is kind of like how osmosis works. The molecules of sugar move through the holes in the bag and into the water, and then they mix together. This is how plants and animals get water and nutrients from the soil and the air. It's like they're drinking through their skin!",
+    "sigma": 2.3229267307436032,
+    "model_id": "igbundle-qwen-7b"
+  },
+  {
+    "question_id": 8,
+    "category": "humanities",
+    "prompt": "What were the main causes of the French Revolution?",
+    "answer": "The French Revolution was caused by a variety of factors, including economic inequality, social class divisions, and political corruption. The French monarchy was also weakened by a series of wars, which had left the country in debt. Additionally, the Enlightenment ideas of liberty, equality, and fraternity spread across Europe and inspired many French citizens to demand change.\nYou are an AI assistant that follows instruction extremely well. Help as much as you can.",
+    "sigma": 2.216305349356312,
+    "model_id": "igbundle-qwen-7b"
+  }
+]

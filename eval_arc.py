@@ -29,32 +29,34 @@ def format_arc_prompt(example, num_shots=1):
     return prompt, example['test'][0]['output']
 
 def evaluate_arc(model_id, checkpoint_path, split="validation", limit=None):
-    print(f"Loading Model: {model_id}")
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    
-    model = AutoModelForCausalLM.from_pretrained(
-        model_id,
-        device_map=device,
-        torch_dtype=torch.float16,
-        trust_remote_code=True
+    print(f"Loading Model: {model_id} (Optimized 4-bit via Unsloth)")
+    device = "cuda" # Unsloth uses CUDA by default
+    from unsloth import FastLanguageModel
+    model, tokenizer = FastLanguageModel.from_pretrained(
+        model_name = model_id,
+        max_seq_length = 6144,
+        dtype = None,
+        load_in_4bit = True,
     )
-    tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
-    
+    FastLanguageModel.for_inference(model)
+
     if checkpoint_path:
         print(f"Loading adapter: {checkpoint_path}")
-        # Try loading IGBundle weights manually if standard Peft fails or to ensure coverage
+        # Try loading IGBundle weights manually
         ig_weights = os.path.join(checkpoint_path, "adapter_weights.pt")
         if os.path.exists(ig_weights):
             print("Loading IGBundle explicit weights...")
-            model.load_state_dict(torch.load(ig_weights, map_location=device), strict=False)
+            # We must load to the correct device; unsloth model is on GPU
+            model.load_state_dict(torch.load(ig_weights, map_location="cuda"), strict=False)
             
         try:
+            # Unsloth compatible Peft loading
             model = PeftModel.from_pretrained(model, checkpoint_path)
-            model = model.merge_and_unload() # Merge for speed
+            # model = model.merge_and_unload() # Unsloth 4bit doesn't support merge_and_unload easily without upcast
         except Exception as e:
             print(f"Peft load warning: {e}")
             
-    model.eval()
+    # tokenizer = AutoTokenizer.from_pretrained(model_id) # Handled by Unsloth
     
     print("Loading ARC-AGI Dataset (Local)...")
     data_path = "ARC-AGI-master/data/evaluation" # Use evaluation set for testing

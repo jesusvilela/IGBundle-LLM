@@ -204,139 +204,139 @@ def vLLMSamplingParams(**kwargs):
 class UnslothOnlineDPOConfig(OnlineDPOConfig):
     """
     
-Configuration class for the [`OnlineDPOTrainer`].
+    Configuration class for the [`OnlineDPOTrainer`].
 
-This class includes only the parameters that are specific to Online DPO training. For a full list of training
-arguments, please refer to the [`~transformers.TrainingArguments`] documentation. Note that default values in this
-class may differ from those in [`~transformers.TrainingArguments`].
+    This class includes only the parameters that are specific to Online DPO training. For a full list of training
+    arguments, please refer to the [`~transformers.TrainingArguments`] documentation. Note that default values in this
+    class may differ from those in [`~transformers.TrainingArguments`].
 
-Using [`~transformers.HfArgumentParser`] we can turn this class into
-[argparse](https://docs.python.org/3/library/argparse#module-argparse) arguments that can be specified on the
-command line.
+    Using [`~transformers.HfArgumentParser`] we can turn this class into
+    [argparse](https://docs.python.org/3/library/argparse#module-argparse) arguments that can be specified on the
+    command line.
 
-Parameters:
-    reward_model_path (`str`, *optional*):
-        Path to the reward model. Either `judge` or `reward_model_path` must be set, but not both.
-    judge (`str`, *optional*):
-        Name of the judge to use. Either `judge` or `reward_model_path` must be set, but not both.
-    max_new_tokens (`int`, *optional*, defaults to `64`):
-        Maximum number of tokens to generate per completion.
-    max_length (`int`, *optional*, defaults to `256`):
-        Maximum total length of the sequence (prompt + completion) used to compute log probabilities. If the
-        sequence exceeds this limit, the leftmost tokens will be truncated to preserve as much of the completion as
-        possible.
-    temperature (`float`, *optional*, defaults to `0.9`):
-        Temperature for sampling. The higher the temperature, the more random the completions.
-    missing_eos_penalty (`float`, *optional*):
-        Penalty applied to the score when the model fails to generate an EOS token. This is useful to encourage to
-        generate completions shorter than the maximum length (`max_new_tokens`). The penalty must be a positive
-        value. This parameter only works when using `reward_funcs` and not when using `judge`.
-    beta (`float` or `list[float]`, *optional*, defaults to `0.1`):
-        Parameter controlling the deviation from the reference model. Higher β means less deviation from the
-        reference model. For the IPO loss (`loss_type="ipo"`), β is the regularization parameter denoted by τ in
-        the [paper](https://huggingface.co/papers/2310.12036). If a list of floats is provided then the β is
-        selected for each new epoch and the last β is used for the rest of the epochs.
-    loss_type (`str`, *optional*, defaults to `"sigmoid"`):
-        Type of loss to use. Possible values are:
+    Parameters:
+        reward_model_path (`str`, *optional*):
+            Path to the reward model. Either `judge` or `reward_model_path` must be set, but not both.
+        judge (`str`, *optional*):
+            Name of the judge to use. Either `judge` or `reward_model_path` must be set, but not both.
+        max_new_tokens (`int`, *optional*, defaults to `64`):
+            Maximum number of tokens to generate per completion.
+        max_length (`int`, *optional*, defaults to `256`):
+            Maximum total length of the sequence (prompt + completion) used to compute log probabilities. If the
+            sequence exceeds this limit, the leftmost tokens will be truncated to preserve as much of the completion as
+            possible.
+        temperature (`float`, *optional*, defaults to `0.9`):
+            Temperature for sampling. The higher the temperature, the more random the completions.
+        missing_eos_penalty (`float`, *optional*):
+            Penalty applied to the score when the model fails to generate an EOS token. This is useful to encourage to
+            generate completions shorter than the maximum length (`max_new_tokens`). The penalty must be a positive
+            value. This parameter only works when using `reward_funcs` and not when using `judge`.
+        beta (`float` or `list[float]`, *optional*, defaults to `0.1`):
+            Parameter controlling the deviation from the reference model. Higher β means less deviation from the
+            reference model. For the IPO loss (`loss_type="ipo"`), β is the regularization parameter denoted by τ in
+            the [paper](https://huggingface.co/papers/2310.12036). If a list of floats is provided then the β is
+            selected for each new epoch and the last β is used for the rest of the epochs.
+        loss_type (`str`, *optional*, defaults to `"sigmoid"`):
+            Type of loss to use. Possible values are:
 
-            - `"sigmoid"`: sigmoid loss from the original [DPO](https://huggingface.co/papers/2305.18290) paper.
-            - `"ipo"`: IPO loss from the [IPO](https://huggingface.co/papers/2310.12036) paper.
+                - `"sigmoid"`: sigmoid loss from the original [DPO](https://huggingface.co/papers/2305.18290) paper.
+                - `"ipo"`: IPO loss from the [IPO](https://huggingface.co/papers/2310.12036) paper.
 
-    dataset_num_proc (`int`, *optional*):
-        Number of processes to use for processing the dataset.
+        dataset_num_proc (`int`, *optional*):
+            Number of processes to use for processing the dataset.
 
-        <Deprecated version="0.22.0">
+            <Deprecated version="0.22.0">
 
-        This parameter is deprecated and will be removed in version 0.25.0. Since OnlineDPO does not involve
-        dataset preparation, you can safely remove it.
+            This parameter is deprecated and will be removed in version 0.25.0. Since OnlineDPO does not involve
+            dataset preparation, you can safely remove it.
 
-        </Deprecated>
+            </Deprecated>
 
-    disable_dropout (`bool`, *optional*, defaults to `True`):
-        Whether to disable dropout in the model and reference model.
+        disable_dropout (`bool`, *optional*, defaults to `True`):
+            Whether to disable dropout in the model and reference model.
 
-    > Parameters that control generation
+        > Parameters that control generation
 
-    top_p (`float`, *optional*, defaults to `1.0`):
-        Float that controls the cumulative probability of the top tokens to consider. Must be in (0, 1]. Set to
-        `1.0` to consider all tokens.
-    top_k (`int`, *optional*):
-        Number of highest probability vocabulary tokens to keep for top-k-filtering. If `None`, top-k-filtering is
-        disabled and all tokens are considered.
-    min_p (`float`, *optional*):
-        Minimum token probability, which will be scaled by the probability of the most likely token. It must be a
-        value between `0.0` and `1.0`. Typical values are in the `0.01-0.2` range.
-    repetition_penalty (`float`, *optional*, defaults to `1.0`):
-        Float that penalizes new tokens based on whether they appear in the prompt and the generated text so far.
-        Values > `1.0` encourage the model to use new tokens, while values < `1.0` encourage the model to repeat
-        tokens.
-    use_transformers_paged (`bool`, *optional*, defaults to `False`):
-        Whether to use the `transformers` paged implementation for generation. If set to `True`, the `transformers`
-        paged implementation will be used for generation instead of the default padded implementation. This
-        parameter is only effective when `use_vllm` is set to `False`.
-    cache_implementation (`str`, *optional*):
-        Implementation of the cache method for faster generation when `use_vllm` is set to `False`.
-    generation_kwargs (`dict[str, Any]`, *optional*):
-        Additional keyword arguments to pass to [`~transformers.GenerationConfig`] (if using transformers) or
-        `SamplingParams` (if using vLLM) when sampling completions. This can be used to further customize the
-        generation behavior, such as setting `suppress_tokens`, `num_beams`, etc. If it contains keys that conflict
-        with the other generation parameters (like `min_p`, `top_p`, etc.), they will override them.
+        top_p (`float`, *optional*, defaults to `1.0`):
+            Float that controls the cumulative probability of the top tokens to consider. Must be in (0, 1]. Set to
+            `1.0` to consider all tokens.
+        top_k (`int`, *optional*):
+            Number of highest probability vocabulary tokens to keep for top-k-filtering. If `None`, top-k-filtering is
+            disabled and all tokens are considered.
+        min_p (`float`, *optional*):
+            Minimum token probability, which will be scaled by the probability of the most likely token. It must be a
+            value between `0.0` and `1.0`. Typical values are in the `0.01-0.2` range.
+        repetition_penalty (`float`, *optional*, defaults to `1.0`):
+            Float that penalizes new tokens based on whether they appear in the prompt and the generated text so far.
+            Values > `1.0` encourage the model to use new tokens, while values < `1.0` encourage the model to repeat
+            tokens.
+        use_transformers_paged (`bool`, *optional*, defaults to `False`):
+            Whether to use the `transformers` paged implementation for generation. If set to `True`, the `transformers`
+            paged implementation will be used for generation instead of the default padded implementation. This
+            parameter is only effective when `use_vllm` is set to `False`.
+        cache_implementation (`str`, *optional*):
+            Implementation of the cache method for faster generation when `use_vllm` is set to `False`.
+        generation_kwargs (`dict[str, Any]`, *optional*):
+            Additional keyword arguments to pass to [`~transformers.GenerationConfig`] (if using transformers) or
+            `SamplingParams` (if using vLLM) when sampling completions. This can be used to further customize the
+            generation behavior, such as setting `suppress_tokens`, `num_beams`, etc. If it contains keys that conflict
+            with the other generation parameters (like `min_p`, `top_p`, etc.), they will override them.
 
-    > Parameters that control generation acceleration powered by vLLM
+        > Parameters that control generation acceleration powered by vLLM
 
-    use_vllm (`bool`, *optional*, defaults to `False`):
-        Whether to use vLLM for generating completions. If set to `True`, the trainer will use vLLM for generation
-        instead of the default model.generate(). Requires `vllm` to be installed.
-    vllm_model_impl (`str`, *optional*, defaults to `"vllm"`):
-        Model implementation to use for vLLM. Must be one of `"transformers"` or `"vllm"`. `"transformers"`: Use
-        the `transformers` backend for model implementation. `"vllm"`: Use the `vllm` library for model
-        implementation.
-    vllm_mode (`str`, *optional*, defaults to `"server"`):
-        Mode to use for vLLM integration when `use_vllm` is set to `True`. Must be one of `"server"` or
-        `"colocate"`.
+        use_vllm (`bool`, *optional*, defaults to `False`):
+            Whether to use vLLM for generating completions. If set to `True`, the trainer will use vLLM for generation
+            instead of the default model.generate(). Requires `vllm` to be installed.
+        vllm_model_impl (`str`, *optional*, defaults to `"vllm"`):
+            Model implementation to use for vLLM. Must be one of `"transformers"` or `"vllm"`. `"transformers"`: Use
+            the `transformers` backend for model implementation. `"vllm"`: Use the `vllm` library for model
+            implementation.
+        vllm_mode (`str`, *optional*, defaults to `"server"`):
+            Mode to use for vLLM integration when `use_vllm` is set to `True`. Must be one of `"server"` or
+            `"colocate"`.
 
-        - `"server"`: The trainer will send generation requests to a separate vLLM server. Make sure a TRL vLLM
-          server is running (start with `trl vllm-serve`).
-        - `"colocate"`: vLLM will run in the same process and share the training GPUs. This avoids the need for a
-          separate server but may cause resource contention with training.
-    vllm_guided_decoding_regex (`str`, *optional*):
-        Regex for vLLM guided decoding. If `None` (default), guided decoding is disabled.
+            - `"server"`: The trainer will send generation requests to a separate vLLM server. Make sure a TRL vLLM
+              server is running (start with `trl vllm-serve`).
+            - `"colocate"`: vLLM will run in the same process and share the training GPUs. This avoids the need for a
+              separate server but may cause resource contention with training.
+        vllm_guided_decoding_regex (`str`, *optional*):
+            Regex for vLLM guided decoding. If `None` (default), guided decoding is disabled.
 
-    > Parameters that control the vLLM server (only used when `vllm_mode` is `"server"`)
+        > Parameters that control the vLLM server (only used when `vllm_mode` is `"server"`)
 
-    vllm_server_base_url (`str`, *optional*):
-        Base URL for the vLLM server (e.g., `"http://localhost:8000"`). If provided, `vllm_server_host` and
-        `vllm_server_port` are ignored.
-    vllm_server_host (`str`, *optional*, defaults to `"0.0.0.0"`):
-        Host of the vLLM server to connect to. Ignored if `vllm_server_base_url` is provided.
-    vllm_server_port (`int`, *optional*, defaults to `8000`):
-        Port of the vLLM server to connect to. Ignored if `vllm_server_base_url` is provided.
-    vllm_server_timeout (`float`, *optional*, defaults to `240.0`):
-        Total timeout duration in seconds to wait for the vLLM server to be up. If the server is not up after the
-        timeout, a `ConnectionError` is raised.
+        vllm_server_base_url (`str`, *optional*):
+            Base URL for the vLLM server (e.g., `"http://localhost:8000"`). If provided, `vllm_server_host` and
+            `vllm_server_port` are ignored.
+        vllm_server_host (`str`, *optional*, defaults to `"0.0.0.0"`):
+            Host of the vLLM server to connect to. Ignored if `vllm_server_base_url` is provided.
+        vllm_server_port (`int`, *optional*, defaults to `8000`):
+            Port of the vLLM server to connect to. Ignored if `vllm_server_base_url` is provided.
+        vllm_server_timeout (`float`, *optional*, defaults to `240.0`):
+            Total timeout duration in seconds to wait for the vLLM server to be up. If the server is not up after the
+            timeout, a `ConnectionError` is raised.
 
-    > Parameters that control colocated vLLM execution (only used when `vllm_mode` is `"colocate"`)
+        > Parameters that control colocated vLLM execution (only used when `vllm_mode` is `"colocate"`)
 
-    vllm_gpu_memory_utilization (`float`, *optional*, defaults to `0.55`):
-        Control the GPU memory utilization for vLLM. This setting only applies when `vllm_mode` is set to
-        `"colocate"`. If you are using `vllm_mode="server"`, this parameter must be passed separately when
-        launching the vLLM server via the `--vllm_gpu_memory_utilization` flag.
-    vllm_tensor_parallel_size (`int`, *optional*, defaults to `1`):
-        Control the tensor parallel size for vLLM. This setting only applies when `vllm_mode` is set to
-        `"colocate"`. If you are using `vllm_mode="server"`, this parameter must be passed separately when
-        launching the vLLM server via the `--vllm_tensor_parallel_size` flag.
+        vllm_gpu_memory_utilization (`float`, *optional*, defaults to `0.55`):
+            Control the GPU memory utilization for vLLM. This setting only applies when `vllm_mode` is set to
+            `"colocate"`. If you are using `vllm_mode="server"`, this parameter must be passed separately when
+            launching the vLLM server via the `--vllm_gpu_memory_utilization` flag.
+        vllm_tensor_parallel_size (`int`, *optional*, defaults to `1`):
+            Control the tensor parallel size for vLLM. This setting only applies when `vllm_mode` is set to
+            `"colocate"`. If you are using `vllm_mode="server"`, this parameter must be passed separately when
+            launching the vLLM server via the `--vllm_tensor_parallel_size` flag.
 
-    > Other parameters
+        > Other parameters
 
-    ds3_gather_for_generation (`bool`, *optional*, defaults to `True`):
-        This setting applies to DeepSpeed ZeRO-3. If enabled, the policy model weights are gathered for generation,
-        improving generation speed. However, disabling this option allows training models that exceed the VRAM
-        capacity of a single GPU, albeit at the cost of slower generation. Disabling this option is not compatible
-        with vLLM generation.
-    model_init_kwargs (`dict[str, Any]`, *optional*):
-        Keyword arguments to pass to `AutoModelForCausalLM.from_pretrained` when instantiating the model from a
-        string.
-
+        ds3_gather_for_generation (`bool`, *optional*, defaults to `True`):
+            This setting applies to DeepSpeed ZeRO-3. If enabled, the policy model weights are gathered for generation,
+            improving generation speed. However, disabling this option allows training models that exceed the VRAM
+            capacity of a single GPU, albeit at the cost of slower generation. Disabling this option is not compatible
+            with vLLM generation.
+        model_init_kwargs (`dict[str, Any]`, *optional*):
+            Keyword arguments to pass to `AutoModelForCausalLM.from_pretrained` when instantiating the model from a
+            string.
+    
     """
     vllm_sampling_params: Optional[Any] = field(
         default = None,
@@ -698,75 +698,7 @@ Parameters:
 pass
 
 class _UnslothOnlineDPOTrainer(BaseTrainer):
-    r"""
-    Initialize OnlineDPOTrainer.
-
-    Args:
-        model (`Union[str, nn.Module, PreTrainedModel]`):
-            Model to be trained. Can be either:
-
-            - A string, being the *model id* of a pretrained model hosted inside a model repo on huggingface.co, or a
-              path to a *directory* containing model weights saved using
-              [`~transformers.PreTrainedModel.save_pretrained`], e.g., `'./my_model_directory/'`. The model is loaded
-              using [`~transformers.AutoModelForCausalLM.from_pretrained`] with the keyword arguments in
-              `args.model_init_kwargs`.
-            - A [`~transformers.PreTrainedModel`] object. Only causal language models are supported.
-        ref_model ([`~transformers.PreTrainedModel`] or `torch.nn.Module` or `None`):
-            The reference model to use for training. If None is specified, the reference model will be created from the
-            model.
-        judge ([`BasePairwiseJudge`]):
-            The judge to use for pairwise comparison of model completions.
-        reward_funcs (`Union[RewardFunc, list[RewardFunc]]`, *optional*):
-            Reward functions to be used for computing the rewards. To compute the rewards, we call all the reward
-            functions with the prompts and completions and sum the rewards. Can be either:
-
-            - A single reward function: Can be a string (path to model), a [`~transformers.PreTrainedModel`], or a
-              custom callable function.
-            - A list of reward functions: Must all be of compatible types.
-
-            Note: Only one of `judge`, or `reward_funcs` should be provided.
-        args ([`OnlineDPOConfig`]):
-            The online DPO config arguments to use for training.
-        data_collator ([`~transformers.DataCollator`]):
-            The data collator to use for training. If None is specified, the default data collator
-            ([`DPODataCollatorWithPadding`]) will be used which will pad the sequences to the maximum length of the
-            sequences in the batch, given a dataset of paired sequences.
-        train_dataset ([`~datasets.Dataset`] or [`~datasets.IterableDataset`]):
-            The dataset to use for training.
-        eval_dataset ([`~datasets.Dataset`], [`~datasets.IterableDataset`] or `dict[str, Union[Dataset, IterableDataset]]`):
-            The dataset to use for evaluation.
-        processing_class ([`~transformers.PreTrainedTokenizerBase`] or [`~transformers.ProcessorMixin`], *optional*):
-            Processing class used to process the data. If provided, will be used to automatically process the inputs
-            for the model, and it will be saved along the model to make it easier to rerun an interrupted training or
-            reuse the fine-tuned model.
-        reward_processing_classes ([`~transformers.PreTrainedTokenizerBase`] or `list[PreTrainedTokenizerBase]`, *optional*):
-            Processing classes corresponding to the reward functions specified in `reward_funcs`. Can be either:
-
-            - A single processing class: Used when `reward_funcs` contains only one reward function.
-            - A list of processing classes: Must match the order and length of the reward functions in `reward_funcs`.
-
-            If set to `None`, the tokenizer for each model-based reward function is automatically loaded using
-            [`~transformers.AutoTokenizer.from_pretrained`].
-        peft_config ([`~peft.PeftConfig`], *optional*):
-            PEFT configuration used to wrap the model. If `None`, the model is not wrapped.
-        compute_metrics (`Callable[[EvalPrediction], dict]`, *optional*):
-            The function to use to compute the metrics. Must take a `EvalPrediction` and return a dictionary string to
-            metric values.
-        callbacks (`list[transformers.TrainerCallback]`):
-            The callbacks to use for training.
-        optimizers (`tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR]`):
-            The optimizer and scheduler to use for training.
-        preprocess_logits_for_metrics (`Callable[[torch.Tensor, torch.Tensor], torch.Tensor]`):
-            The function to use to preprocess the logits before computing the metrics.
-
-        reward_model:
-
-            <Deprecated version="0.22.0">
-
-            This parameter is deprecated and will be removed in version 0.25.0. Use `reward_funcs` instead.
-
-            </Deprecated>
-    """
+    r""""""
 
     _tag_names = ["trl", "online-dpo"]
     _name = "Online DPO"
@@ -2110,74 +2042,74 @@ class _UnslothOnlineDPOTrainer(BaseTrainer):
 class UnslothOnlineDPOTrainer(_UnslothOnlineDPOTrainer):
     """
     
-Initialize OnlineDPOTrainer.
+    Initialize OnlineDPOTrainer.
 
-Args:
-    model (`Union[str, nn.Module, PreTrainedModel]`):
-        Model to be trained. Can be either:
+    Args:
+        model (`Union[str, nn.Module, PreTrainedModel]`):
+            Model to be trained. Can be either:
 
-        - A string, being the *model id* of a pretrained model hosted inside a model repo on huggingface.co, or a
-          path to a *directory* containing model weights saved using
-          [`~transformers.PreTrainedModel.save_pretrained`], e.g., `'./my_model_directory/'`. The model is loaded
-          using [`~transformers.AutoModelForCausalLM.from_pretrained`] with the keyword arguments in
-          `args.model_init_kwargs`.
-        - A [`~transformers.PreTrainedModel`] object. Only causal language models are supported.
-    ref_model ([`~transformers.PreTrainedModel`] or `torch.nn.Module` or `None`):
-        The reference model to use for training. If None is specified, the reference model will be created from the
-        model.
-    judge ([`BasePairwiseJudge`]):
-        The judge to use for pairwise comparison of model completions.
-    reward_funcs (`Union[RewardFunc, list[RewardFunc]]`, *optional*):
-        Reward functions to be used for computing the rewards. To compute the rewards, we call all the reward
-        functions with the prompts and completions and sum the rewards. Can be either:
+            - A string, being the *model id* of a pretrained model hosted inside a model repo on huggingface.co, or a
+              path to a *directory* containing model weights saved using
+              [`~transformers.PreTrainedModel.save_pretrained`], e.g., `'./my_model_directory/'`. The model is loaded
+              using [`~transformers.AutoModelForCausalLM.from_pretrained`] with the keyword arguments in
+              `args.model_init_kwargs`.
+            - A [`~transformers.PreTrainedModel`] object. Only causal language models are supported.
+        ref_model ([`~transformers.PreTrainedModel`] or `torch.nn.Module` or `None`):
+            The reference model to use for training. If None is specified, the reference model will be created from the
+            model.
+        judge ([`BasePairwiseJudge`]):
+            The judge to use for pairwise comparison of model completions.
+        reward_funcs (`Union[RewardFunc, list[RewardFunc]]`, *optional*):
+            Reward functions to be used for computing the rewards. To compute the rewards, we call all the reward
+            functions with the prompts and completions and sum the rewards. Can be either:
 
-        - A single reward function: Can be a string (path to model), a [`~transformers.PreTrainedModel`], or a
-          custom callable function.
-        - A list of reward functions: Must all be of compatible types.
+            - A single reward function: Can be a string (path to model), a [`~transformers.PreTrainedModel`], or a
+              custom callable function.
+            - A list of reward functions: Must all be of compatible types.
 
-        Note: Only one of `judge`, or `reward_funcs` should be provided.
-    args ([`OnlineDPOConfig`]):
-        The online DPO config arguments to use for training.
-    data_collator ([`~transformers.DataCollator`]):
-        The data collator to use for training. If None is specified, the default data collator
-        ([`DPODataCollatorWithPadding`]) will be used which will pad the sequences to the maximum length of the
-        sequences in the batch, given a dataset of paired sequences.
-    train_dataset ([`~datasets.Dataset`] or [`~datasets.IterableDataset`]):
-        The dataset to use for training.
-    eval_dataset ([`~datasets.Dataset`], [`~datasets.IterableDataset`] or `dict[str, Union[Dataset, IterableDataset]]`):
-        The dataset to use for evaluation.
-    processing_class ([`~transformers.PreTrainedTokenizerBase`] or [`~transformers.ProcessorMixin`], *optional*):
-        Processing class used to process the data. If provided, will be used to automatically process the inputs
-        for the model, and it will be saved along the model to make it easier to rerun an interrupted training or
-        reuse the fine-tuned model.
-    reward_processing_classes ([`~transformers.PreTrainedTokenizerBase`] or `list[PreTrainedTokenizerBase]`, *optional*):
-        Processing classes corresponding to the reward functions specified in `reward_funcs`. Can be either:
+            Note: Only one of `judge`, or `reward_funcs` should be provided.
+        args ([`OnlineDPOConfig`]):
+            The online DPO config arguments to use for training.
+        data_collator ([`~transformers.DataCollator`]):
+            The data collator to use for training. If None is specified, the default data collator
+            ([`DPODataCollatorWithPadding`]) will be used which will pad the sequences to the maximum length of the
+            sequences in the batch, given a dataset of paired sequences.
+        train_dataset ([`~datasets.Dataset`] or [`~datasets.IterableDataset`]):
+            The dataset to use for training.
+        eval_dataset ([`~datasets.Dataset`], [`~datasets.IterableDataset`] or `dict[str, Union[Dataset, IterableDataset]]`):
+            The dataset to use for evaluation.
+        processing_class ([`~transformers.PreTrainedTokenizerBase`] or [`~transformers.ProcessorMixin`], *optional*):
+            Processing class used to process the data. If provided, will be used to automatically process the inputs
+            for the model, and it will be saved along the model to make it easier to rerun an interrupted training or
+            reuse the fine-tuned model.
+        reward_processing_classes ([`~transformers.PreTrainedTokenizerBase`] or `list[PreTrainedTokenizerBase]`, *optional*):
+            Processing classes corresponding to the reward functions specified in `reward_funcs`. Can be either:
 
-        - A single processing class: Used when `reward_funcs` contains only one reward function.
-        - A list of processing classes: Must match the order and length of the reward functions in `reward_funcs`.
+            - A single processing class: Used when `reward_funcs` contains only one reward function.
+            - A list of processing classes: Must match the order and length of the reward functions in `reward_funcs`.
 
-        If set to `None`, the tokenizer for each model-based reward function is automatically loaded using
-        [`~transformers.AutoTokenizer.from_pretrained`].
-    peft_config ([`~peft.PeftConfig`], *optional*):
-        PEFT configuration used to wrap the model. If `None`, the model is not wrapped.
-    compute_metrics (`Callable[[EvalPrediction], dict]`, *optional*):
-        The function to use to compute the metrics. Must take a `EvalPrediction` and return a dictionary string to
-        metric values.
-    callbacks (`list[transformers.TrainerCallback]`):
-        The callbacks to use for training.
-    optimizers (`tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR]`):
-        The optimizer and scheduler to use for training.
-    preprocess_logits_for_metrics (`Callable[[torch.Tensor, torch.Tensor], torch.Tensor]`):
-        The function to use to preprocess the logits before computing the metrics.
+            If set to `None`, the tokenizer for each model-based reward function is automatically loaded using
+            [`~transformers.AutoTokenizer.from_pretrained`].
+        peft_config ([`~peft.PeftConfig`], *optional*):
+            PEFT configuration used to wrap the model. If `None`, the model is not wrapped.
+        compute_metrics (`Callable[[EvalPrediction], dict]`, *optional*):
+            The function to use to compute the metrics. Must take a `EvalPrediction` and return a dictionary string to
+            metric values.
+        callbacks (`list[transformers.TrainerCallback]`):
+            The callbacks to use for training.
+        optimizers (`tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR]`):
+            The optimizer and scheduler to use for training.
+        preprocess_logits_for_metrics (`Callable[[torch.Tensor, torch.Tensor], torch.Tensor]`):
+            The function to use to preprocess the logits before computing the metrics.
 
-    reward_model:
+        reward_model:
 
-        <Deprecated version="0.22.0">
+            <Deprecated version="0.22.0">
 
-        This parameter is deprecated and will be removed in version 0.25.0. Use `reward_funcs` instead.
+            This parameter is deprecated and will be removed in version 0.25.0. Use `reward_funcs` instead.
 
-        </Deprecated>
-
+            </Deprecated>
+    
     """
     def __init__(
         self,

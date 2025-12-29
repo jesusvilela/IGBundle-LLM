@@ -5,58 +5,58 @@ import os
 import argparse
 
 def export_to_gguf_ready(base_model_id, checkpoint_path, output_dir):
-    print(f"Loading base model: {base_model_id}")
-    # We must load in float16 for merging, not 4bit
+    print(f"Loading Base: {base_model_id} (CPU)")
+    import sys
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+    from peft import PeftModel
+    import torch
+    import subprocess
+    
+    # 1. Load Base Model on CPU
     model = AutoModelForCausalLM.from_pretrained(
         base_model_id,
-        torch_dtype=torch.float16,
-        device_map="auto" if torch.cuda.is_available() else "cpu",
+        device_map="cpu",
+        torch_dtype=torch.float16, # Use float16 to save RAM
         trust_remote_code=True
     )
     tokenizer = AutoTokenizer.from_pretrained(base_model_id, trust_remote_code=True)
     
-    print(f"Loading adapter from {checkpoint_path}")
-    try:
-        model = PeftModel.from_pretrained(model, checkpoint_path)
-    except Exception as e:
-        print(f"Failed to load PEFT adapter: {e}")
-        return
-
-    print("Merging LoRA weights into Base Model...")
-    # This merges the LoRA parameters (A*B) into the base weights
+    # 2. Load Adapter
+    print(f"Loading Adapter: {checkpoint_path}")
+    model = PeftModel.from_pretrained(model, checkpoint_path, device_map="cpu")
+    
+    # 3. Merge
+    print("Merging adapters...")
     model = model.merge_and_unload()
     
-    # NOTE: IGBundle specific bottleneck weights (if separate from LoRA)
-    # cannot be merged into the base Linear layers if they have non-linearities.
-    # They are preserved in the topological structure but ignored by standard GGUF.
-    # However, since we trained with LoRA, the LoRA weights capture the 'projection' 
-    # effects influenced by the Sheaf Loss.
+    # 4. Save Merged HF Model
+    merged_dir = "igbundle_merged_hf"
+    print(f"Saving merged model to {merged_dir}...")
+    model.save_pretrained(merged_dir)
+    tokenizer.save_pretrained(merged_dir)
     
-    print(f"Saving merged model to {output_dir}")
-    model.save_pretrained(output_dir)
-    tokenizer.save_pretrained(output_dir)
+    # 5. Convert to GGUF using local script
+    print("Converting to GGUF using llama.cpp/convert_hf_to_gguf.py...")
+    gguf_file = f"{output_dir}.gguf" # e.g. igbundle_qwen7b.gguf
     
-    print("\n=== GGUF CONVERSION INSTRUCTIONS ===")
-    print(f"1. Clone llama.cpp: git clone https://github.com/ggerganov/llama.cpp")
-    print(f"2. Install requirements: pip install -r llama.cpp/requirements.txt")
-    print(f"3. Run conversion:")
-    print(f"   python llama.cpp/convert_hf_to_gguf.py {output_dir} --outfile {output_dir}/igbundle_qwen.gguf --outtype f16")
-    print(f"4. Quantize (Optional):")
-    print(f"   ./llama.cpp/llama-quantize {output_dir}/igbundle_qwen.gguf {output_dir}/igbundle_qwen_q4_k_m.gguf q4_k_m")
+    # Use sys.executable to ensure we use the same environment
+    cmd = [
+        sys.executable, "llama.cpp/convert_hf_to_gguf.py", 
+        merged_dir, 
+        "--outfile", gguf_file, 
+        "--outtype", "f16"
+    ]
     
-    # Helper script generator
-    with open(os.path.join(output_dir, "convert.bat"), "w") as f:
-        f.write(f"python ../../../llama.cpp/convert_hf_to_gguf.py . --outfile igbundle_qwen.gguf --outtype f16\n")
-        f.write("pause")
+    print(f"Running: {' '.join(cmd)}")
+    subprocess.run(cmd, check=True)
+    
+    print(f"Success! GGUF saved to {gguf_file}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--base", default="Qwen/Qwen2.5-7B")
     parser.add_argument("--checkpoint", required=True, help="Path to checkpoint folder")
-    parser.add_argument("--output", default="igbundle_merged")
+    parser.add_argument("--output", default="igbundle_qwen7b") # Filename without extension
     args = parser.parse_args()
-    
-    if os.path.exists(args.output):
-        print(f"Warning: Output directory {args.output} exists.")
     
     export_to_gguf_ready(args.base, args.checkpoint, args.output)

@@ -35,3 +35,7 @@ validate_result.txt
 !Activate.ps1
 
 ARC-AGI-master/
+igbundle_merged_hf/
+*.gguf
+llama.cpp/
+unsloth_compiled_cache/

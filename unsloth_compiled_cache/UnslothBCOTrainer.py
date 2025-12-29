@@ -27,7 +27,7 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 from typing import Any, List, Optional, Tuple, Union, Dict, Set, Callable
-from trl.trainer.bco_trainer import (Any, AutoModelForCausalLM, BCOConfig, BCOTrainer, BaseImageProcessor, BaseTrainer, CLF_NAME, Callable, DPODataCollatorWithPadding, DataCollator, DataLoader, Dataset, EvalLoopOutput, F, FeatureExtractionMixin, Literal, LogisticRegression, Optional, PartialState, Path, PeftModel, PreTrainedModel, PreTrainedTokenizerBase, ProcessorMixin, RUNNING_NAME, RunningMoments, SequentialSampler, TrainerCallback, TrainingArguments, Union, _process_tokens, _tokenize, autocast, contextmanager, create_reference_model, defaultdict, disable_dropout_in_model, has_length, inspect, is_comet_available, is_joblib_available, is_peft_available, is_sklearn_available, is_wandb_available, itemgetter, joblib, log_table_to_comet_experiment, logger, logging, maybe_apply_chat_template, maybe_extract_prompt, maybe_unpair_preference_dataset, nn, np, nullcontext, os, pad_to_length, pd, peft_module_casting_to_bf16, prepare_deepspeed, prepare_model_for_kbit_training, random, selective_log_softmax, textwrap, torch, tqdm, warnings, F, Optional, PeftModel, PreTrainedModel, is_peft_available, logger, os, torch)
+from trl.trainer.bco_trainer import (Any, AutoModelForCausalLM, BCOConfig, BCOTrainer, BaseImageProcessor, BaseTrainer, CLF_NAME, Callable, DPODataCollatorWithPadding, DataCollator, DataLoader, Dataset, EvalLoopOutput, F, FeatureExtractionMixin, Literal, Optional, PartialState, Path, PeftModel, PreTrainedModel, PreTrainedTokenizerBase, ProcessorMixin, RUNNING_NAME, RunningMoments, SequentialSampler, TrainerCallback, TrainingArguments, Union, _process_tokens, _tokenize, autocast, contextmanager, create_reference_model, defaultdict, disable_dropout_in_model, has_length, inspect, is_comet_available, is_joblib_available, is_peft_available, is_sklearn_available, is_wandb_available, itemgetter, log_table_to_comet_experiment, logger, logging, maybe_apply_chat_template, maybe_extract_prompt, maybe_unpair_preference_dataset, nn, np, nullcontext, os, pad_to_length, pd, peft_module_casting_to_bf16, prepare_deepspeed, prepare_model_for_kbit_training, random, selective_log_softmax, textwrap, torch, tqdm, warnings, F, Optional, PeftModel, PreTrainedModel, is_peft_available, logger, os, torch)
 
 
 import os
@@ -198,61 +198,61 @@ def align_logprobs_with_mask(
 class UnslothBCOConfig(BCOConfig):
     """
     
-Configuration class for the [`BCOTrainer`].
+    Configuration class for the [`BCOTrainer`].
 
-This class includes only the parameters that are specific to BCO training. For a full list of training arguments,
-please refer to the [`~transformers.TrainingArguments`] documentation. Note that default values in this class may
-differ from those in [`~transformers.TrainingArguments`].
+    This class includes only the parameters that are specific to BCO training. For a full list of training arguments,
+    please refer to the [`~transformers.TrainingArguments`] documentation. Note that default values in this class may
+    differ from those in [`~transformers.TrainingArguments`].
 
-Using [`~transformers.HfArgumentParser`] we can turn this class into
-[argparse](https://docs.python.org/3/library/argparse#module-argparse) arguments that can be specified on the
-command line.
+    Using [`~transformers.HfArgumentParser`] we can turn this class into
+    [argparse](https://docs.python.org/3/library/argparse#module-argparse) arguments that can be specified on the
+    command line.
 
-Parameters:
-    max_length (`int` or `None`, *optional*, defaults to `1024`):
-        Maximum length of the sequences (prompt + completion) in the batch. This argument is required if you want
-        to use the default data collator.
-    max_prompt_length (`int` or `None`, *optional*, defaults to `512`):
-        Maximum length of the prompt. This argument is required if you want to use the default data collator.
-    max_completion_length (`int`, *optional*):
-        Maximum length of the completion. This argument is required if you want to use the default data collator
-        and your model is an encoder-decoder.
-    beta (`float`, *optional*, defaults to `0.1`):
-        Parameter controlling the deviation from the reference model. Higher β means less deviation from the
-        reference model.
-    label_pad_token_id (`int`,  *optional*, defaults to `-100`):
-        Label pad token id. This argument is required if you want to use the default data collator.
-    padding_value (`int`, *optional*):
-        Padding value to use. If `None`, the padding value of the tokenizer is used.
-    truncation_mode (`str`, *optional*, defaults to `"keep_end"`):
-        Truncation mode to use when the prompt is too long. Possible values are `"keep_end"` or `"keep_start"`.
-        This argument is required if you want to use the default data collator.
-    disable_dropout (`bool`, *optional*, defaults to `True`):
-        Whether to disable dropout in the model and reference model.
-    generate_during_eval (`bool`, *optional*, defaults to `False`):
-        If `True`, generates and logs completions from both the model and the reference model to W&B or Comet
-        during evaluation.
-    is_encoder_decoder (`bool`, *optional*):
-        When using the `model_init` argument (callable) to instantiate the model instead of the `model` argument,
-        you need to specify if the model returned by the callable is an encoder-decoder model.
-    precompute_ref_log_probs (`bool`, *optional*, defaults to `False`):
-        Whether to precompute reference model log probabilities for training and evaluation datasets. This is
-        useful when training without the reference model to reduce the total GPU memory needed.
-    model_init_kwargs (`dict[str, Any]`, *optional*):
-        Keyword arguments to pass to `AutoModelForCausalLM.from_pretrained` when instantiating the model from a
-        string.
-    ref_model_init_kwargs (`dict[str, Any]`, *optional*):
-        Keyword arguments to pass to `AutoModelForCausalLM.from_pretrained` when instantiating the reference model
-        from a string.
-    dataset_num_proc (`int`, *optional*):
-        Number of processes to use for processing the dataset.
-    prompt_sample_size (`int`, *optional*, defaults to `1024`):
-        Number of prompts that are fed to density ratio classifier.
-    min_density_ratio (`float`, *optional*, defaults to `0.5`):
-        Minimum value of the density ratio. The estimated density ratio is clamped to this value.
-    max_density_ratio (`float`, *optional*, defaults to `10.0`):
-        Maximum value of the density ratio. The estimated density ratio is clamped to this value.
-
+    Parameters:
+        max_length (`int` or `None`, *optional*, defaults to `1024`):
+            Maximum length of the sequences (prompt + completion) in the batch. This argument is required if you want
+            to use the default data collator.
+        max_prompt_length (`int` or `None`, *optional*, defaults to `512`):
+            Maximum length of the prompt. This argument is required if you want to use the default data collator.
+        max_completion_length (`int`, *optional*):
+            Maximum length of the completion. This argument is required if you want to use the default data collator
+            and your model is an encoder-decoder.
+        beta (`float`, *optional*, defaults to `0.1`):
+            Parameter controlling the deviation from the reference model. Higher β means less deviation from the
+            reference model.
+        label_pad_token_id (`int`,  *optional*, defaults to `-100`):
+            Label pad token id. This argument is required if you want to use the default data collator.
+        padding_value (`int`, *optional*):
+            Padding value to use. If `None`, the padding value of the tokenizer is used.
+        truncation_mode (`str`, *optional*, defaults to `"keep_end"`):
+            Truncation mode to use when the prompt is too long. Possible values are `"keep_end"` or `"keep_start"`.
+            This argument is required if you want to use the default data collator.
+        disable_dropout (`bool`, *optional*, defaults to `True`):
+            Whether to disable dropout in the model and reference model.
+        generate_during_eval (`bool`, *optional*, defaults to `False`):
+            If `True`, generates and logs completions from both the model and the reference model to W&B or Comet
+            during evaluation.
+        is_encoder_decoder (`bool`, *optional*):
+            When using the `model_init` argument (callable) to instantiate the model instead of the `model` argument,
+            you need to specify if the model returned by the callable is an encoder-decoder model.
+        precompute_ref_log_probs (`bool`, *optional*, defaults to `False`):
+            Whether to precompute reference model log probabilities for training and evaluation datasets. This is
+            useful when training without the reference model to reduce the total GPU memory needed.
+        model_init_kwargs (`dict[str, Any]`, *optional*):
+            Keyword arguments to pass to `AutoModelForCausalLM.from_pretrained` when instantiating the model from a
+            string.
+        ref_model_init_kwargs (`dict[str, Any]`, *optional*):
+            Keyword arguments to pass to `AutoModelForCausalLM.from_pretrained` when instantiating the reference model
+            from a string.
+        dataset_num_proc (`int`, *optional*):
+            Number of processes to use for processing the dataset.
+        prompt_sample_size (`int`, *optional*, defaults to `1024`):
+            Number of prompts that are fed to density ratio classifier.
+        min_density_ratio (`float`, *optional*, defaults to `0.5`):
+            Minimum value of the density ratio. The estimated density ratio is clamped to this value.
+        max_density_ratio (`float`, *optional*, defaults to `10.0`):
+            Maximum value of the density ratio. The estimated density ratio is clamped to this value.
+    
     """
     vllm_sampling_params: Optional[Any] = field(
         default = None,
@@ -583,50 +583,7 @@ Parameters:
 pass
 
 class _UnslothBCOTrainer(BaseTrainer):
-    r"""
-    Initialize BCOTrainer from [BCO](https://huggingface.co/papers/2404.04656) paper.
-
-    Args:
-        model ([`~transformers.PreTrainedModel`]):
-            The model to train, preferably an [`~transformers.AutoModelForSequenceClassification`].
-        ref_model ([`PreTrainedModelWrapper`]):
-            Hugging Face transformer model with a casual language modelling head. Used for implicit reward computation
-            and loss. If no reference model is provided, the trainer will create a reference model with the same
-            architecture as the model to be optimized.
-        args ([`BCOConfig`]):
-            The arguments to use for training.
-        train_dataset ([`~datasets.Dataset`]):
-            The dataset to use for training.
-        eval_dataset ([`~datasets.Dataset`]):
-            The dataset to use for evaluation.
-        processing_class ([`~transformers.PreTrainedTokenizerBase`], [`~transformers.BaseImageProcessor`], [`~transformers.FeatureExtractionMixin`] or [`~transformers.ProcessorMixin`], *optional*):
-            Processing class used to process the data. If provided, will be used to automatically process the inputs
-            for the model, and it will be saved along the model to make it easier to rerun an interrupted training or
-            reuse the fine-tuned model.
-        data_collator ([`~transformers.DataCollator`], *optional*):
-            The data collator to use for training. If None is specified, the default data collator
-            ([`DPODataCollatorWithPadding`]) will be used which will pad the sequences to the maximum length of the
-            sequences in the batch, given a dataset of paired sequences.
-        model_init (`Callable[[], transformers.PreTrainedModel]`):
-            The model initializer to use for training. If None is specified, the default model initializer will be
-            used.
-        callbacks (`list[transformers.TrainerCallback]`):
-            The callbacks to use for training.
-        optimizers (`tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR]`):
-            The optimizer and scheduler to use for training.
-        preprocess_logits_for_metrics (`Callable[[torch.Tensor, torch.Tensor], torch.Tensor]`):
-            The function to use to preprocess the logits before computing the metrics.
-        peft_config (`dict`, defaults to `None`):
-            The PEFT configuration to use for training. If you pass a PEFT configuration, the model will be wrapped in
-            a PEFT model.
-        compute_metrics (`Callable[[EvalPrediction], dict]`, *optional*):
-            The function to use to compute the metrics. Must take a `EvalPrediction` and return a dictionary string to
-            metric values.
-        model_adapter_name (`str`, defaults to `None`):
-            Name of the train target PEFT adapter, when using LoRA with multiple adapters.
-        ref_adapter_name (`str`, defaults to `None`):
-            Name of the reference PEFT adapter, when using LoRA with multiple adapters.
-    """
+    r""""""
 
     _tag_names = ["trl", "bco"]
     _name = "BCO"
@@ -1823,49 +1780,49 @@ class _UnslothBCOTrainer(BaseTrainer):
 class UnslothBCOTrainer(_UnslothBCOTrainer):
     """
     
-Initialize BCOTrainer from [BCO](https://huggingface.co/papers/2404.04656) paper.
+    Initialize BCOTrainer from [BCO](https://huggingface.co/papers/2404.04656) paper.
 
-Args:
-    model ([`~transformers.PreTrainedModel`]):
-        The model to train, preferably an [`~transformers.AutoModelForSequenceClassification`].
-    ref_model ([`PreTrainedModelWrapper`]):
-        Hugging Face transformer model with a casual language modelling head. Used for implicit reward computation
-        and loss. If no reference model is provided, the trainer will create a reference model with the same
-        architecture as the model to be optimized.
-    args ([`BCOConfig`]):
-        The arguments to use for training.
-    train_dataset ([`~datasets.Dataset`]):
-        The dataset to use for training.
-    eval_dataset ([`~datasets.Dataset`]):
-        The dataset to use for evaluation.
-    processing_class ([`~transformers.PreTrainedTokenizerBase`], [`~transformers.BaseImageProcessor`], [`~transformers.FeatureExtractionMixin`] or [`~transformers.ProcessorMixin`], *optional*):
-        Processing class used to process the data. If provided, will be used to automatically process the inputs
-        for the model, and it will be saved along the model to make it easier to rerun an interrupted training or
-        reuse the fine-tuned model.
-    data_collator ([`~transformers.DataCollator`], *optional*):
-        The data collator to use for training. If None is specified, the default data collator
-        ([`DPODataCollatorWithPadding`]) will be used which will pad the sequences to the maximum length of the
-        sequences in the batch, given a dataset of paired sequences.
-    model_init (`Callable[[], transformers.PreTrainedModel]`):
-        The model initializer to use for training. If None is specified, the default model initializer will be
-        used.
-    callbacks (`list[transformers.TrainerCallback]`):
-        The callbacks to use for training.
-    optimizers (`tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR]`):
-        The optimizer and scheduler to use for training.
-    preprocess_logits_for_metrics (`Callable[[torch.Tensor, torch.Tensor], torch.Tensor]`):
-        The function to use to preprocess the logits before computing the metrics.
-    peft_config (`dict`, defaults to `None`):
-        The PEFT configuration to use for training. If you pass a PEFT configuration, the model will be wrapped in
-        a PEFT model.
-    compute_metrics (`Callable[[EvalPrediction], dict]`, *optional*):
-        The function to use to compute the metrics. Must take a `EvalPrediction` and return a dictionary string to
-        metric values.
-    model_adapter_name (`str`, defaults to `None`):
-        Name of the train target PEFT adapter, when using LoRA with multiple adapters.
-    ref_adapter_name (`str`, defaults to `None`):
-        Name of the reference PEFT adapter, when using LoRA with multiple adapters.
-
+    Args:
+        model ([`~transformers.PreTrainedModel`]):
+            The model to train, preferably an [`~transformers.AutoModelForSequenceClassification`].
+        ref_model ([`PreTrainedModelWrapper`]):
+            Hugging Face transformer model with a casual language modelling head. Used for implicit reward computation
+            and loss. If no reference model is provided, the trainer will create a reference model with the same
+            architecture as the model to be optimized.
+        args ([`BCOConfig`]):
+            The arguments to use for training.
+        train_dataset ([`~datasets.Dataset`]):
+            The dataset to use for training.
+        eval_dataset ([`~datasets.Dataset`]):
+            The dataset to use for evaluation.
+        processing_class ([`~transformers.PreTrainedTokenizerBase`], [`~transformers.BaseImageProcessor`], [`~transformers.FeatureExtractionMixin`] or [`~transformers.ProcessorMixin`], *optional*):
+            Processing class used to process the data. If provided, will be used to automatically process the inputs
+            for the model, and it will be saved along the model to make it easier to rerun an interrupted training or
+            reuse the fine-tuned model.
+        data_collator ([`~transformers.DataCollator`], *optional*):
+            The data collator to use for training. If None is specified, the default data collator
+            ([`DPODataCollatorWithPadding`]) will be used which will pad the sequences to the maximum length of the
+            sequences in the batch, given a dataset of paired sequences.
+        model_init (`Callable[[], transformers.PreTrainedModel]`):
+            The model initializer to use for training. If None is specified, the default model initializer will be
+            used.
+        callbacks (`list[transformers.TrainerCallback]`):
+            The callbacks to use for training.
+        optimizers (`tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR]`):
+            The optimizer and scheduler to use for training.
+        preprocess_logits_for_metrics (`Callable[[torch.Tensor, torch.Tensor], torch.Tensor]`):
+            The function to use to preprocess the logits before computing the metrics.
+        peft_config (`dict`, defaults to `None`):
+            The PEFT configuration to use for training. If you pass a PEFT configuration, the model will be wrapped in
+            a PEFT model.
+        compute_metrics (`Callable[[EvalPrediction], dict]`, *optional*):
+            The function to use to compute the metrics. Must take a `EvalPrediction` and return a dictionary string to
+            metric values.
+        model_adapter_name (`str`, defaults to `None`):
+            Name of the train target PEFT adapter, when using LoRA with multiple adapters.
+        ref_adapter_name (`str`, defaults to `None`):
+            Name of the reference PEFT adapter, when using LoRA with multiple adapters.
+    
     """
     def __init__(
         self,
