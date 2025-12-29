@@ -19,6 +19,7 @@ output/
 !trained_adapter/*.safetensors
 !trained_adapter/*.json
 crash.txt
+braintop/
 diag_*.txt
 smoke_log.txt
 validate_result.txt
@@ -32,3 +33,5 @@ validate_result.txt
 !fix_environment.ps1
 !setup_env.ps1
 !Activate.ps1
+
+ARC-AGI-master/

@@ -56,56 +56,61 @@ def evaluate_arc(model_id, checkpoint_path, split="validation", limit=None):
             
     model.eval()
     
-    print("Loading ARC-AGI Dataset (huggingface: chollet/ARC)...")
-    try:
-        # Note: 'chollet/ARC' might not be directly hosting the data easily for 'load_dataset' without config
-        # We'll use a known community mirror if official fails, e.g. 'fchollet/ARC' doesn't exist as HF dataset directly often
-        # Using a reliable mirror: 'barc0/arc_puzzles' or similar. 
-        # Actually, let's use a local loader or a trustworthy mirror. 
-        # 'giganticode/ARC' is a common one.
-        dataset = load_dataset("giganticode/ARC", split=split)
-    except Exception as e:
-        print(f"Failed to download dataset: {e}")
+    print("Loading ARC-AGI Dataset (Local)...")
+    data_path = "ARC-AGI-master/data/evaluation" # Use evaluation set for testing
+    if not os.path.exists(data_path):
+        print(f"Error: Data path {data_path} not found. Ensure ARC-AGI-master is extracted.")
         return
 
+    tasks = []
+    for f in os.listdir(data_path):
+        if f.endswith(".json"):
+            with open(os.path.join(data_path, f), "r") as json_file:
+                tasks.append(json.load(json_file))
+    
+    # Shuffle or select
+    import random
+    random.seed(42)
+    random.shuffle(tasks)
+
     if limit:
-        dataset = dataset.select(range(limit))
+        tasks = tasks[:limit]
+    
+    dataset = []
+    for t in tasks:
+        # Normalize to 'datasets' format for compatibility
+        dataset.append(t)
         
     correct = 0
     total = 0
     
     print("Starting Evaluation...")
     for item in tqdm(dataset):
-        # The structure of 'item' depends on the specific HF dataset version.
-        # giganticode/ARC details:
-        # features: ['id', 'train', 'test']
-        
-        prompt, target_grid = format_arc_prompt(item)
-        
-        inputs = tokenizer(prompt, return_tensors="pt").to(device)
-        
-        with torch.no_grad():
-            outputs = model.generate(
-                **inputs, 
-                max_new_tokens=200, 
-                do_sample=False, # Greco search/Grid search determinism
-                pad_token_id=tokenizer.eos_token_id
-            )
+        try:
+            prompt, target_grid = format_arc_prompt(item)
             
-        generated = tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
-        
-        # Simple parsing: Look for the grid format
-        # This is very fragile. Validating ARC requires parsing the 2D array.
-        target_str = format_grid(target_grid)
-        
-        # Clean generation
-        gen_clean = generated.strip().split("\n")[0] # Take first line
-        gen_clean = gen_clean.replace(" ", "")
-        
-        if target_str in gen_clean:
-            correct += 1
-        
-        total += 1
+            inputs = tokenizer(prompt, return_tensors="pt").to(device)
+            
+            with torch.no_grad():
+                outputs = model.generate(
+                    **inputs, 
+                    max_new_tokens=200, 
+                    do_sample=False, 
+                    pad_token_id=tokenizer.eos_token_id
+                )
+                
+            generated = tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
+            
+            target_str = format_grid(target_grid)
+            gen_clean = generated.strip().split("\n")[0].replace(" ", "")
+            
+            if target_str in gen_clean:
+                correct += 1
+            
+            total += 1
+        except Exception as e:
+            print(f"Error processing task: {e}")
+            continue
         
     print(f"\nResults on ARC-{split}:")
     print(f"Accuracy (Exact String Match): {correct}/{total} ({correct/total*100:.2f}%)")

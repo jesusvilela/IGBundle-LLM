@@ -41,7 +41,12 @@ class ValidationBenchmark:
                 'bottleneck_dim': 256,
                 'latent_dim': 128,
                 'adapter_scale': 0.1,
-                'dropout': 0.05
+                'dropout': 0.05,
+                'alpha': 1.0,
+                'beta': 1.0,
+                'eta_f': 0.1,
+                'eta_b': 0.01,
+                'eta_w': 0.01
             }
             self.model = wrap_hf_candidate(self.model, DictConfig(adapter_config))
             
