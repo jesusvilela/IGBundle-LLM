@@ -15,6 +15,9 @@ output/
 *.safetensors
 *.bin
 *.pth
+!trained_adapter/*.pt
+!trained_adapter/*.safetensors
+!trained_adapter/*.json
 crash.txt
 diag_*.txt
 smoke_log.txt
