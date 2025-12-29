@@ -11,7 +11,7 @@
 
 *"Language is non-Euclidean. Meaning lives in the fibers."*
 
-[**Read the Thesis (PDF)**](IGBundle_Thesis.pdf) | [**View Interactive Topology**](igbundle_topology.html)
+[**Read the Thesis (PDF)**](IGBundle_Thesis.pdf)
 
 </div>
 
@@ -108,7 +108,7 @@ python export_gguf.py --checkpoint output/igbundle_qwen7b/checkpoint-100
 python benchmark.py --checkpoint output/igbundle_qwen7b/checkpoint-100
 
 # ARC-AGI Evaluation (Reasoning Grid)
-# Connects to HuggingFace Datasets to download 'giganticode/ARC'
+# Uses local 'ARC-AGI-master/data/evaluation' dataset
 python eval_arc.py --checkpoint output/igbundle_qwen7b/checkpoint-100 --limit 50
 
 # Chatbot Arena / MT-Bench Generation
