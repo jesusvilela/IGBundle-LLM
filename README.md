@@ -107,6 +107,14 @@ python export_gguf.py --checkpoint output/igbundle_qwen7b/checkpoint-100
 # Industry Benchmark Validation
 python benchmark.py --checkpoint output/igbundle_qwen7b/checkpoint-100
 
+# ARC-AGI Evaluation (Reasoning Grid)
+# Connects to HuggingFace Datasets to download 'giganticode/ARC'
+python eval_arc.py --checkpoint output/igbundle_qwen7b/checkpoint-100 --limit 50
+
+# Chatbot Arena / MT-Bench Generation
+# Generates answers for qualitative industry check
+python bench_arena.py --checkpoint output/igbundle_qwen7b/checkpoint-100
+
 # Visualise Geometry
 python generate_braintop_viz.py
 ```
