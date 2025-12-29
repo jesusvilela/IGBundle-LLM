@@ -7,7 +7,9 @@ if _src_path not in sys.path:
 
 # Disable TorchAO to prevent compatibility issues
 _os.environ['DISABLE_TORCHAO'] = '1'
-sys.modules['torchao'] = None # Force ImportError for transformers checks
+sys.modules['torchao'] = None # Force ImportError
+# Memory fragmentation fix
+_os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'max_split_size_mb:128'
 
 # Apply Triton fixes for Windows
 from igbundle.utils import triton_fix
