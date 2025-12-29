@@ -97,6 +97,16 @@ The non-zero $\sigma$ confirms the "Proof of Life": the model actively utilizes 
 # Reproduce Training
 python train.py --config configs/qwen25_7b_igbundle_lora.yaml
 
+# Hyperparameter Optimization (Optuna)
+# Note: Requires dedicated VRAM. Do not run alongside training.
+python optimize_hyperparams.py
+
+# Export to GGUF (llama.cpp ready)
+python export_gguf.py --checkpoint output/igbundle_qwen7b/checkpoint-100
+
+# Industry Benchmark Validation
+python benchmark.py --checkpoint output/igbundle_qwen7b/checkpoint-100
+
 # Visualise Geometry
 python generate_braintop_viz.py
 ```
