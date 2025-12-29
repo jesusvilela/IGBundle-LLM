@@ -7,6 +7,7 @@ if _src_path not in sys.path:
 
 # Disable TorchAO to prevent compatibility issues
 _os.environ['DISABLE_TORCHAO'] = '1'
+sys.modules['torchao'] = None # Force ImportError for transformers checks
 
 # Apply Triton fixes for Windows
 from igbundle.utils import triton_fix
@@ -345,7 +346,16 @@ def train():
     )
     
     print("Starting training...")
-    trainer.train()
+    
+    # Check for checkpoints
+    last_checkpoint = None
+    if os.path.isdir(cfg.training.output_dir):
+        checkpoints = [d for d in os.listdir(cfg.training.output_dir) if d.startswith("checkpoint")]
+        if checkpoints:
+            last_checkpoint = True
+            print(f"Resuming from existing checkpoints in {cfg.training.output_dir}")
+
+    trainer.train(resume_from_checkpoint=last_checkpoint)
     
     print("Training complete.")
     # Save adapter + LoRA? PEFT saves LoRA.

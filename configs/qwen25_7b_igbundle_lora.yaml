@@ -23,14 +23,14 @@ lora:
 training:
   output_dir: "./output/igbundle_qwen7b"
   num_train_epochs: 1
-  max_steps: 60 # Extended for full training check
-  per_device_train_batch_size: 1 # Crucial for 8GB VRAM
+  max_steps: 600 # Extended run for convergence
+  per_device_train_batch_size: 1 # Low batch size for VRAM
   optim: paged_adamw_8bit
-  gradient_accumulation_steps: 16
-  learning_rate: 2e-5
+  gradient_accumulation_steps: 8 # High accumulation for stability
+  learning_rate: 2e-4
   max_grad_norm: 0.3
   logging_steps: 1
-  save_steps: 10
+  save_steps: 50 # Save every ~2.5 hours
   bf16: true
 
 loss:
