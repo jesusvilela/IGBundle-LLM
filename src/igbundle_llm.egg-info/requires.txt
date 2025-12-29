@@ -1,0 +1,6 @@
+torch>=2.0.0
+transformers>=4.38.0
+peft>=0.10.0
+accelerate>=0.27.0
+bitsandbytes>=0.40.0
+numpy

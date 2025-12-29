@@ -1,0 +1,16 @@
+setup.py
+src/igbundle/__init__.py
+src/igbundle/integrations/__init__.py
+src/igbundle/integrations/hf_patch.py
+src/igbundle/modules/__init__.py
+src/igbundle/modules/adapter.py
+src/igbundle/modules/kl.py
+src/igbundle/modules/losses.py
+src/igbundle/modules/ops.py
+src/igbundle/modules/state.py
+src/igbundle_llm.egg-info/PKG-INFO
+src/igbundle_llm.egg-info/SOURCES.txt
+src/igbundle_llm.egg-info/dependency_links.txt
+src/igbundle_llm.egg-info/requires.txt
+src/igbundle_llm.egg-info/top_level.txt
+tests/test_ig.py

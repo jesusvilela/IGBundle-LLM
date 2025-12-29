@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments
+venv/
+venv_fixed/
+unsloth_env/
+.env
+
+# Checkpoints and Outputs
+output/
+*.pt
+*.safetensors
+*.bin
+*.pth
+crash.txt
+diag_*.txt
+smoke_log.txt
+validate_result.txt
+
+# IDE
+.vscode/
+.idea/
+
+# Windows
+*.ps1
+!fix_environment.ps1
+!setup_env.ps1
+!Activate.ps1
