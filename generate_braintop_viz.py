@@ -63,6 +63,18 @@ def generate_viz(checkpoint_path, output_file):
     print(f"Generating visualization to {output_file}...")
     visualizer = TopologyVisualizer(topology)
     visualizer.save(output_file)
+    
+    # Static Export
+    png_file = output_file.replace(".html", ".png")
+    print(f"Generating static image to {png_file}...")
+    try:
+        # We need to manually access the plotly figure from the visualizer
+        # Assuming visualizer has a create_figure() method or similar
+        fig = visualizer.create_figure() 
+        fig.write_image(png_file, engine="kaleido")
+    except Exception as e:
+        print(f"Warning: Could not save PNG: {e}")
+        
     print("Done!")
 
 if __name__ == "__main__":

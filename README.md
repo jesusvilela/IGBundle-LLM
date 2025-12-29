@@ -1,145 +1,49 @@
-# IGBundle LLM: Information-Geometric Bundle Adapters
+# ManifoldGL: Information-Geometric Bundle Adapters for LLMs
 
-**IGBundle LLM** is an experimental framework for adapting Large Language Models (LLMs) using concepts from **Information Geometry** and **Sheaf/Bundle Theory**. 
+![Manifold Topology](igbundle_topology.png)
 
-It implements a custom adapter architecture that treats the latent space activations as sections of a fiber bundle, processing them through "Sheaf Layers" that measure and utilize the curvature (sigma) of the informational manifold.
+> "Language is non-Euclidean. Meaning lives in the fibers."
 
-## Key Features
+## Abstract
 
-- **Information-Geometric Adapter**: Custom `IGBundleAdapter` that introduces a bottleneck architecture ($H \to 256 \to P \times K \to H$) to learn manifold geometry.
-- **Sheaf Loss**: Specialized loss function that encourages the model to learn consistent geometric structures.
-- **Memory Efficient**: Optimized for 8GB VRAM GPUs (tested on RTX 3060 Ti) using:
-  - Bottleneck Adapters (~72M parameters vs ~900M original).
-  - 4-bit Quantization (bitsandbytes).
-  - Gradient Accumulation.
-  - Thermal Management (SlowStepCallback) to prevent hardware instability.
-- **Windows Compatible**: Scripts include fixes for Windows-specific issues with `torchao` and `triton`.
-- **Gradio UI**: Interactive chat interface to load and test trained adapters.
+**ManifoldGL** (IGBundle-LLM) is an experimental research framework that challenges the "flat space" assumption of contemporary Large Language Models. By integrating concepts from **Differential Geometry** and **Sheaf Theory**, we propose that semantic ambiguity and context-dependence are best modeled as curvature in a fiber bundle, rather than vector superpositions in a Euclidean space.
 
-## Architecture
+This repository contains the implementation of the **IGBundle Adapter**, a bottleneck architecture that projects standard Transformer activations into a low-dimensional "bundle space" where consistency is enforced via Sheaf Cohomology constraints.
 
-The adapter injects layers into the transformer blocks that project hidden states into a lower-dimensional "bundle" space. 
+## Theoretical Foundation
 
-- **Input Projection**: $H \to D_{bot}$ (e.g., $3584 \to 256$).
-- **Bundle Processing**: Operations on the $256$-dim latent space.
-- **Output Projection**: $D_{bot} \to H$.
+Traditional Transformers treat word embeddings as points in a flat vector space $\mathbb{R}^d$. However, the semantic space of natural language is inherently hierarchical and curved (hyperbolic).
 
-This drastically reduces parameter count while maintaining the capacity to learn complex geometric transformations.
+We hypothesize:
+1.  **Base Manifold ($M$)**: The structural "grammar" of language forms a base manifold.
+2.  **Fiber Bundle ($E \xrightarrow{\pi} M$)**: The set of all possible meanings for a given context forms the fibers $F$.
+3.  **Parallel Transport**: The attention mechanism acts as a connection $\nabla$, transporting meaning along the path of the sentence.
 
-## Installation
+Our architecture computes the **Local Section** of this bundle. The internal metric **Sigma ($\sigma$)** measures the *holonomy* or curvature of the path—essentially quantifying how much "ambiguity" or "information density" exists in the current context.
 
-The project uses a dedicated virtual environment.
+## Research Artifacts
 
-### Prerequisites
-- Python 3.10 or 3.11 (Recommended)
-- CUDA-capable GPU (NVIDIA RTX 3060 Ti or better recommended for 7B models)
+### 1. The Thesis
+For a comprehensive overview of the mathematical motivation, methodology, and results, please refer to the project thesis:
+📄 **[Read the Thesis (PDF)](IGBundle_Thesis.pdf)**
 
-### Setup
+### 2. Interactive Topology
+The visualization above represents the learned 256-dimensional tangent bundle projected into $\mathbb{R}^3$. You can examine the interactive topology report here:
+✨ **[View Interactive Manifold](igbundle_topology.html)**
 
-1.  **Activate the Environment**:
-    ```powershell
-    & "h:\LLM-MANIFOLD\igbundle-llm\unsloth_env\Scripts\Activate.ps1"
-    ```
+## Installation & Replication
 
-2.  **Install Dependencies** (if fresh install):
-    ```bash
-    pip install -r requirements.txt # (If available)
-    # OR manual install of key packages:
-    pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
-    pip install transformers peft bitsandbytes accelerate gradio
-    ```
-
-## Usage
-
-### 1. Training
-
-To train the adapter on the Alpaca dataset (or your custom data):
+The framework is optimized for consumer hardware (8GB VRAM) using 4-bit quantization and gradient accumulation.
 
 ```powershell
-python train.py --config configs/qwen25_7b_igbundle_lora.yaml
+# Windows Setup (Powershell)
+& "unsloth_env\Scripts\Activate.ps1"
 ```
 
-**Key Configuration Options** (`configs/qwen25_7b_igbundle_lora.yaml`):
-- `max_steps`: Total training steps (e.g., 60 for quick test, 1000+ for convergence).
-- `bottleneck_dim`: Size of the adapter bottleneck (default: 256).
-- `save_steps`: Frequency of checkpoint saving.
-
-### 2. Validation
-
-To compare the IGBundle model against the base model and view internal metrics:
-
-```powershell
-python validate_effects.py --checkpoint output/igbundle_qwen7b/checkpoint-60
-```
-
-This script will:
-- Generate text with the Base Model.
-- Generate text with the IGBundle Adapter.
-- Report the **Average Internal Sigma**, which measures the curvature/activity of the sheaf layers.
-
-### 3. Interactive UI
-
-Launch the Gradio Chat Interface:
-
-```powershell
-python app.py --checkpoint output/igbundle_qwen7b/checkpoint-60
-```
-
-Access the UI at `http://127.0.0.1:7860`.
-
-### 4. Checkpoint Verification
-
-To verify that a checkpoint contains valid weights (no NaNs/Infs) and custom adapter files:
-
-```powershell
-python verify_checkpoint.py
-```
-
-## Troubleshooting
-
-- **Windows Import Errors**: If you see errors related to `torchao` or `triton`, the scripts natively handle this by skipping those imports or patching dependencies.
-- **VRAM Issues**: If you run out of memory:
-    - Reduce `bottleneck_dim` in config.
-    - Reduce `per_device_train_batch_size` to 1.
-    - Ensure `gradient_accumulation_steps` is high enough to compensate.
-- **System Reboots**: If training causes reboots, `SlowStepCallback` in `train.py` adds pauses to manage thermal load.
-
-## Theoretical Addendum: Why Sheaf Theory?
-
-Language is non-Euclidean. Ambiguity, polysemy, and context-dependent meaning behave like "curvature" in the semantic space. Standard transformers treat this space as flat (Euclidean vector space).
-
-**IGBundle** hypothesizes that:
-1.  **Word embeddings live on a base manifold $M$**.
-2.  **Contextual meanings live in the fibers over $M$**.
-3.  **Attention mechanisms are parallel transport** operations along the path of the sentence.
-
-The experiment implements a **Fiber Bundle** architecture where:
--   **Activations** are projected into a lower-dimensional "Tangent Bundle" (bottleneck).
--   **Sheaf Layers** process these sections, explicitly modeling the local agreement (consistency) between overlapping semantic patches.
--   **Sigma ($\sigma$)** represents the local "curvature" or ambiguity—high sigma means the model detects multiple valid interpretations (high curvature).
-
-### Visualizing the Manifold
-
-We provide a tool to explore the learned geometry of the adapter's fiber bundle.
-
-```powershell
-python visualize_theory.py --checkpoint trained_adapter
-```
-
-This will analyze the learned projection weights and generate:
--   **Singular Value Spectrum**: Showing the effective dimensionality of the learned bundle.
--   **3D Interactive Manifold**: A visualization of the random unit sphere projected into the learned fiber space, revealing its topological structure.
--   **Topology Report**: [View Interactive Topology](igbundle_topology.html) (Generated by Braintop).
-
-
-```mermaid
-graph TD
-    A[Hidden State H] -->|Project| B(Fiber Bundle F 256-dim)
-    B -->|Sheaf Layer| C{Consistency Check}
-    C -->|Update| B
-    B -->|Project Back| D[Hidden State H]
-    style B fill:#f9f,stroke:#333,stroke-width:2px
-```
+### Reproducing Results
+1.  **Train**: `python train.py --config configs/qwen25_7b_igbundle_lora.yaml`
+2.  **Validate**: `python validate_effects.py` (Compares Base vs Bundle outputs)
+3.  **Visualize**: `python generate_braintop_viz.py`
 
 ## License
 
