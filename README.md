@@ -104,6 +104,41 @@ python verify_checkpoint.py
     - Ensure `gradient_accumulation_steps` is high enough to compensate.
 - **System Reboots**: If training causes reboots, `SlowStepCallback` in `train.py` adds pauses to manage thermal load.
 
+## Theoretical Addendum: Why Sheaf Theory?
+
+Language is non-Euclidean. Ambiguity, polysemy, and context-dependent meaning behave like "curvature" in the semantic space. Standard transformers treat this space as flat (Euclidean vector space).
+
+**IGBundle** hypothesizes that:
+1.  **Word embeddings live on a base manifold $M$**.
+2.  **Contextual meanings live in the fibers over $M$**.
+3.  **Attention mechanisms are parallel transport** operations along the path of the sentence.
+
+The experiment implements a **Fiber Bundle** architecture where:
+-   **Activations** are projected into a lower-dimensional "Tangent Bundle" (bottleneck).
+-   **Sheaf Layers** process these sections, explicitly modeling the local agreement (consistency) between overlapping semantic patches.
+-   **Sigma ($\sigma$)** represents the local "curvature" or ambiguity—high sigma means the model detects multiple valid interpretations (high curvature).
+
+### Visualizing the Manifold
+
+We provide a tool to explore the learned geometry of the adapter's fiber bundle.
+
+```powershell
+python visualize_theory.py --checkpoint trained_adapter
+```
+
+This will analyze the learned projection weights and generate:
+-   **Singular Value Spectrum**: Showing the effective dimensionality of the learned bundle.
+-   **3D Interactive Manifold**: A visualization of the random unit sphere projected into the learned fiber space, revealing its topological structure.
+
+```mermaid
+graph TD
+    A[Hidden State H] -->|Project| B(Fiber Bundle F 256-dim)
+    B -->|Sheaf Layer| C{Consistency Check}
+    C -->|Update| B
+    B -->|Project Back| D[Hidden State H]
+    style B fill:#f9f,stroke:#333,stroke-width:2px
+```
+
 ## License
 
 (c) Jesús Vilela Jato, all rights reserved.
