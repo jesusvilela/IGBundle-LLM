@@ -11,7 +11,7 @@
 
 *"Language is non-Euclidean. Meaning lives in the fibers."*
 
-[**Read the Thesis (PDF)**](IGBundle_Thesis.pdf)
+[**Read the Thesis (PDF)**](IGBundle_Thesis.pdf) | [**View Interactive 3D Manifold (HTML)**](https://htmlpreview.github.io/?https://github.com/jesusvilela/IGBundle-LLM/blob/main/igbundle_topology.html)
 
 </div>
 
