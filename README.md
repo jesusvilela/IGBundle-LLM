@@ -3,7 +3,6 @@
 # ManifoldGL
 ### Information-Geometric Bundle Adapters for Large Language Models
 
-![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)
 ![PyTorch 2.6](https://img.shields.io/badge/PyTorch-2.6-ee4c2c.svg)
 ![Status: Research](https://img.shields.io/badge/Status-Research_Preview-purple.svg)
@@ -119,4 +118,5 @@ If you use this framework in your research, please cite the included thesis:
 ## 📜 License
 
 &copy; 2025 **Jesús Vilela Jato**. All rights reserved.
-MIT License (Code) / CC-BY-4.0 (Text & Thesis).
+Unauthorized copying, modification, or distribution of this code, via any medium, is strictly prohibited.
+
