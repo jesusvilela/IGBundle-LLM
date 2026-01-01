@@ -53,6 +53,14 @@ Our work is grounded in **proper Differential Geometry, Category Theory, and Inf
 *Where E is the total space, M is the base manifold, and fibers carry categorical structure*
 </div>
 
+### **Mathematical Visualization: Fiber Bundle Structure**
+
+<div align="center">
+<img src="assets/fiber_bundle_structure.png" width="800" alt="IGBundle Fiber Bundle Structure">
+<br>
+<em>Figure 1: True fiber bundle structure π: E → M with proper Riemannian base manifold and categorical fiber operations. ✅ Corrected implementation shows genuine bundle projections with local triviality.</em>
+</div>
+
 ### **Mathematically Rigorous Core Principles**
 
 #### 1. **True Riemannian Manifold Structure**
@@ -61,16 +69,34 @@ Our work is grounded in **proper Differential Geometry, Category Theory, and Inf
 - **Riemann Curvature**: R^i_{jkl} tensor characterizing manifold geometry
 - **Sectional Curvature**: K(u,v) = R(u,v,v,u) / (g(u,u)g(v,v) - g(u,v)²)
 
+<div align="center">
+<img src="assets/riemannian_geometry.png" width="800" alt="Riemannian Geometry Operations">
+<br>
+<em>Figure 2: True Riemannian geometric operations showing metric tensor computation, curvature tensor components, and parallel transport. ✅ Proper differential geometry replaces ad-hoc variance parameters.</em>
+</div>
+
 #### 2. **Fiber Bundle Lambda Calculus**
 - **Lambda Abstraction**: λx:A. body with proper type checking
 - **Function Application**: f @ x preserving bundle structure
 - **Categorical Composition**: g ∘ f in fiber categories
 - **Section Products**: Operations over base manifold coordinates
 
+<div align="center">
+<img src="assets/lambda_calculus_operations.png" width="800" alt="Lambda Calculus Operations in Fiber Bundles">
+<br>
+<em>Figure 3: Fiber bundle lambda calculus operations showing abstraction (λx:A.body), application (f@x), and categorical composition (g∘f). ✅ True lambda operations with type preservation.</em>
+</div>
+
 #### 3. **Information-Geometric Optimization**
 - **Fisher Information**: F_ij = E[∂log p/∂θ_i ∂log p/∂θ_j]
 - **Natural Gradients**: θ ← θ - η × F^{-1} × ∇θ
 - **Statistical Manifold**: Proper Riemannian structure on parameter space
+
+<div align="center">
+<img src="assets/information_geometry.png" width="800" alt="Information Geometry and Natural Gradients">
+<br>
+<em>Figure 4: Information-geometric optimization showing Fisher information matrix computation and natural gradient descent paths. ✅ True F^{-1}∇ natural gradients replace ad-hoc parameter updates.</em>
+</div>
 
 #### 4. **Sheaf-Theoretic Consistency**
 - **Cover**: Open sets {U_α} covering base manifold
@@ -149,6 +175,12 @@ We validated the framework on a single-gpu consumer setup (RTX 3060 Ti, 8GB VRAM
 | "Lambda logic" | Missing implementation | Full λ-calculus with types |
 | "Sheaf theory" | Ad-hoc similarities | Topological gluing conditions |
 
+<div align="center">
+<img src="assets/before_after_comparison.png" width="800" alt="Before vs After Mathematical Corrections">
+<br>
+<em>Figure 5: Comprehensive comparison of original (flawed) vs corrected mathematical foundations. ❌ Original implementation had fundamental errors; ✅ Corrected version provides proper geometric operations.</em>
+</div>
+
 ### 📐 **True Geometric Learning Validation**
 
 **New Corrected Metrics** (Geometric Implementation):
@@ -213,6 +245,14 @@ from src.igbundle.geometry.riemannian import RiemannianGeometry
 print('True geometric operations available')
 "
 ```
+
+### **Mathematical Foundations: Key Equations**
+
+<div align="center">
+<img src="assets/mathematical_equations.png" width="800" alt="Key Mathematical Equations">
+<br>
+<em>Figure 6: Fundamental mathematical equations driving the corrected IGBundle implementation, including Riemannian curvature tensors, Fisher information matrices, and sheaf consistency constraints.</em>
+</div>
 
 ### **Research & Validation**
 ```bash
