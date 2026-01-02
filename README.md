@@ -25,13 +25,15 @@ We operate on the hypothesis that the "Manifold of Meaning" is **Hyperbolic** (n
 *   **Hierarchical Concepts**: Exponential expansion of space for tree-like data.
 *   **Entailment Cones**: Logical entailment `A -> B` maps to inclusion `Region(A) ⊂ Region(B)`.
 
-### Information-Geometric Bundle (IGBundle)
-We implement the adapter as a **Fiber Bundle** $\pi: E \to M$:
-*   **Base Manifold $M$**: The Hyperbolic parameter space.
-*   **Fiber $F_x$**: The local activation space at semantic position $x$.
-*   **Connection $\nabla$**: A custom transport operator that preserves semantic geometry during inference.
+<div align="center">
 
-This rigorous mathematical structure prevents "Semantic Drift" (hallucination) by constraining the model's random walk to the valid semantic manifold.
+[![IGBundle Hyperbolic Topology Visualization](igbundle_topology.png)](http://htmlpreview.github.io/?https://github.com/jesusvilela/IGBundle-LLM/blob/main/igbundle_topology.html)
+
+*Click the image above to explore the **Interactive 3D Manifold** (requires WebGL)*
+
+[**📄 Unified Project Thesis (PDF)**](IGBundle_Thesis.pdf)
+
+</div>
 
 ---
 
