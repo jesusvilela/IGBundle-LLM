@@ -10,7 +10,7 @@
 
 <div align="center">
 
-[**📄 Unified Project Thesis (PDF)**](IGBundle_Unified_Thesis.pdf) | [**🎮 Interactive Topology**](igbundle_topology.html)
+[**📄 Unified Project Thesis (PDF)**](IGBundle_Thesis.pdf) | [**🎮 Interactive Topology**](igbundle_topology.html)
 
 </div>
 
