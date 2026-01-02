@@ -197,7 +197,14 @@ python comparative_studies.py generate_framework
 ./comparative_studies/run_comparative_studies.sh
 ```
 
+### 4. Scientific Evaluation
+Run rigorous evaluation with confidence intervals, MFR compliance tracking, and detailed JSON logging.
+```bash
+python eval_arc.py --checkpoint output/igbundle_qwen7b/checkpoint-600 --mfr --limit 20
+```
+
 ## 📚 Citation
+
 
 ```bibtex
 @misc{vilela2025manifoldgl_corrected,
