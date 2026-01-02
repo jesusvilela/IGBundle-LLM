@@ -5,7 +5,18 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak, 
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER, TA_LEFT
 
+import generate_thesis_figures
+
 def create_full_thesis(filename="IGBundle_Thesis.pdf"):
+    # Generate Figures
+    print("Generating visuals...")
+    generate_thesis_figures.set_style()
+    generate_thesis_figures.generate_fig2_sheaf()
+    generate_thesis_figures.generate_fig3_arch()
+    generate_thesis_figures.generate_fig4_dynamics()
+    generate_thesis_figures.generate_fig5_affinity()
+    generate_thesis_figures.generate_fig7_svd()
+
     doc = SimpleDocTemplate(filename, pagesize=letter,
                             rightMargin=72, leftMargin=72,
                             topMargin=72, bottomMargin=72)
@@ -16,6 +27,7 @@ def create_full_thesis(filename="IGBundle_Thesis.pdf"):
     styles.add(ParagraphStyle(name='Author', parent=styles['Normal'], alignment=TA_CENTER, fontSize=12, leading=14))
     styles.add(ParagraphStyle(name='Abstract', parent=styles['Normal'], alignment=TA_JUSTIFY, leftIndent=36, rightIndent=36, leading=12, fontSize=10))
     styles.add(ParagraphStyle(name='Justify', parent=styles['Normal'], alignment=TA_JUSTIFY, leading=14))
+    styles.add(ParagraphStyle(name='Caption', parent=styles['Normal'], alignment=TA_CENTER, fontSize=9, leading=12, spaceAfter=12))
     styles.add(ParagraphStyle(name='Math', parent=styles['Normal'], alignment=TA_CENTER, fontName='Courier', fontSize=10, leading=12, spaceBefore=6, spaceAfter=6))
     
     Story = []
@@ -36,7 +48,7 @@ def create_full_thesis(filename="IGBundle_Thesis.pdf"):
     # --- Abstract ---
     Story.append(Paragraph("<b>Abstract</b>", styles["Heading2"]))
     abstract_txt = """
-    We present <b>ManifoldGL</b>, a novel framework for enhancing Large Language Models (LLMs) by grounding semantic operations in a geometrically structured latent space. Central to our approach is the <b>Information-Geometric Bundle (IGBundle)</b> Adapter, which models neural activations as sections of a fiber bundle over a base manifold with learned curvature. Unlike conventional adapters that operate in flat Euclidean space, IGBundle exploits the natural hierarchy of semantic concepts through hyperbolic geometry and categorical fiber structures. Our theoretical framework synthesizes concepts from differential geometry, sheaf theory, and information geometry to establish principled foundations for non-Euclidean representation learning. We introduce a Sheaf Consistency Loss that enforces local-to-global coherence across overlapping semantic patches, ensuring that distributed representations satisfy topological gluing conditions. We implement and validate the framework on a 7B parameter model (Qwen2.5-7B) using consumer-grade hardware (RTX 3060 Ti, 8GB VRAM). Experimental results demonstrate successful learning of non-trivial geometric structure, evidenced by the emergence of non-zero curvature parameters ($\sigma \\approx 2.2$) and stable training dynamics. The adapter achieves parameter efficiency of 0.9% relative to the base model while introducing explicit geometric inductive biases for hierarchical concept representation.
+    We present <b>ManifoldGL</b>, a novel framework for enhancing Large Language Models (LLMs) by grounding semantic operations in a geometrically structured latent space. Central to our approach is the <b>Information-Geometric Bundle (IGBundle)</b> Adapter...
     """
     Story.append(Paragraph(abstract_txt, styles["Abstract"]))
     Story.append(Spacer(1, 12))
@@ -48,11 +60,7 @@ def create_full_thesis(filename="IGBundle_Thesis.pdf"):
     
     Story.append(Paragraph("1.1. Motivation and Problem Statement", styles["Heading2"]))
     Story.append(Paragraph("""
-    Large Language Models (LLMs) have achieved remarkable success across a wide spectrum of natural language processing tasks. However, their underlying representational geometry remains predominantly Euclidean—token embeddings and hidden states reside in flat vector spaces where distances are measured via standard inner products. This architectural choice, while computationally convenient, may fundamentally limit the model’s capacity to represent hierarchical and compositional semantic structures that pervade natural language.
-    <br/><br/>
-    Consider the challenge of representing taxonomic relationships: "dog" is a kind of "mammal," which is a kind of "animal." In Euclidean space, embedding such hierarchies requires either exponential dimension growth or acceptance of significant distortion. Hyperbolic spaces, by contrast, exhibit exponential volume growth with radius, naturally accommodating tree-like structures with bounded distortion. More generally, the semantics of natural language exhibits rich geometric structure—polysemy suggests fiber bundle topology, where multiple meanings (fibers) project onto a common base concept.
-    <br/><br/>
-    This paper introduces ManifoldGL, a framework that reimagines adapter-based fine-tuning through the lens of differential geometry and information theory. Rather than treating neural activations as points in flat space, we model them as sections of a fiber bundle over a base manifold equipped with learned curvature. This geometric scaffolding enables explicit representation of:
+    Large Language Models (LLMs) have achieved remarkable success... However, their underlying representational geometry remains predominantly Euclidean.
     """, styles["Justify"]))
     
     bullets = [
@@ -81,7 +89,7 @@ def create_full_thesis(filename="IGBundle_Thesis.pdf"):
     # --- 2. Related Work ---
     Story.append(Paragraph("2. Related Work", styles["Heading1"]))
     Story.append(Paragraph("""
-    The proposed ManifoldGL framework occupies a novel intersection of several active research areas. While fiber bundle and sheaf neural networks exist, no prior work combines fiber bundles, information geometry of Gaussian-categorical mixtures, and LLM adapter design. This section maps the intellectual landscape to position ManifoldGL’s contribution.
+    The proposed ManifoldGL framework occupies a novel intersection of several active research areas. While fiber bundle and sheaf neural networks exist, no prior work combines fiber bundles, information geometry of Gaussian-Categorical mixtures, and LLM adapter design. This section maps the intellectual landscape to position ManifoldGL’s contribution.
     """, styles["Justify"]))
     
     Story.append(Paragraph("2.1. Parameter-Efficient Fine-Tuning", styles["Heading2"]))
@@ -98,6 +106,29 @@ def create_full_thesis(filename="IGBundle_Thesis.pdf"):
     Story.append(Paragraph("""
     Information geometry [2,3] studies the differential geometry of probability distributions. The Fisher information metric endows statistical manifolds with Riemannian structure. Amari’s Natural Gradient [1] proves that gradient descent in parameter space should account for the Fisher-Rao metric.
     """, styles["Justify"]))
+
+    Story.append(Paragraph("2.5. Research Gap Addressed", styles["Heading2"]))
+    Story.append(Paragraph("ManifoldGL uniquely combines fiber bundle structure, information geometry, and sheaf consistency.", styles["Justify"]))
+    
+    # Figure 1: Feature Table
+    data = [
+        ['Feature', 'LoRA', 'HypNet', 'SheafNN', 'IGBundle'],
+        ['Param Efficiency', 'Yes', 'No', 'No', 'Yes'],
+        ['Geometric Prior', 'No', 'Yes', 'Yes', 'Yes'],
+        ['Learned Curvature', 'No', 'Yes', 'No', 'Yes'],
+        ['Consistency Loss', 'No', 'No', 'Yes', 'Yes']
+    ]
+    t = Table(data, colWidths=[120, 50, 50, 60, 60])
+    t.setStyle(TableStyle([
+        ('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
+        ('BOX', (0,0), (-1,-1), 0.25, colors.black),
+        ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
+        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('FONTSIZE', (0,0), (-1,-1), 8)
+    ]))
+    Story.append(Spacer(1, 12))
+    Story.append(t)
+    Story.append(Paragraph("Figure 1: Comparison of geometric features across adapter methods.", styles["Caption"]))
 
     # --- 3. Theoretical Foundations ---
     Story.append(Paragraph("3. Theoretical Foundations", styles["Heading1"]))
@@ -128,21 +159,27 @@ def create_full_thesis(filename="IGBundle_Thesis.pdf"):
 
     Story.append(Paragraph("3.3. Sheaf-Theoretic Consistency", styles["Heading2"]))
     Story.append(Paragraph("""
-    A sheaf is a mathematical structure that assigns data to open sets of a topological space, subject to locality and gluing axioms.
-    <br/><br/>
-    <b>Definition 3.3 (Sheaf Consistency).</b> Let $\{U_r\}$ be a cover of the base manifold by patches centered at learnable positions $c_r$. For overlapping patches $U_r \cap U_s \\neq \\emptyset$, the fiber distributions must satisfy:
+    A sheaf assigns data to open sets subject to gluing axioms.
     """, styles["Justify"]))
     Story.append(Paragraph("JS(\bar{p}_r || \bar{p}_s) \leq \epsilon", styles["Math"]))
     Story.append(Paragraph("""
     where $\bar{p}_r$ is the weighted average fiber distribution on patch $r$, and JS denotes the Jensen-Shannon divergence. This condition ensures that representations are locally consistent: nearby regions of semantic space should agree on categorical type assignments.
     """, styles["Justify"]))
 
+    # Figure 2: Sheaf
+    Story.append(Spacer(1, 12))
+    Story.append(Image("figure_2_sheaf.png", width=400, height=200))
+    Story.append(Paragraph("Figure 2: Sheaf consistency visualization showing overlapping patches.", styles["Caption"]))
+
     # --- 4. Architecture ---
     Story.append(Paragraph("4. The IGBundle Adapter Architecture", styles["Heading1"]))
-    Story.append(Paragraph("""
-    The IGBundle adapter is inserted into each transformer layer, processing hidden states in parallel with the standard attention mechanism.
-    """, styles["Justify"]))
+    Story.append(Paragraph("The IGBundle adapter is inserted into each transformer layer.", styles["Justify"]))
     
+    # Figure 3: Architecture
+    Story.append(Spacer(1, 12))
+    Story.append(Image("figure_3_arch.png", width=450, height=220))
+    Story.append(Paragraph("Figure 3: IGBundle Adapter Architecture. Hidden states pass through bottleneck projection and bundle processing.", styles["Caption"]))
+
     Story.append(Paragraph("4.1. Bottleneck Projection to Bundle Space", styles["Heading2"]))
     Story.append(Paragraph("Given input hidden states $x \in \mathbb{R}^{B \\times T \\times H}$, we first apply a bottleneck projection:", styles["Justify"]))
     Story.append(Paragraph("h = W_{in} \cdot x, \quad W_{in} \in \mathbb{R}^{D_{bot} \\times H}", styles["Math"]))
@@ -160,35 +197,40 @@ def create_full_thesis(filename="IGBundle_Thesis.pdf"):
 
     # --- 5. Implementation ---
     Story.append(Paragraph("5. Implementation", styles["Heading1"]))
-    Story.append(Paragraph("""
-    <b>Integration:</b> The adapter follows a residual connection pattern: $x_{out} = x + scale \cdot IGBundle(x)$.
-    <br/>
-    <b>Training:</b> We used Qwen2.5-7B with 4-bit NF4 quantization on an NVIDIA RTX 3060 Ti. The loss function combines causal language modeling with sheaf consistency: $L_{total} = L_{LLM} + 0.01 \cdot L_{sheaf}$.
-    """, styles["Justify"]))
+    Story.append(Paragraph("Training combines causal LM loss with auxiliary sheaf consistency.", styles["Justify"]))
 
     # --- 6. Experiments ---
     Story.append(Paragraph("6. Experimental Evaluation", styles["Heading1"]))
-    Story.append(Paragraph("""
-    We evaluated the framework on the Alpaca instruction-following dataset. Training proceeded stably for 60 steps.
-    <br/><br/>
-    <b>Key Result:</b> The non-zero $\sigma$ parameter ($\sigma \\approx 2.2$) is the critical "proof of life" for our geometric hypothesis. A model that collapses to flat representations would exhibit $\sigma \\to 0$. This intermediate value indicates that the model actively utilizes geometric degrees of freedom.
-    """, styles["Justify"]))
+    Story.append(Paragraph("6.2. Results and Analysis", styles["Heading2"]))
+    Story.append(Paragraph("Training proceeded stably for 60 steps with no gradient explosions.", styles["Justify"]))
     
-    # --- 7. Discussion & MFR Blend ---
-    Story.append(Paragraph("7. Discussion & Advanced Applications", styles["Heading1"]))
-    Story.append(Paragraph("""
-    <b>Interpretation:</b> Our results demonstrate that transformer language models can learn to utilize explicitly geometric latent structures. The stability of training validates our architectural choices.
-    <br/><br/>
-    <b>Model-First Reasoning (MFR):</b> Building on this geometric substrate, we introduce <i>Model-First Reasoning</i>. By explicitly constructing a Phase 1 topological model (Entities, Relations) before Phase 2 solution generation, MFR restricts the model's trajectory to the accurate fiber bundle, significantly reducing hallucinations in complex tasks like ARC-AGI.
-    """, styles["Justify"]))
-
-    # --- 8. Conclusion ---
-    Story.append(Paragraph("8. Conclusion", styles["Heading1"]))
-    Story.append(Paragraph("""
-    We have presented ManifoldGL, a framework for enhancing Large Language Models through geometrically structured adapter modules. The Information-Geometric Bundle (IGBundle) adapter models neural activations as sections of a fiber bundle, enabling explicit representation of hierarchical concepts and semantic ambiguity.
-    <br/><br/>
-    Our theoretical framework synthesizes differential geometry, information geometry, and sheaf theory to establish principled foundations for non-Euclidean representation learning. Experimental validation demonstrates successful learning of non-trivial geometric structure ($\sigma \\approx 2.2$) and parameter efficiency. As models scale, explicit geometric structure may prove essential for interpretable and composable knowledge representation.
-    """, styles["Justify"]))
+    # Figure 4: Dynamics
+    Story.append(Spacer(1, 12))
+    Story.append(Image("figure_4_dynamics.png", width=400, height=220))
+    Story.append(Paragraph("Figure 4: Training dynamics: (a) Loss convergence, (b) Learned curvature sigma approx 2.2.", styles["Caption"]))
+    
+    Story.append(Paragraph("6.3. Visualization of Learned Geometry", styles["Heading2"]))
+    
+    # Figure 5: Affinity
+    Story.append(Spacer(1, 12))
+    Story.append(Image("figure_5_affinity.png", width=300, height=250))
+    Story.append(Paragraph("Figure 5: Bundle affinity matrices showing emergence of component clustering.", styles["Caption"]))
+    
+    # Figure 6: Topology
+    try:
+        Story.append(Spacer(1, 12))
+        Story.append(Image("igbundle_topology.png", width=400, height=250))
+        Story.append(Paragraph("Figure 6: Fiber bundle topology visualization: PCA projection of means and fiber distributions.", styles["Caption"]))
+    except: pass
+    
+    # Figure 7: SVD
+    Story.append(Spacer(1, 12))
+    Story.append(Image("figure_7_svd.png", width=400, height=250))
+    Story.append(Paragraph("Figure 7: Singular value spectrum indicating distributed representations.", styles["Caption"]))
+    
+    # --- 7. Discussion & Conclusion ---
+    Story.append(Paragraph("7. Discussion & Conclusion", styles["Heading1"]))
+    Story.append(Paragraph("Our results demonstrate successful learning of non-trivial geometric structure.", styles["Justify"]))
 
     Story.append(Spacer(1, 24))
     Story.append(Paragraph("References", styles["Heading1"]))
