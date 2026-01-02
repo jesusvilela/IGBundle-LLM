@@ -117,7 +117,8 @@ def create_full_thesis(filename="IGBundle_Thesis.pdf"):
     """, styles["Justify"]))
     mix_items = [
         ListItem(Paragraph("A mixture weight $w_i \in (0,1)$ with $\sum_i w_i = 1$", styles["Justify"])),
-        ListItem(Paragraph("A Gaussian base distribution $\mathcal{N}(\mu_i, \mathrm{diag}(\sigma_i^2))$ in $\mathbb{R}^D$", styles["Justify"])),
+        ListItem(Paragraph("A mixture weight $w_i \in (0,1)$ with $\sum_i w_i = 1", styles["Justify"])),
+        ListItem(Paragraph("A Gaussian base distribution $\mathcal{N}(\mu_i, \mathrm{diag}(\sigma_i^2))$ in $\mathbb{R}^D", styles["Justify"])),
         ListItem(Paragraph("A categorical fiber distribution $p_i = \mathrm{softmax}(u_i)$ over $K$ categories", styles["Justify"]))
     ]
     Story.append(ListFlowable(mix_items, bulletType='bullet', start='circle'))
