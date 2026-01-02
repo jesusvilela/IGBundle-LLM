@@ -82,23 +82,36 @@ class ThesisPreserver(BaseAgent):
             return Proposal(self.name, "thesis_align", "Detected drift in README vs Thesis.pdf. Proposal to revert Section 3.")
         return None
 
-class Critic(BaseAgent):
+class ScientificReviewer(Critic):
+    """
+    Scientific Committee Peer-Reviewer.
+    GUARDIAN of the Thesis. Protects against 'pollution' and ensures Academic Rigor.
+    """
     async def review(self, proposal: Proposal) -> bool:
-        if "invalid" in proposal.content.lower(): return False
+        content_lower = proposal.content.lower()
         
-        # Bias towards Geometry
-        if "curvature" in proposal.content.lower() or "bundle" in proposal.content.lower():
-            self.log(f"PRIORITY APPROVAL for Geometric Proposal: {proposal.content}")
-            return True
+        # 1. FORBIDDEN PATTERNS
+        forbidden = ["corrected version", "revised by ai", "unified thesis", "pollution"]
+        if any(term in content_lower for term in forbidden):
+            self.log(f"REJECTED: Detected forbidden term in proposal: {proposal.content}")
+            return False
             
-        if random.random() > 0.1:
-            self.log(f"APPROVED: {proposal.content}")
-            return True
-        return False
+        # 2. THESIS PROTECTION
+        if "thesis" in content_lower or "pdf" in content_lower:
+            if "restore" in content_lower or "original" in content_lower:
+                self.log(f"APPROVED: Restoration of Original Spirit confirmed.")
+                return True
+            else:
+                self.log(f"REDIRECT: Experimental thesis change sent to Draft Review.")
+                # Ideally we would modify the proposal to target _Draft.pdf, but for now we just log
+                return False
+
+        # 3. Standard Review
+        return await super().review(proposal)
 
 class Supervisor(BaseAgent):
     async def validate_repo_integrity(self) -> bool:
-        self.log("Running MANIFOLD INTEGRITY CHECKS...")
+        self.log("Running MANIFOLD INTEGRITY CHECKS (Scientific Committee Oversight)...")
         try:
             # Ensure geometry module is importable
             subprocess.run(["python", "-c", "import src.igbundle.geometry"], check=False) # Soft check
@@ -133,7 +146,7 @@ class CrewManager:
         # Spawn Massive Crew (50 Agents) - REBALANCED
         self.log("Spawning 50 agents (Geometry Focused)...")
         
-        # Major Pivot: 30 Geometric Analysts
+        # 30 Geometric Analysts
         for i in range(30): self.agents.append(GeometricAnalyst(f"Geo-{i}", "Analyst"))
         
         # 5 Janitors -> Thesis Preservers
@@ -145,8 +158,12 @@ class CrewManager:
         # 5 Gemini Operators
         for i in range(5): self.agents.append(GeminiOperator(f"Gemini-{i}", "GeminiOp"))
         
-        # 5 Critics
-        for i in range(5): self.critics.append(Critic(f"Crit-{i}", "Critic"))
+        # 5 Critics (Standard)
+        for i in range(4): self.critics.append(Critic(f"Crit-{i}", "Critic"))
+        
+        # 1 SCIENTIFIC COMPMITTEE REVIEWER (The Guardian)
+        self.critics.append(ScientificReviewer("Peer-Reviewer-1", "ScientificCommittee"))
+
         
         self.cycle_count = 0
 
