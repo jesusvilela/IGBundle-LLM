@@ -6,6 +6,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import PeftModel
 from datasets import load_dataset
 from tqdm import tqdm
+from mfr_utils import construct_phase1_prompt, construct_phase2_prompt
 
 def format_grid(grid):
     return str(grid).replace(" ", "")
@@ -28,7 +29,7 @@ def format_arc_prompt(example, num_shots=1):
     
     return prompt, example['test'][0]['output']
 
-def evaluate_arc(model_id, checkpoint_path, split="validation", limit=None):
+def evaluate_arc(model_id, checkpoint_path, split="validation", limit=None, use_mfr=False):
     print(f"Loading Model: {model_id} (Optimized 4-bit via Unsloth)")
     device = "cuda" # Unsloth uses CUDA by default
     from unsloth import FastLanguageModel
@@ -91,7 +92,29 @@ def evaluate_arc(model_id, checkpoint_path, split="validation", limit=None):
         try:
             prompt, target_grid = format_arc_prompt(item)
             
-            inputs = tokenizer(prompt, return_tensors="pt").to(device)
+                
+            # --- MFR LOGIC ---
+            if use_mfr:
+                # Phase 1: Model Construction
+                p1 = construct_phase1_prompt(prompt)
+                inp1 = tokenizer(p1, return_tensors="pt").to(device)
+                
+                with torch.no_grad():
+                    out1_tokens = model.generate(
+                        **inp1, 
+                        max_new_tokens=512, # Allow space for model definition
+                        do_sample=False,
+                        pad_token_id=tokenizer.eos_token_id
+                    )
+                model_text = tokenizer.decode(out1_tokens[0][inp1.input_ids.shape[1]:], skip_special_tokens=True)
+                print(f"\n[MFR Phase 1 Output]:\n{model_text}\n") # Debug
+                
+                # Phase 2: Reasoning
+                final_prompt = construct_phase2_prompt(prompt, model_text)
+                inputs = tokenizer(final_prompt, return_tensors="pt").to(device)
+            else:
+                # Standard CoT/Direct
+                inputs = tokenizer(prompt, return_tensors="pt").to(device)
             
             with torch.no_grad():
                 outputs = model.generate(
@@ -121,6 +144,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--checkpoint", required=True)
     parser.add_argument("--limit", type=int, default=20, help="Number of tasks to test (ARC is hard!)")
+    parser.add_argument("--mfr", action="store_true", help="Enable Model-First Reasoning (2-phase inference)")
     args = parser.parse_args()
     
-    evaluate_arc("Qwen/Qwen2.5-7B", args.checkpoint, limit=args.limit)
+    evaluate_arc("Qwen/Qwen2.5-7B", args.checkpoint, limit=args.limit, use_mfr=args.mfr)

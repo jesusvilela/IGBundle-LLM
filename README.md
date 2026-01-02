@@ -173,6 +173,30 @@ python eval_arc.py --checkpoint output/igbundle_qwen7b/checkpoint-600 --mfr
 python export_gguf.py --checkpoint output/igbundle_qwen7b/checkpoint-600
 ```
 
+## 🔬 Advanced Analysis Framework
+
+The project includes a comprehensive suite for geometric analysis:
+
+### 1. Geometric Analysis
+Visualize curvature, sheaf consistency, and bundle structure.
+```bash
+python geometric_analysis.py analyze --training_dir output/igbundle_qwen7b
+```
+
+### 2. Ablation Studies
+Systematically test the impact of specific components (e.g., removing Curvature Loss).
+```bash
+python ablation_studies.py generate  # Generates execution scripts
+./ablation_studies/run_all_ablations.sh
+```
+
+### 3. Comparative Studies
+Run head-to-head statistical comparisons between configurations.
+```bash
+python comparative_studies.py generate_framework
+./comparative_studies/run_comparative_studies.sh
+```
+
 ## 📚 Citation
 
 ```bibtex

@@ -47,16 +47,17 @@ def generate_viz(checkpoint_path, output_file):
     )
     
     # Layer 2: Riemannian Sphere (Simulating the normalized bundle space)
-    # We map the same nodes to a sphere to show the "ideal" geometry we aim for
+    # We map the same nodes to a Hyperbolic space to show the "concave" geometry we aim for
     builder.add_riemannian_layer(
         "ideal_bundle", 
         num_nodes=num_nodes, 
-        manifold_type="sphere", 
+        manifold_type="hyperbolic", 
         radius=2.0
     )
     
     # Connect them to show how learned basis maps to ideal manifold
-    builder.connect_layers("latent_basis", "ideal_bundle", "one_to_one")
+    # Use 'nearest' to show geometric clustering rather than index mapping
+    builder.connect_layers("latent_basis", "ideal_bundle", "nearest", num_connections=3)
     
     topology = builder.build()
     
