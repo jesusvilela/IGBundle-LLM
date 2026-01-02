@@ -5,7 +5,7 @@ import argparse
 from braintop.utils.builders import TopologyBuilder
 from braintop.core.visualizer import TopologyVisualizer
 
-def generate_viz(checkpoint_path, output_file):
+def generate_viz(checkpoint_path, output_file, lite_mode=False):
     print(f"Loading weights from {checkpoint_path}...")
     weights_path = os.path.join(checkpoint_path, "adapter_weights.pt")
     
@@ -18,11 +18,10 @@ def generate_viz(checkpoint_path, output_file):
     state_dict = torch.load(weights_path, map_location="cpu")
     
     # Extract projection weights
-    # We look for the first input projection to visualize the "entry" into the bundle
     proj_weight = None
     for k, v in state_dict.items():
         if "input_proj.weight" in k:
-            proj_weight = v.float().numpy() # [256, 3584] usually
+            proj_weight = v.float().numpy() 
             print(f"Found projection layer: {k} {proj_weight.shape}")
             break
             
@@ -30,14 +29,20 @@ def generate_viz(checkpoint_path, output_file):
         print("No input_proj.weight found in adapter.")
         return
 
-    # Use the 256 bottleneck dimensions as nodes
     num_nodes = proj_weight.shape[0]
     embeddings = proj_weight
     
-    print("Building topology...")
+    # LITE MODE: Downsample to max 50 nodes for <1MB file size
+    if lite_mode:
+        print("⚡ LITE MODE ACTIVE: Downsampling to 50 nodes for lightweight web preview.")
+        if num_nodes > 50:
+            indices = np.random.choice(num_nodes, 50, replace=False)
+            embeddings = embeddings[indices]
+            num_nodes = 50
+    
+    print(f"Building topology with {num_nodes} nodes...")
     builder = TopologyBuilder("igbundle_manifold", "IGBundle Fiber Space")
     
-    # Layer 1: Conceptual (The bottleneck neurons projected via PCA)
     concepts = [f"Fiber Dim {i}" for i in range(num_nodes)]
     builder.add_conceptual_layer(
         "latent_basis", 
@@ -46,18 +51,17 @@ def generate_viz(checkpoint_path, output_file):
         embeddings=embeddings
     )
     
-    # Layer 2: Riemannian Sphere (Simulating the normalized bundle space)
-    # We map the same nodes to a Hyperbolic space to show the "concave" geometry we aim for
+    # Lite mode uses simplified manifold representation
+    manifold_res = 1.0 if lite_mode else 2.0
     builder.add_riemannian_layer(
         "ideal_bundle", 
         num_nodes=num_nodes, 
         manifold_type="hyperbolic", 
-        radius=2.0
+        radius=manifold_res
     )
     
-    # Connect them to show how learned basis maps to ideal manifold
-    # Use 'nearest' to show geometric clustering rather than index mapping
-    builder.connect_layers("latent_basis", "ideal_bundle", "nearest", num_connections=3)
+    conn_count = 1 if lite_mode else 3
+    builder.connect_layers("latent_basis", "ideal_bundle", "nearest", num_connections=conn_count)
     
     topology = builder.build()
     
@@ -65,16 +69,15 @@ def generate_viz(checkpoint_path, output_file):
     visualizer = TopologyVisualizer(topology)
     visualizer.save(output_file)
     
-    # Static Export
-    png_file = output_file.replace(".html", ".png")
-    print(f"Generating static image to {png_file}...")
-    try:
-        # We need to manually access the plotly figure from the visualizer
-        # Assuming visualizer has a create_figure() method or similar
-        fig = visualizer.create_figure() 
-        fig.write_image(png_file, engine="kaleido")
-    except Exception as e:
-        print(f"Warning: Could not save PNG: {e}")
+    # Static Export (Only for full mode or specific request)
+    if not lite_mode:
+        png_file = output_file.replace(".html", ".png")
+        print(f"Generating static image to {png_file}...")
+        try:
+            fig = visualizer.create_figure() 
+            fig.write_image(png_file, engine="kaleido")
+        except Exception as e:
+            print(f"Warning: Could not save PNG: {e}")
         
     print("Done!")
 
@@ -82,6 +85,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--checkpoint", default="trained_adapter")
     parser.add_argument("--output", default="igbundle_topology.html")
+    parser.add_argument("--lite", action="store_true", help="Generate lightweight version for web preview")
     args = parser.parse_args()
     
-    generate_viz(args.checkpoint, args.output)
+    generate_viz(args.checkpoint, args.output, args.lite)
