@@ -1,26 +1,18 @@
-# IGBundle-LLM (ManifoldGL)
+# ManifoldGL (IGBundle-LLM)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)
 ![PyTorch 2.6](https://img.shields.io/badge/PyTorch-2.6-ee4c2c.svg)
 ![Status: Research](https://img.shields.io/badge/Status-Research_Preview-purple.svg)
-![Mathematics: Corrected](https://img.shields.io/badge/Mathematics-Rigorously_Corrected-green.svg)
-
-<img src="igbundle_topology.png" width="800" alt="IGBundle Hyperbolic Topology Visualization">
 
 <div align="center">
 
-[**📄 Unified Project Thesis (PDF)**](IGBundle_Thesis.pdf) | [**🎮 Interactive Topology**](igbundle_topology.html)
+[**📄 Unified Project Thesis (PDF)**](IGBundle_Thesis.pdf)
 
 </div>
 
 ---
 
-## 🚨 **CRITICAL MATHEMATICAL CORRECTIONS NOTICE**
-
-> **⚠️ IMPORTANT**: The original implementation contained fundamental mathematical errors that have been systematically corrected. See [**IGBundle_Corrected_Thesis.md**](IGBundle_Corrected_Thesis.md) for complete details.
-
----
 
 **ManifoldGL** (IGBundle-LLM) is a research framework investigating the **Geometry of Semantics**. This project implements an **Information-Geometric Bundle (IGBundle)** adapter with **mathematically rigorous foundations**. By treating neural activations as local sections of a fiber bundle over a **Hyperbolic** base manifold, we enable models to explicitly represent hierarchical concept nesting.
 
