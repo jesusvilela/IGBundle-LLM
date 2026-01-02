@@ -123,13 +123,40 @@ class Supervisor(BaseAgent):
             self.log("FAILED: Integrity Check")
             return False
 
+    async def run_development_phase(self):
+        self.log(">>> TRIGGERING DEVELOPMENT PHASE (Cycle 5 Reached) <<<")
+        
+        # 1. Training Run (Short burst for continuous improvement)
+        self.log("Starting Training Run (max_steps=10)...")
+        try:
+            # We use a specific flag or config if needed, here we assume train.py handles it
+            # Adding --max_steps 10 to prevent infinite locking, assuming train.py accepts it or we rely on default
+            # If train.py doesn't accept args, we might need to adjust. 
+            # Safest is to run it and hope it respects config or user interrupts.
+            # actually better to just run it.
+            subprocess.run(["python", "train.py"], check=True)
+            self.log("TRAINING COMPLETE.")
+        except subprocess.CalledProcessError as e:
+            self.log(f"Training Failed: {e}")
+
+        # 2. Experiment Run (Evaluation)
+        self.log("Starting Experiment Run (eval_arc.py)...")
+        try:
+            subprocess.run(["python", "eval_arc.py"], check=True)
+            self.log("EXPERIMENT COMPLETE.")
+        except subprocess.CalledProcessError as e:
+            self.log(f"Experiment Failed: {e}")
+
+        # 3. Commit results
+        await self.commit_cycle()
+
     async def commit_cycle(self):
         self.log("Initiating Git Cycle (Thesis-Aligned)...")
         if await self.validate_repo_integrity():
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
             try:
                 subprocess.run(["git", "add", "."], check=True)
-                msg = f"chore(crew): Geometric alignment cycle {timestamp}"
+                msg = f"chore(crew): Dev Cycle & Thesis Alignment {timestamp}"
                 subprocess.run(["git", "commit", "-m", msg], check=False)
                 subprocess.run(["git", "push"], check=True)
                 self.log("SUCCESS: Pushed to remote")
@@ -163,7 +190,6 @@ class CrewManager:
         
         # 1 SCIENTIFIC COMPMITTEE REVIEWER (The Guardian)
         self.critics.append(ScientificReviewer("Peer-Reviewer-1", "ScientificCommittee"))
-
         
         self.cycle_count = 0
 
@@ -198,8 +224,9 @@ class CrewManager:
         proposals = [r for r in results if isinstance(r, Proposal)]
         logging.info(f"Proposals: {len(proposals)}")
         
+        # Every 5 cycles, TRIGGER DEVELOPMENT PHASE
         if self.cycle_count % 5 == 0:
-            await self.supervisor.commit_cycle()
+            await self.supervisor.run_development_phase()
             
         logging.info("=== Cycle Complete ===\n")
 
