@@ -1,0 +1,17 @@
+2026-01-02 23:11:05,709 - __main__ - INFO - Ablation Study Framework initialized
+2026-01-02 23:11:05,710 - __main__ - INFO - Generating ablation study scripts...
+2026-01-02 23:11:05,715 - __main__ - INFO - Generated script: ablation_results/run_ablation_no_curvature_loss.sh
+2026-01-02 23:11:05,732 - __main__ - INFO - Generated script: ablation_results/run_ablation_no_natural_gradients.sh
+2026-01-02 23:11:05,738 - __main__ - INFO - Generated script: ablation_results/run_ablation_no_sheaf_consistency.sh
+2026-01-02 23:11:05,744 - __main__ - INFO - Generated script: ablation_results/run_ablation_no_lambda_calculus.sh
+2026-01-02 23:11:05,749 - __main__ - INFO - Generated script: ablation_results/run_ablation_no_bundle_structure.sh
+2026-01-02 23:11:05,756 - __main__ - INFO - Generated script: ablation_results/run_ablation_minimal_components.sh
+2026-01-02 23:11:05,762 - __main__ - INFO - Generated script: ablation_results/run_ablation_large_architecture.sh
+2026-01-02 23:11:05,768 - __main__ - INFO - Generated script: ablation_results/run_ablation_balanced_learning_rates.sh
+2026-01-02 23:11:05,774 - __main__ - INFO - Generated script: ablation_results/run_ablation_high_fiber_learning.sh
+2026-01-02 23:11:05,781 - __main__ - INFO - Generated script: ablation_results/run_ablation_euclidean_target.sh
+2026-01-02 23:11:05,788 - __main__ - INFO - Generated script: ablation_results/run_ablation_extreme_hyperbolic.sh
+2026-01-02 23:11:05,796 - __main__ - INFO - Generated script: ablation_results/run_ablation_standard_igbundle.sh
+2026-01-02 23:11:05,802 - __main__ - INFO - Generated script: ablation_results/run_ablation_lora_only_baseline.sh
+2026-01-02 23:11:05,804 - __main__ - INFO - Generated master script: ablation_results/run_all_ablations.sh
+2026-01-02 23:11:05,809 - __main__ - INFO - Created markdown summary: ablation_results/ABLATION_STUDIES.md

@@ -1,0 +1,2 @@
+2026-01-02 23:10:58,573 - INFO - Analyzing training run: igbundle_qwen7b
+2026-01-02 23:10:58,575 - WARNING - Metrics file not found: output/igbundle_qwen7b/geometric_training_metrics.json

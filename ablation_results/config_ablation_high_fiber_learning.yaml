@@ -1,0 +1,40 @@
+base_model_id: Qwen/Qwen2.5-7B
+ig_adapter:
+  adapter_scale: 0.1
+  alpha: 1.0
+  beta: 1.0
+  bottleneck_dim: 256
+  dropout: 0.05
+  eta_b: 0.01
+  eta_f: 0.2
+  eta_w: 0.01
+  hidden_size: 3584
+  latent_dim: 256
+  num_categories: 32
+  num_components: 8
+lora:
+  lora_alpha: 32
+  lora_dropout: 0.05
+  r: 8
+  target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+loss:
+  lambda_glue: 0.01
+  num_patches: 8
+  tau: 1.0
+training:
+  bf16: true
+  gradient_accumulation_steps: 8
+  gradient_checkpointing: true
+  learning_rate: 2e-4
+  logging_steps: 5
+  max_grad_norm: 0.3
+  max_steps: 100
+  num_train_epochs: 1
+  optim: paged_adamw_8bit
+  output_dir: ./output/ablation_high_fiber_learning
+  per_device_train_batch_size: 1
+  save_steps: 50

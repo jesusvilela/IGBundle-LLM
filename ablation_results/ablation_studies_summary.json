@@ -1,0 +1,240 @@
+{
+  "total_studies": 13,
+  "studies": [
+    {
+      "name": "no_curvature_loss",
+      "description": "Disable curvature regularization to test Riemannian geometry impact",
+      "research_question": "How much does curvature regularization contribute to geometric learning?",
+      "expected_impact": "high",
+      "enabled_components": {
+        "curvature_loss": false,
+        "sheaf_loss": true,
+        "bundle_loss": true,
+        "lambda_loss": true,
+        "natural_gradients": true,
+        "riemannian_geometry": true
+      },
+      "modified_parameters": {
+        "geometric_training.lambda_curvature": 0.0
+      }
+    },
+    {
+      "name": "no_natural_gradients",
+      "description": "Disable natural gradients, use standard Adam optimization",
+      "research_question": "What is the impact of information-geometric optimization vs standard optimization?",
+      "expected_impact": "high",
+      "enabled_components": {
+        "curvature_loss": true,
+        "sheaf_loss": true,
+        "bundle_loss": true,
+        "lambda_loss": true,
+        "natural_gradients": false,
+        "riemannian_geometry": true
+      },
+      "modified_parameters": {
+        "geometric_training.use_natural_gradients": false
+      }
+    },
+    {
+      "name": "no_sheaf_consistency",
+      "description": "Disable sheaf consistency constraints",
+      "research_question": "How important are sheaf-theoretic consistency constraints?",
+      "expected_impact": "medium",
+      "enabled_components": {
+        "curvature_loss": true,
+        "sheaf_loss": false,
+        "bundle_loss": true,
+        "lambda_loss": true,
+        "natural_gradients": true,
+        "riemannian_geometry": true
+      },
+      "modified_parameters": {
+        "geometric_training.lambda_sheaf": 0.0
+      }
+    },
+    {
+      "name": "no_lambda_calculus",
+      "description": "Disable lambda calculus operations in fiber bundles",
+      "research_question": "What role does lambda calculus play in geometric semantics?",
+      "expected_impact": "medium",
+      "enabled_components": {
+        "curvature_loss": true,
+        "sheaf_loss": true,
+        "bundle_loss": true,
+        "lambda_loss": false,
+        "natural_gradients": true,
+        "riemannian_geometry": true
+      },
+      "modified_parameters": {
+        "geometric_training.lambda_lambda": 0.0
+      }
+    },
+    {
+      "name": "no_bundle_structure",
+      "description": "Disable bundle structure preservation",
+      "research_question": "How critical is bundle topology preservation for performance?",
+      "expected_impact": "medium",
+      "enabled_components": {
+        "curvature_loss": true,
+        "sheaf_loss": true,
+        "bundle_loss": false,
+        "lambda_loss": true,
+        "natural_gradients": true,
+        "riemannian_geometry": true
+      },
+      "modified_parameters": {
+        "geometric_training.lambda_bundle": 0.0,
+        "geometric_training.preserve_bundle_topology": false
+      }
+    },
+    {
+      "name": "minimal_components",
+      "description": "Reduce to minimal number of mixture components",
+      "research_question": "What is the minimum architecture needed for geometric benefits?",
+      "expected_impact": "medium",
+      "enabled_components": {
+        "curvature_loss": true,
+        "sheaf_loss": true,
+        "bundle_loss": true,
+        "lambda_loss": true,
+        "natural_gradients": true,
+        "riemannian_geometry": true
+      },
+      "modified_parameters": {
+        "ig_adapter.num_components": 2,
+        "ig_adapter.num_categories": 8
+      }
+    },
+    {
+      "name": "large_architecture",
+      "description": "Increase architectural capacity",
+      "research_question": "Do larger geometric architectures provide proportional benefits?",
+      "expected_impact": "medium",
+      "enabled_components": {
+        "curvature_loss": true,
+        "sheaf_loss": true,
+        "bundle_loss": true,
+        "lambda_loss": true,
+        "natural_gradients": true,
+        "riemannian_geometry": true
+      },
+      "modified_parameters": {
+        "ig_adapter.num_components": 8,
+        "ig_adapter.num_categories": 32,
+        "ig_adapter.latent_dim": 256
+      }
+    },
+    {
+      "name": "balanced_learning_rates",
+      "description": "Use equal learning rates for base and fiber updates",
+      "research_question": "What is the optimal base-to-fiber learning rate ratio?",
+      "expected_impact": "medium",
+      "enabled_components": {
+        "curvature_loss": true,
+        "sheaf_loss": true,
+        "bundle_loss": true,
+        "lambda_loss": true,
+        "natural_gradients": true,
+        "riemannian_geometry": true
+      },
+      "modified_parameters": {
+        "ig_adapter.eta_b": 0.05,
+        "ig_adapter.eta_f": 0.05
+      }
+    },
+    {
+      "name": "high_fiber_learning",
+      "description": "Dramatically increase fiber learning rate",
+      "research_question": "Does faster fiber learning improve semantic capture?",
+      "expected_impact": "low",
+      "enabled_components": {
+        "curvature_loss": true,
+        "sheaf_loss": true,
+        "bundle_loss": true,
+        "lambda_loss": true,
+        "natural_gradients": true,
+        "riemannian_geometry": true
+      },
+      "modified_parameters": {
+        "ig_adapter.eta_f": 0.2,
+        "ig_adapter.eta_b": 0.01
+      }
+    },
+    {
+      "name": "euclidean_target",
+      "description": "Target Euclidean (zero) curvature instead of hyperbolic",
+      "research_question": "Is hyperbolic geometry essential, or does any curvature help?",
+      "expected_impact": "high",
+      "enabled_components": {
+        "curvature_loss": true,
+        "sheaf_loss": true,
+        "bundle_loss": true,
+        "lambda_loss": true,
+        "natural_gradients": true,
+        "riemannian_geometry": true
+      },
+      "modified_parameters": {
+        "geometric_training.initial_target_curvature": 0.0,
+        "geometric_training.final_target_curvature": 0.0,
+        "geometric_training.target_curvature_schedule": "constant"
+      }
+    },
+    {
+      "name": "extreme_hyperbolic",
+      "description": "Target very high negative curvature",
+      "research_question": "Is there an optimal curvature range for language modeling?",
+      "expected_impact": "medium",
+      "enabled_components": {
+        "curvature_loss": true,
+        "sheaf_loss": true,
+        "bundle_loss": true,
+        "lambda_loss": true,
+        "natural_gradients": true,
+        "riemannian_geometry": true
+      },
+      "modified_parameters": {
+        "geometric_training.final_target_curvature": -5.0,
+        "geometric_training.lambda_curvature": 0.05
+      }
+    },
+    {
+      "name": "standard_igbundle",
+      "description": "Use original IGBundle adapter for comparison",
+      "research_question": "What is the total improvement from geometric corrections?",
+      "expected_impact": "high",
+      "enabled_components": {
+        "curvature_loss": false,
+        "sheaf_loss": true,
+        "bundle_loss": false,
+        "lambda_loss": false,
+        "natural_gradients": false,
+        "riemannian_geometry": false
+      },
+      "modified_parameters": {
+        "training_mode": "standard",
+        "geometric_training.lambda_curvature": 0.0,
+        "geometric_training.lambda_bundle": 0.0,
+        "geometric_training.lambda_lambda": 0.0,
+        "geometric_training.use_natural_gradients": false
+      }
+    },
+    {
+      "name": "lora_only_baseline",
+      "description": "LoRA-only training without any IGBundle components",
+      "research_question": "What is the total benefit of IGBundle vs pure LoRA?",
+      "expected_impact": "high",
+      "enabled_components": {
+        "curvature_loss": false,
+        "sheaf_loss": false,
+        "bundle_loss": false,
+        "lambda_loss": false,
+        "natural_gradients": false,
+        "riemannian_geometry": false,
+        "igbundle_adapter": false
+      },
+      "modified_parameters": {
+        "skip_igbundle": true
+      }
+    }
+  ]
+}
