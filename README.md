@@ -16,24 +16,29 @@
 
 **ManifoldGL** (IGBundle-LLM) is a research framework investigating the **Geometry of Semantics**. This project implements an **Information-Geometric Bundle (IGBundle)** adapter with **mathematically rigorous foundations**. By treating neural activations as local sections of a fiber bundle over a **Hyperbolic** base manifold, we enable models to explicitly represent hierarchical concept nesting.
 
-## 🧠 Model-First Reasoning (MFR)
+## 📐 Geometric Foundations
 
-<div align="center">
-  <h3>"Reasoning is Representation"</h3>
-</div>
+**ManifoldGL** adapts the **Natural Gradient** concept to the semantic space of Large Language Models.
 
-We implement **Model-First Reasoning** (MFR), a 2-phase cognitive architecture designed to reduce hallucination in complex planning tasks.
+### The Concave Substrate
+We operate on the hypothesis that the "Manifold of Meaning" is **Hyperbolic** (negative curvature) and locally **Concave**. This structure naturally accommodates:
+*   **Hierarchical Concepts**: Exponential expansion of space for tree-like data.
+*   **Entailment Cones**: Logical entailment `A -> B` maps to inclusion `Region(A) ⊂ Region(B)`.
 
-1.  **Phase 1: Model Construction**
-    *   The agent explicitly defines the **Entities**, **State Variables**, **Actions**, and **Constraints** of the problem *before* attempting to solve it.
-    *   This forces the latent "Implicit Model" to become an **Explicit, Inspectable Model**.
-2.  **Phase 2: Constrained Reasoning**
-    *   The agent generates a solution strategy strictly conditioned on the structural model defined in Phase 1.
+### Information-Geometric Bundle (IGBundle)
+We implement the adapter as a **Fiber Bundle** $\pi: E \to M$:
+*   **Base Manifold $M$**: The Hyperbolic parameter space.
+*   **Fiber $F_x$**: The local activation space at semantic position $x$.
+*   **Connection $\nabla$**: A custom transport operator that preserves semantic geometry during inference.
 
-Usage:
-```bash
-python eval_arc.py --checkpoint output/igbundle_qwen7b/checkpoint-600 --mfr
-```
+This rigorous mathematical structure prevents "Semantic Drift" (hallucination) by constraining the model's random walk to the valid semantic manifold.
+
+---
+
+## 🔧 Applications: Model-First Reasoning (MFR) (Sub-Methodology)
+
+As a practical application of this geometry, we use **MFR** to explicate the latent manifold structure.
+
 
 ## 📊 Experimental Results
 
