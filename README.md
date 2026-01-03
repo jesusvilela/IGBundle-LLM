@@ -13,7 +13,7 @@
 
 **Figure 1**: *Interactive visualization of the IGBundle fiber space projected onto a hyperbolic manifold. Click to explore.*
 
-[**📄 Unified Project Thesis (PDF)**](IGBundle_Thesis.pdf)
+[**📄 Unified Project Thesis**](IGBundle_Corrected_Thesis.md)
 
 </div>
 
