@@ -1,8 +1,25 @@
 # ManifoldGL: Information-Geometric Bundle Adapters for LLMs
 
-**License**: All Rights Reserved | **Python**: 3.10+ | **PyTorch**: 2.6 | **Status**: Research
+**The Geometry of Reasoning: Non-Euclidean Latent Spaces for Abstract Intelligence**
 
-### Generated artifacts (not committed):
+[![License: All Rights Reserved](https://img.shields.io/badge/License-All_Rights_Reserved-red.svg)](LICENSE)
+![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)
+![PyTorch 2.6](https://img.shields.io/badge/PyTorch-2.6-ee4c2c.svg)
+![Status: Research](https://img.shields.io/badge/Status-Research_Preview-purple.svg)
+
+<div align="center">
+
+![Interactive Manifold Topology](output/readme_visuals/riemannian_geometry.png)
+
+**Figure 1**: *Visualization of the IGBundle fiber space projected onto a Riemannian manifold. Node activations reflect semantic density.*
+
+[**📄 Unified Project Thesis (PDF)**](IGBundle_Corrected_Thesis.md) | [**📊 Ablation Studies**](ablation_results/ablation_studies_summary.json)
+
+</div>
+
+---
+
+### 📦 Generated artifacts (not committed):
 - **Thesis PDF**: `python generate_thesis.py` -> `output/thesis/IGBundle_Thesis.pdf`
 - **Topology visualization (lite)**: `python generate_braintop_viz.py --lite --output output/igbundle_topology_lite.html`
 
