@@ -281,7 +281,7 @@ def launch_app(config_path, checkpoint_path):
             
         with gr.Tab("System Architecture"):
             gr.Markdown("### IGBundle Topological View")
-            gr.HTML('<iframe src="file/output/igbundle_topology_lite.html" width="100%" height="600px"></iframe>')
+            gr.HTML('<iframe src="file/output/igbundle_topology_riemannian.html" width="100%" height="600px"></iframe>')
 
     demo.launch(share=True)
 

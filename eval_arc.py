@@ -1,3 +1,4 @@
+from unsloth import FastLanguageModel
 import argparse
 import json
 import os
@@ -45,29 +46,16 @@ def calculate_confidence_interval(k, n, confidence=0.95):
     return lower, upper
 
 def evaluate_arc(model_id, checkpoint_path, split="validation", limit=None, use_mfr=False):
-    print(f"Loading Model: {model_id} (Optimized 4-bit via Unsloth)")
-    print("Scientific Evaluation Mode: ACTIVE")
-    device = "cuda"
-    from unsloth import FastLanguageModel
+    print("Loading via Unsloth (4-bit Mode)...")
     model, tokenizer = FastLanguageModel.from_pretrained(
-        model_name = model_id,
-        max_seq_length = 6144,
-        dtype = None,
+        model_name = checkpoint_path if checkpoint_path else model_id,
+        max_seq_length = 4096,
         load_in_4bit = True,
     )
     FastLanguageModel.for_inference(model)
-
-    if checkpoint_path:
-        print(f"Loading adapter: {checkpoint_path}")
-        ig_weights = os.path.join(checkpoint_path, "adapter_weights.pt")
-        if os.path.exists(ig_weights):
-            print("Loading IGBundle explicit weights...")
-            model.load_state_dict(torch.load(ig_weights, map_location="cuda"), strict=False)
-            
-        try:
-            model = PeftModel.from_pretrained(model, checkpoint_path)
-        except Exception as e:
-            print(f"Peft load warning: {e}")
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+    device = "cuda"
     
     print("Loading ARC-AGI Dataset (Local)...")
     data_path = "ARC-AGI-master/data/evaluation"
@@ -139,9 +127,27 @@ def evaluate_arc(model_id, checkpoint_path, split="validation", limit=None, use_
                 
             generated = tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
             result_entry["generated"] = generated
+            result_entry["target"] = format_grid(target_grid)
+            result_entry["prompt_len"] = inputs.input_ids.shape[1]
+            result_entry["gen_len"] = len(outputs[0]) - inputs.input_ids.shape[1]
             
             target_str = format_grid(target_grid)
-            gen_clean = generated.strip().split("\n")[0].replace(" ", "")
+            generated_stripped = generated.strip()
+            # Safety check if empty
+            if not generated_stripped:
+                gen_clean = ""
+            else:
+                gen_clean = generated_stripped.split("\n")[0].replace(" ", "")
+            
+            print(f"\n[DEBUG] Task {task_id}")
+            print(f"[DEBUG] Target: {target_str[:50]}")
+            print(f"[DEBUG] Gen Raw: {generated[:50]}")
+            print(f"[DEBUG] Gen Clean: {gen_clean[:50]}")
+
+            # Robust check
+            target_clean = target_str.replace(" ", "")
+            is_match = (gen_clean == target_clean)
+            print(f"[DEBUG] Match Line 0: {is_match}")
             
             # Robust check: look for target grid in last few lines
             if target_str in gen_clean or target_str in generated.replace(" ", "")[-len(target_str)*2:]:

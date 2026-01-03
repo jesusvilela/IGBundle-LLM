@@ -62,10 +62,17 @@ def generate_viz(checkpoint_path, output_file, lite_mode=False):
     
     # Lite mode uses simplified manifold representation
     manifold_res = 1.0 if lite_mode else 2.0
+    manifold_type = "hyperbolic" if "riemannian" in checkpoint_path.lower() else "euclidean"
+    # Allow override
+    if "euclidean" in output_file.lower(): manifold_type = "euclidean"
+    if "hyperbolic" in output_file.lower() or "riemannian" in output_file.lower(): manifold_type = "hyperbolic"
+    
+    print(f"Manifold Geometry: {manifold_type.upper()}")
+    
     builder.add_riemannian_layer(
         "ideal_bundle", 
         num_nodes=num_nodes, 
-        manifold_type="hyperbolic", 
+        manifold_type=manifold_type, 
         radius=manifold_res
     )
     
