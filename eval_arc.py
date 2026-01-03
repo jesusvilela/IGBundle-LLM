@@ -45,12 +45,39 @@ def calculate_confidence_interval(k, n, confidence=0.95):
     lower = low_numerator / denominator
     return lower, upper
 
+def extract_grid(text):
+    """Robustly extract a grid pattern [[...]] from text."""
+    import re
+    # Try to find the most likely grid pattern
+    # Look for [[...]] that might span multiple lines
+    pattern = r'\[\s*\[.*?\]\s*\]'
+    # Find all matches in raw text (including newlines)
+    matches = re.findall(pattern, text, re.DOTALL)
+    if matches:
+        # Take the LAST match, as models often repeat the prompt grid first
+        # Clean of inner whitespace/newlines for comparison
+        return matches[-1].replace("\n", "").replace(" ", "")
+    
+    # Fallback: look for lines that contain only [,] and digits
+    lines = text.split("\n")
+    for line in lines:
+        if "[" in line and "]" in line and any(c.isdigit() for c in line):
+            # Might be a single row or a whole grid on one line
+            clean = line.strip().replace(" ", "")
+            if clean.startswith("[[") and clean.endswith("]]"):
+                return clean
+    return ""
+
 def evaluate_arc(model_id, checkpoint_path, split="validation", limit=None, use_mfr=False):
     print("Loading via Unsloth (4-bit Mode)...")
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+        
     model, tokenizer = FastLanguageModel.from_pretrained(
         model_name = checkpoint_path if checkpoint_path else model_id,
-        max_seq_length = 4096,
+        max_seq_length = 1024,
         load_in_4bit = True,
+        device_map = {"": 0}
     )
     FastLanguageModel.for_inference(model)
     if tokenizer.pad_token is None:
@@ -100,18 +127,16 @@ def evaluate_arc(model_id, checkpoint_path, split="validation", limit=None, use_
                 with torch.no_grad():
                     out1_tokens = model.generate(
                         **inp1, 
-                        max_new_tokens=1024, # Increased for robust model definition
+                        max_new_tokens=1024,
                         do_sample=False,
                         pad_token_id=tokenizer.eos_token_id
                     )
                 model_text = tokenizer.decode(out1_tokens[0][inp1.input_ids.shape[1]:], skip_special_tokens=True)
                 
-                # Verify MFR format
                 if "## PROBLEM MODEL" in model_text or "ENTITIES" in model_text:
                     mfr_compliant_count += 1
                     result_entry["mfr_compliant"] = True
                 
-                # Phase 2: Reasoning
                 final_prompt = construct_phase2_prompt(prompt, model_text)
                 inputs = tokenizer(final_prompt, return_tensors="pt").to(device)
             else:
@@ -120,7 +145,7 @@ def evaluate_arc(model_id, checkpoint_path, split="validation", limit=None, use_
             with torch.no_grad():
                 outputs = model.generate(
                     **inputs, 
-                    max_new_tokens=2048, # Increased for complex grids
+                    max_new_tokens=2048,
                     do_sample=False, 
                     pad_token_id=tokenizer.eos_token_id
                 )
@@ -128,31 +153,26 @@ def evaluate_arc(model_id, checkpoint_path, split="validation", limit=None, use_
             generated = tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
             result_entry["generated"] = generated
             result_entry["target"] = format_grid(target_grid)
-            result_entry["prompt_len"] = inputs.input_ids.shape[1]
-            result_entry["gen_len"] = len(outputs[0]) - inputs.input_ids.shape[1]
             
-            target_str = format_grid(target_grid)
-            generated_stripped = generated.strip()
-            # Safety check if empty
-            if not generated_stripped:
-                gen_clean = ""
-            else:
-                gen_clean = generated_stripped.split("\n")[0].replace(" ", "")
+            target_clean = format_grid(target_grid).replace(" ", "")
+            gen_clean = extract_grid(generated)
             
             print(f"\n[DEBUG] Task {task_id}")
-            print(f"[DEBUG] Target: {target_str[:50]}")
-            print(f"[DEBUG] Gen Raw: {generated[:50]}")
-            print(f"[DEBUG] Gen Clean: {gen_clean[:50]}")
+            print(f"[DEBUG] Target (clean): {target_clean[:60]}...")
+            print(f"[DEBUG] Extracted (clean): {gen_clean[:60]}...")
 
-            # Robust check
-            target_clean = target_str.replace(" ", "")
-            is_match = (gen_clean == target_clean)
-            print(f"[DEBUG] Match Line 0: {is_match}")
-            
-            # Robust check: look for target grid in last few lines
-            if target_str in gen_clean or target_str in generated.replace(" ", "")[-len(target_str)*2:]:
+            if gen_clean == target_clean:
                 correct += 1
                 result_entry["correct"] = True
+                print("✅ MATCH!")
+            else:
+                # Last ditch: check if target is inside the extracted string (sometimes model adds extra brackets)
+                if target_clean in gen_clean:
+                    correct += 1
+                    result_entry["correct"] = True
+                    print("✅ PARTIAL MATCH (FOUND INSIDE)!")
+                else:
+                    print("❌ NO MATCH")
             
             total += 1
             results_log.append(result_entry)

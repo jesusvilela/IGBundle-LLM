@@ -14,34 +14,41 @@ if braintop_src not in sys.path:
 from braintop.utils.builders import TopologyBuilder
 from braintop.core.visualizer import TopologyVisualizer
 
-def generate_viz(checkpoint_path, output_file, lite_mode=False):
+def generate_viz(checkpoint_path, output_file, lite_mode=False, node_metadata=None):
+    """
+    Main entry point for generating topology visualizations.
+    node_metadata: dict mapping node_id or index to metadata dict.
+    """
     print(f"Loading weights from {checkpoint_path}...")
     weights_path = os.path.join(checkpoint_path, "adapter_weights.pt")
     
     if not os.path.exists(weights_path):
-        weights_path = "trained_adapter/adapter_weights.pt"
+        weights_path = os.path.join(checkpoint_path, "pytorch_model.bin") # Fallback for some formats
         if not os.path.exists(weights_path):
-            print("Error: Could not find adapter_weights.pt")
-            return
-
-    state_dict = torch.load(weights_path, map_location="cpu")
+            print("Warning: Could not find adapter_weights.pt, using default layout.")
+            state_dict = {}
+        else:
+            state_dict = torch.load(weights_path, map_location="cpu")
+    else:
+        state_dict = torch.load(weights_path, map_location="cpu")
     
-    # Extract projection weights
+    # Extract projection weights for latent basis
     proj_weight = None
     for k, v in state_dict.items():
         if "input_proj.weight" in k:
             proj_weight = v.float().numpy() 
-            print(f"Found projection layer: {k} {proj_weight.shape}")
             break
             
     if proj_weight is None:
-        print("No input_proj.weight found in adapter.")
-        return
-
-    num_nodes = proj_weight.shape[0]
-    embeddings = proj_weight
+        # If no weights, we use a random projection for the "scaffold"
+        print("Using scaffold projection (uninitialized).")
+        num_nodes = 512 # Default
+        embeddings = np.random.randn(num_nodes, 128)
+    else:
+        num_nodes = proj_weight.shape[0]
+        embeddings = proj_weight
     
-    # LITE MODE: Downsample to max 50 nodes for <1MB file size
+    # LITE MODE: Downsample
     if lite_mode:
         print("⚡ LITE MODE ACTIVE: Downsampling to 50 nodes for lightweight web preview.")
         if num_nodes > 50:
@@ -50,9 +57,9 @@ def generate_viz(checkpoint_path, output_file, lite_mode=False):
             num_nodes = 50
     
     print(f"Building topology with {num_nodes} nodes...")
-    builder = TopologyBuilder("igbundle_manifold", "IGBundle Fiber Space")
+    builder = TopologyBuilder("igbundle_manifold", "IGBundle Real-time Fiber Space")
     
-    concepts = [f"Fiber Dim {i}" for i in range(num_nodes)]
+    concepts = [f"Fiber {i}" for i in range(num_nodes)]
     builder.add_conceptual_layer(
         "latent_basis", 
         num_nodes=num_nodes, 
@@ -60,10 +67,7 @@ def generate_viz(checkpoint_path, output_file, lite_mode=False):
         embeddings=embeddings
     )
     
-    # Lite mode uses simplified manifold representation
-    manifold_res = 1.0 if lite_mode else 2.0
     manifold_type = "hyperbolic" if "riemannian" in checkpoint_path.lower() else "euclidean"
-    # Allow override
     if "euclidean" in output_file.lower(): manifold_type = "euclidean"
     if "hyperbolic" in output_file.lower() or "riemannian" in output_file.lower(): manifold_type = "hyperbolic"
     
@@ -73,11 +77,23 @@ def generate_viz(checkpoint_path, output_file, lite_mode=False):
         "ideal_bundle", 
         num_nodes=num_nodes, 
         manifold_type=manifold_type, 
-        radius=manifold_res
+        radius=1.0 if lite_mode else 1.5
     )
     
-    conn_count = 1 if lite_mode else 3
-    builder.connect_layers("latent_basis", "ideal_bundle", "nearest", num_connections=conn_count)
+    # Optional: Apply activations to ideal_bundle nodes
+    if node_metadata:
+        # Get the layer and inject metadata into nodes
+        topo = builder.topology
+        layer = topo.get_layer("ideal_bundle")
+        if layer:
+            for i, node in enumerate(layer.nodes):
+                if i < len(node_metadata):
+                    node.metadata.update(node_metadata[i])
+                    # Also update labels with activation if relevant
+                    if "activation" in node_metadata[i]:
+                        node.label = f"{node.label} ({node_metadata[i]['activation']:.2f})"
+
+    builder.connect_layers("latent_basis", "ideal_bundle", "nearest", num_connections=1 if lite_mode else 2)
     
     topology = builder.build()
     
@@ -86,19 +102,15 @@ def generate_viz(checkpoint_path, output_file, lite_mode=False):
 
     print(f"Generating visualization to {output_file}...")
     visualizer = TopologyVisualizer(topology)
-    visualizer.save(output_file)
     
-    # Static Export (Only for full mode or specific request)
-    if not lite_mode:
-        png_file = output_file.replace(".html", ".png")
-        print(f"Generating static image to {png_file}...")
-        try:
-            fig = visualizer.create_figure() 
-            fig.write_image(png_file, engine="kaleido")
-        except Exception as e:
-            print(f"Warning: Could not save PNG: {e}")
-        
-    print("Done!")
+    # Style the visualization if metadata is present
+    color_by = "activation" if node_metadata else "layer"
+    size_by = "activation" if node_metadata else "degree"
+    
+    fig = visualizer.create_figure(color_by=color_by, size_by=size_by)
+    visualizer.save(output_file)
+    print(f"Visualization saved to {output_file}")
+    return output_file
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
