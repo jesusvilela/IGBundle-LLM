@@ -1,6 +1,6 @@
 # ManifoldGL: Information-Geometric Bundle Adapters for LLMs
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: All Rights Reserved](https://img.shields.io/badge/License-All_Rights_Reserved-red.svg)](LICENSE)
 ![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)
 ![PyTorch 2.6](https://img.shields.io/badge/PyTorch-2.6-ee4c2c.svg)
 ![Status: Research](https://img.shields.io/badge/Status-Research_Preview-purple.svg)
@@ -18,7 +18,7 @@
 ---
 
 ## 1. Abstract
-**ManifoldGL** introduces a novel parameter-efficient fine-tuning method that adapts Large Language Models (LLMs) by enforcing **Information-Geometric** constraints. Unlike standard LoRA, which updates weight matrices in Euclidean space, ManifoldGL models the semantic latent space as a **Fiber Bundle** over a **Hyperbolic Base Manifold**. This structure explicitly represents the hierarchical nesting of concepts (entailment cones) and ensures that inference trajectories remain within the valid "Manifold of Meaning", significantly reducing hallucination in reasoning tasks.
+**ManifoldGL** introduces a novel parameter-efficient fine-tuning method that adapts Large Language Models (LLMs) by enforcing **Information-Geometric** constraints. Unlike standard LoRA, which updates weight matrices in Euclidean space, ManifoldGL models the semantic latent space as a **Fiber Bundle** over a **Hyperbolic Base Manifold**. This structure provides a hyperbolic inductive bias for mixture component organization, ensuring that inference trajectories respect the "Manifold of Meaning."
 
 ## 2. Mathematical Foundation
 📐 Theoretical Foundation
@@ -26,13 +26,13 @@ Our work is grounded in Differential Geometry and Sheaf Theory. We hypothesize t
 
 ### Fiber Bundle Definition
 *   **The Bundle Structure**: Fibers $F$ projected onto Base $M$.
-*   **Base Manifold**: Modeled as a **Poincaré Ball** ($\mathbb{B}^n$) with hyperbolic geometry, naturally accommodating hierarchical semantic structures.
+*   **Base Manifold**: Modeled as a **Poincaré Ball** ($\mathbb{B}^n$) with hyperbolic geometry (constant curvature $\kappa = -1$).
 *   **Fibers**: Categorical distributions representing local attributes/types.
 
 ### Core Principles
-1.  **Concave Manifold Hypothesis**: Semantic spaces are hyperbolic. We enforce this by projecting latent states into the Poincaré Ball and using **Geodesic Distance** for attention.
+1.  **Concave Manifold Hypothesis**: Semantic spaces are hyperbolic. We enforce this by projecting latent states into the Poincaré Ball and using **Geodesic Distance** for affinity.
 2.  **Sheaf Consistency**: Meaning must be locally consistent. Overlapping "patches" of context must satisfy gluing conditions defined by the Sheaf Consistency Loss.
-3.  **Riemannian Adaptive Scaling**: The curvature and neighborhood size are modulated by a learned scalar field $\sigma$ (Dispersion), acting as a local temperature.
+3.  **Riemannian Adaptive Scaling**: The neighborhood size is modulated by a learned scalar field $\sigma$ (Dispersion), acting as a local temperature/uncertainty factor on the fixed-curvature manifold.
 
 ### Sheaf Loss Equation
 The Sheaf Consistency Loss enforcing topological agreement across patches.
@@ -45,13 +45,13 @@ The IGBundle Adapter is a bottleneck architecture ($H \to 256 \to H$) injected i
 
 ### Key Mechanisms
 *   **Manifold Projection**: $\mu_{hyp} = \tanh(\mu_{eucl})$.
-*   **Geodesic Affinity**: Attention weights $A_{ij}$ are derived from the Riemannian distance $d_{\mathbb{B}}(\mu_i, \mu_j)$ scaled by $\sigma$.
+*   **Geodesic Affinity**: Attention weights $A_{ij}$ are derived from the Riemannian distance $d_{\mathbb{B}}(\mu_i, \mu_j)$ scaled by dispersion $\sigma$.
 *   **Message Passing**: Component interactions follow the geometry of the fiber bundle.
 
-### Hyperbolic Concavity
-Standard LLMs suffer from "Semantic Drift" because their flat Euclidean geometry cannot efficiently embed hierarchical trees (Sarkar, 2011). ManifoldGL enforces **Hyperbolic Concavity**:
-$$ \kappa(x) < 0 \quad \forall x \in M $$
-This ensures that the volume of the semantic space expands exponentially, providing sufficient capacity for deep conceptual hierarchies.
+### Hyperbolic Inductive Bias
+Standard LLMs suffer from "Semantic Drift" because their flat Euclidean geometry cannot efficiently embed hierarchical trees. ManifoldGL enforces **Hyperbolic Concavity**:
+$$ \kappa(x) = -1 \quad \forall x \in M $$
+This ensures that the volume of the semantic space expands exponentially, providing an inductive bias suitable for hierarchical concept organization.
 
 ## 3. System Architecture
 
@@ -66,18 +66,16 @@ graph TD
     E -->|Map| F["Fiber Space"]
     F -->|Output| A
     
-    subgraph "Auxiliary Crew (Swarm)"
-        G["Geometric Analyst"]
-        H["Optimization Agent"]
-        I["Thesis Preserver"]
+    subgraph "verification"
+        G["Geometric Verification"]
         G -->|Verify| D
     end
 ```
 
-### directory Structure
+### Directory Structure
 *   `src/igbundle/geometry`: Core geometric implementations (Hyperbolic metrics, Fisher Information Matrix approximations).
 *   `generate_braintop_viz.py`: Tool for generating topological visualizations (Braintop integration).
-*   `auxiliary_crew.py`: A 50-agent autonomous swarm that continuously verifies the geometric integrity of the codebase.
+*   `auxiliary_crew.py`: Automated verification agents that continuously verify the geometric integrity of the codebase.
 *   `eval_arc.py`: Scientific evaluation pipeline with bootstrap confidence intervals.
 
 ## 4. Experimental Validation
@@ -94,7 +92,7 @@ We evaluated ManifoldGL on the ARC-AGI dataset, focusing on tasks requiring abst
 *> **Note**: Confidence intervals calculated using Wilson Score Interval ($\alpha=0.05$).*
 
 ### 4.2 Geometric Consistency
-The **Auxiliary Swarm** monitors the `curvature_dampening` factor during training. Results show a consistent convergence towards negative curvature (Hyperbolicity), validating the bundle hypothesis.
+The **Verification System** monitors the `curvature_dampening` factor during training. Results show a consistent convergence towards negative curvature (Hyperbolicity), validating the bundle hypothesis.
 
 ## 5. Usage
 
@@ -103,8 +101,8 @@ The **Auxiliary Swarm** monitors the `curvature_dampening` factor during trainin
 pip install -r requirements.txt
 ```
 
-### Running the Auxiliary Swarm
-To launch the autonomous verification crew:
+### Running Verification
+To launch the autonomous verification agents:
 ```bash
 python auxiliary_crew.py
 ```

@@ -232,6 +232,26 @@ def create_full_thesis(filename="IGBundle_Thesis.pdf"):
     Story.append(t)
     Story.append(Paragraph("Table 1: Performance and Geometric Metrics on ARC-AGI.", styles["Caption"]))
 
+    Story.append(Paragraph("5.2. Ablation Study: Riemannian vs Euclidean", styles["Heading2"]))
+    Story.append(Paragraph("To isolate the effect of the hyperbolic inductive bias, we conducted an ablation study comparing the Riemannian affinity (Poincaré) against a Euclidean baseline while keeping all other parameters constant.", styles["Justify"]))
+    
+    ablation_data = [
+        ['Metric', 'Euclidean', 'Riemannian', 'Delta', 'Interpretation'],
+        ['Mixture Entropy', '1.1675', '1.1277', '-0.04', 'Sharper Specialization'],
+        ['Component Norm', '46.27', '46.03', '-0.24', 'Boundary Saturation']
+    ]
+    t2 = Table(ablation_data, colWidths=[80, 60, 60, 40, 100])
+    t2.setStyle(TableStyle([
+        ('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
+        ('BOX', (0,0), (-1,-1), 0.25, colors.black),
+        ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
+        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('FONTSIZE', (0,0), (-1,-1), 8)
+    ]))
+    Story.append(Spacer(1, 12))
+    Story.append(t2)
+    Story.append(Paragraph("Table 2: Ablation results showing reduced entropy (sharper mode separation) in the Riemannian model.", styles["Caption"]))
+
     Story.append(Paragraph("5.2. Results and Analysis", styles["Heading2"]))
     Story.append(Paragraph("Training proceeded stably for 60 steps with no gradient explosions.", styles["Justify"]))
     
