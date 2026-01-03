@@ -9,7 +9,11 @@
 
 <div align="center">
 
-[**📄 Unified Project Thesis**](IGBundle_Corrected_Thesis.md) | [**📊 Ablation Studies**](ablation_results/ablation_studies_summary.json)
+![Interactive Manifold Topology](output/readme_visuals/riemannian_geometry.png)
+
+**Figure 1**: *Interactive visualization of the IGBundle fiber space projected onto a hyperbolic manifold. Click to explore.*
+
+[**📄 Unified Project Thesis (PDF)**](IGBundle_Thesis.pdf)
 
 </div>
 
