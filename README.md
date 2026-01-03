@@ -20,7 +20,7 @@
 ## 1. Abstract
 **ManifoldGL** introduces a novel parameter-efficient fine-tuning method that adapts Large Language Models (LLMs) by enforcing **Information-Geometric** constraints. Unlike standard LoRA, which updates weight matrices in Euclidean space, ManifoldGL models the semantic latent space as a **Fiber Bundle** over a **Hyperbolic Base Manifold**. This structure explicitly represents the hierarchical nesting of concepts (entailment cones) and ensures that inference trajectories remain within the valid "Manifold of Meaning", significantly reducing hallucination in reasoning tasks.
 
-## 2. Mat
+## 2. Mathematical Foundation
 📐 Theoretical Foundation
 Our work is grounded in Differential Geometry and Sheaf Theory. We hypothesize that the "meaning" of a token is not a fixed point in vector space, but a Fiber ($F$) over a structural manifold ($M$).
 
@@ -32,13 +32,14 @@ Our work is grounded in Differential Geometry and Sheaf Theory. We hypothesize t
 ### Core Principles
 1.  **Concave Manifold Hypothesis**: Semantic spaces are hyperbolic. We enforce this by projecting latent states into the Poincaré Ball and using **Geodesic Distance** for attention.
 2.  **Sheaf Consistency**: Meaning must be locally consistent. Overlapping "patches" of context must satisfy gluing conditions defined by the Sheaf Consistency Loss.
-3.  **Riemannian Adaptive Scaling**: The curvature and neighborhood size are modulated by a learned scalar field $\sigma$, acting as a local temperature.
+3.  **Riemannian Adaptive Scaling**: The curvature and neighborhood size are modulated by a learned scalar field $\sigma$ (Dispersion), acting as a local temperature.
 
 ### Sheaf Loss Equation
 The Sheaf Consistency Loss enforcing topological agreement across patches.
 
 ---
 
+## 3. System Architecture
 🛠️ System Architecture
 The IGBundle Adapter is a bottleneck architecture ($H \to 256 \to H$) injected into a Qwen2.5-7B base model.
 
@@ -46,7 +47,8 @@ The IGBundle Adapter is a bottleneck architecture ($H \to 256 \to H$) injected i
 *   **Manifold Projection**: $\mu_{hyp} = \tanh(\mu_{eucl})$.
 *   **Geodesic Affinity**: Attention weights $A_{ij}$ are derived from the Riemannian distance $d_{\mathbb{B}}(\mu_i, \mu_j)$ scaled by $\sigma$.
 *   **Message Passing**: Component interactions follow the geometry of the fiber bundle.
-ncavity
+
+### Hyperbolic Concavity
 Standard LLMs suffer from "Semantic Drift" because their flat Euclidean geometry cannot efficiently embed hierarchical trees (Sarkar, 2011). ManifoldGL enforces **Hyperbolic Concavity**:
 $$ \kappa(x) < 0 \quad \forall x \in M $$
 This ensures that the volume of the semantic space expands exponentially, providing sufficient capacity for deep conceptual hierarchies.

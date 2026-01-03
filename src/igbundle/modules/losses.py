@@ -40,69 +40,41 @@ class SheafLoss(torch.nn.Module):
         w = mixture_state.w.float() # (B, T, P)
         p = mixture_state.p.float() # (B, T, P, K)
         
-        # Ensure centers are float32
-        self.patch_centers.data = self.patch_centers.data.float()
+        # Ensure centers are float32 (local cast, do not mutate parameter .data in forward)
+        patch_centers_f = self.patch_centers.float()
         
         B, T, P, D = m.shape
-        R = self.patch_centers.shape[0]
+        R = patch_centers_f.shape[0]
         K = p.shape[-1]
         
         # Expand for broadcasting
         # m: (B, T, P, 1, D)
         # centers: (1, 1, 1, R, D)
         m_exp = m.unsqueeze(-2)
-        c_exp = self.patch_centers.reshape(1, 1, 1, R, D)
+        c_exp = patch_centers_f.reshape(1, 1, 1, R, D)
         
         dists = ((m_exp - c_exp).pow(2).sum(dim=-1)) # (B, T, P, R)
         gamma = F.softmax(-dists / self.tau, dim=-1) # (B, T, P, R) resp of patch r for comp i
         
         # Patch-wise fiber belief: p_bar_r = sum_i gamma_ir * w_i * p_i
-        # We need to account for w_i.
-        # w is (B, T, P). Should we weight by w_i? Yes, total mass contribution.
-        # But we need p_bar_r to be a probability distribution.
-        # So we normalize by sum_i gamma_ir * w_i
-        
+        # We need to account for w_i, total mass contribution.
         w_exp = w.unsqueeze(-1) # (B, T, P, 1)
         start_mass = gamma * w_exp # (B, T, P, R)
         total_mass_r = start_mass.sum(dim=2) # (B, T, R)
         
         # Weighted sum of p_i: (B, T, P, K) * (B, T, P, R) -> need careful matmul
-        # p: (B, T, P, K)
-        # start_mass: (B, T, P, R)
-        # p_bar_num: (B, T, R, K) = sum_p start_mass[...,r] * p[...,k]
-        # p[b,t,i,k] * start_mass[b,t,i,r]
-        
         p_bar_num = torch.einsum('btpk,btpr->btrk', p, start_mass)
         p_bar = p_bar_num / (total_mass_r.unsqueeze(-1) + 1e-6) # (B, T, R, K)
         
-        # Pairwise JS between patches?
-        # Only for overlapping patches?
-        # Simplified: all pairs or nearest neighbors.
-        # Let's do all pairs weighted by patch overlap (implicit in geometry) 
-        # or just sum over r<s JS(p_bar_r, p_bar_s) if we assume all should be consistent?
-        # User script: "sum_{r<s} omega_rs * JS(p_bar_r, p_bar_s)"
-        # omega_rs depends on patch overlap.
-        
-        # Compute patch distances
-        c_i = self.patch_centers.unsqueeze(1)
-        c_j = self.patch_centers.unsqueeze(0)
+        # Pairwise JS between patches weighted by patch overlap
+        c_i = patch_centers_f.unsqueeze(1)
+        c_j = patch_centers_f.unsqueeze(0)
         center_dists = (c_i - c_j).pow(2).sum(dim=-1)
         omega = torch.exp(-center_dists / self.tau) # (R, R)
-        
-        # JS calculation
-        # p_bar: (B, T, R, K)
-        
-        # We can implement a simplified version summing over random pairs or all pairs
-        # For efficiency, let's just do a mean JS of all pairs weighted by omega
-        
-        # This is expensive O(R^2). R is small (8).
-        loss = 0.0
-        # Iterate or vectorized? R=8 is small enough to loop or vectorize
         
         # Vectorized JS
         # p_r: (B, T, R, 1, K)
         # p_s: (B, T, 1, R, K)
-        # Broadcst to (B, T, R, R, K)
         p_r = p_bar.unsqueeze(3)
         p_s = p_bar.unsqueeze(2)
         
@@ -116,8 +88,12 @@ class SheafLoss(torch.nn.Module):
         
         # Mask diagonal and lower triangle to count each pair once
         mask = torch.triu(torch.ones(R, R, device=p.device), diagonal=1)
-        # Sum with epsilon and float32 accumulation
-        loss = (weighted_js * mask).sum().float() / (mask.sum().float() + 1e-8)
+        
+        # Normalize by (B * T * num_pairs) to make loss scale invariant to batch/seq_len
+        pair_count = mask.sum().float()
+        total_elements = (B * T * pair_count) + 1e-8
+        
+        loss = (weighted_js * mask).sum().float() / total_elements
         
         return loss
 

@@ -151,6 +151,7 @@ def train():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, default="configs/qwen25_7b_igbundle_lora.yaml")
     parser.add_argument("--smoke_test", action="store_true")
+    parser.add_argument("--max_steps", type=int, default=-1, help="Override max_steps from config")
     args = parser.parse_args()
     
     with open(args.config, 'r') as f:
@@ -322,7 +323,7 @@ def train():
         gradient_accumulation_steps=cfg.training.gradient_accumulation_steps,
         learning_rate=float(cfg.training.learning_rate),
         num_train_epochs=cfg.training.num_train_epochs,
-        max_steps=getattr(cfg.training, 'max_steps', -1),
+        max_steps=args.max_steps if args.max_steps > 0 else getattr(cfg.training, 'max_steps', -1),
         logging_steps=cfg.training.logging_steps,
         bf16=cfg.training.bf16,
         optim=cfg.training.optim,
