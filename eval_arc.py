@@ -46,26 +46,26 @@ def calculate_confidence_interval(k, n, confidence=0.95):
     return lower, upper
 
 def extract_grid(text):
-    """Robustly extract a grid pattern [[...]] from text."""
+    """Robustly extract a numeric grid pattern [[...]] from text."""
     import re
-    # Try to find the most likely grid pattern
-    # Look for [[...]] that might span multiple lines
-    pattern = r'\[\s*\[.*?\]\s*\]'
-    # Find all matches in raw text (including newlines)
+    # Match [[...]] where the inner content is primarily digits and punctuation
+    # This avoids matching Python code like [[0 for i in ...]]
+    pattern = r'\[\s*\[[\d\s,]*\](?:\s*,\s*\[[\d\s,]*\])*\s*\]'
     matches = re.findall(pattern, text, re.DOTALL)
     if matches:
         # Take the LAST match, as models often repeat the prompt grid first
-        # Clean of inner whitespace/newlines for comparison
         return matches[-1].replace("\n", "").replace(" ", "")
     
-    # Fallback: look for lines that contain only [,] and digits
-    lines = text.split("\n")
-    for line in lines:
-        if "[" in line and "]" in line and any(c.isdigit() for c in line):
-            # Might be a single row or a whole grid on one line
-            clean = line.strip().replace(" ", "")
-            if clean.startswith("[[") and clean.endswith("]]"):
-                return clean
+    # Fallback: look for the most "numeric" looking bracketed structure
+    pattern_loose = r'\[\s*\[.*?\]\s*\]'
+    matches_loose = re.findall(pattern_loose, text, re.DOTALL)
+    for m in reversed(matches_loose):
+        m_clean = m.replace(" ", "").replace("\n", "")
+        # If it contains many commas and digits, it's likely our grid
+        if m_clean.count(",") > 5 and any(c.isdigit() for c in m_clean):
+            # Basic check to avoid code
+            if "for" not in m_clean and "range" not in m_clean:
+                return m_clean
     return ""
 
 def evaluate_arc(model_id, checkpoint_path, split="validation", limit=None, use_mfr=False):
