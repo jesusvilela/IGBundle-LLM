@@ -13,7 +13,7 @@
 
 **Figure 1**: *Visualization of the IGBundle fiber space projected onto a Riemannian manifold. Node activations reflect semantic density.*
 
-[**📄 Unified Project Thesis (PDF)**](IGBundle_Corrected_Thesis.md) | [**📊 Ablation Studies**](ablation_results/ablation_studies_summary.json)
+[**📄 Unified Project Thesis (PDF)**](IGBundle_Thesis_v1.0.md) | [**📊 Ablation Studies**](ablation_results/ablation_studies_summary.json)
 
 </div>
 
