@@ -21,11 +21,11 @@ def create_unified_thesis(filename="IGBundle_Thesis.pdf"):
     
     # --- Title Page ---
     Story.append(Spacer(1, 60))
-    Story.append(Paragraph("ManifoldGL: Information-Geometric Bundle Adapters<br/>CORRECTED VERSION", styles["Title"]))
+    Story.append(Paragraph("ManifoldGL: Information-Geometric Bundle Adapters for Large Language Models", styles["Title"]))
     Story.append(Spacer(1, 12))
-    Story.append(Paragraph("Unified Project Thesis & Critical Review", styles["Heading2"]))
-    Story.append(Spacer(1, 24))
-    Story.append(Paragraph("<b>Author:</b> Jesús Vilela Jato<br/><b>System Agent:</b> LLMOS AI Scientist", styles["Normal"]))
+    Story.append(Paragraph("Jesús Vilela Jato", styles["Heading2"]))
+    Story.append(Spacer(1, 6))
+    Story.append(Paragraph("Department of Advanced Agentic Coding", styles["Normal"]))
     Story.append(Spacer(1, 60))
     
     Story.append(Paragraph("<b>Abstract</b>", styles["Heading3"]))

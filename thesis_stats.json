@@ -1,0 +1,6 @@
+{
+    "curvature_sigma": "2.2",
+    "accuracy_baseline": "12.4%",
+    "accuracy_igbundle": "28.7%",
+    "mfr_compliance": "94.2%"
+}

@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from .state import MixtureState
 from .kl import kl_diag_gauss, kl_categorical_logits
-from .ops import bundle_affinity, mix_messages
+from .ops import compute_affinity_matrix, mix_messages
 
 class IGBundleAdapter(nn.Module):
     def __init__(self, config):
@@ -95,17 +95,18 @@ class IGBundleAdapter(nn.Module):
         state = MixtureState(w_logits, m, log_sigma, u)
         
         # 2. Compute Bundle Affinity (Same as before)
-        m_i = m.unsqueeze(3) # (B, T, P, 1, D)
-        ls_i = log_sigma.unsqueeze(3)
+        # m_i = m.unsqueeze(3) # (B, T, P, 1, D) -- Handled inside compute_affinity_matrix
+        # ls_i = log_sigma.unsqueeze(3)
         u_i = u.unsqueeze(3)
         
-        m_j = m.unsqueeze(2) # (B, T, 1, P, D)
-        ls_j = log_sigma.unsqueeze(2)
+        # m_j = m.unsqueeze(2) # (B, T, 1, P, D)
+        # ls_j = log_sigma.unsqueeze(2)
         u_j = u.unsqueeze(2)
         
-        d_base = kl_diag_gauss(m_i, ls_i, m_j, ls_j)
+        # d_base = kl_diag_gauss(m_i, ls_i, m_j, ls_j) -- REPLACED by Poincare logic inside op
         d_fiber = kl_categorical_logits(u_i, u_j)
-        A = bundle_affinity(d_base, d_fiber, self.cfg.alpha, self.cfg.beta) # (B, T, P, P)
+        A = compute_affinity_matrix(m, log_sigma, d_fiber, self.cfg.alpha, self.cfg.beta) # (B, T, P, P)
+
         
         # 3. Message Passing
         raw_feats = torch.cat([m, log_sigma, u], dim=-1)
