@@ -59,17 +59,17 @@ The repository is structured to separate geometric kernels from model adapters.
 
 ```mermaid
 graph TD
-    A[Base LLM (Qwen2.5-7B)] -->|Input Token| B(IGBundle Adapter)
-    B -->|Project| C{Input Projection}
-    C -->|Map| D[Hyperbolic Manifold Kernel]
-    D -->|Transport| E{Parallel Transport}
-    E -->|Map| F[Fiber Space]
+    A["Base LLM (Qwen2.5-7B)"] -->|Input Token| B["IGBundle Adapter"]
+    B -->|Project| C{"Input Projection"}
+    C -->|Map| D["Hyperbolic Manifold Kernel"]
+    D -->|Transport| E{"Parallel Transport"}
+    E -->|Map| F["Fiber Space"]
     F -->|Output| A
     
     subgraph "Auxiliary Crew (Swarm)"
-        G[Geometric Analyst]
-        H[Optimization Agent]
-        I[Thesis Preserver]
+        G["Geometric Analyst"]
+        H["Optimization Agent"]
+        I["Thesis Preserver"]
         G -->|Verify| D
     end
 ```

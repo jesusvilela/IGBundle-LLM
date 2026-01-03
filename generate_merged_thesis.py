@@ -136,35 +136,30 @@ def create_full_thesis(filename="IGBundle_Thesis.pdf"):
     Story.append(Paragraph("3.1. Fiber Bundles and Sections", styles["Heading2"]))
     Story.append(Paragraph("""
     A fiber bundle is a fundamental structure in differential geometry that generalizes the notion of a product space while allowing for local twisting.
-    <br/><br/>
-    <b>Definition 3.1 (Fiber Bundle).</b> A fiber bundle is a tuple $(E, B, \pi, F)$ where: $E$ is the total space, $B$ is the base space (a manifold), $F$ is the fiber, and $\pi: E \\to B$ is a continuous surjection (the projection) such that for each point $b \in B$, there exists a neighborhood $U$ and a homeomorphism $\phi: \pi^{-1}(U) \\to U \\times F$ making the diagram commute.
-    <br/><br/>
-    In our framework, the base manifold $B$ represents "structural" semantic content—the underlying conceptual skeleton. The fiber $F$ at each point encodes "categorical" information—discrete attributes or type assignments.
     """, styles["Justify"]))
+    Story.append(Paragraph(r"<b>Definition 3.1 (Fiber Bundle).</b> A fiber bundle is a tuple $(E, B, \pi, F)$ where: $E$ is the total space, $B$ is the base space (a manifold), $F$ is the fiber, and $\pi: E \to B$ is a continuous surjection (the projection) such that for each point $b \in B$, there exists a neighborhood $U$ and a homeomorphism $\phi: \pi^{-1}(U) \to U \times F$ making the diagram commute.", styles["Justify"]))
+    Story.append(Paragraph(r"In our framework, the base manifold $B$ represents 'structural' semantic content—the underlying conceptual skeleton. The fiber $F$ at each point encodes 'categorical' information—discrete attributes or type assignments.", styles["Justify"]))
     
     Story.append(Paragraph("3.2. Information Geometry of Mixture Models", styles["Heading2"]))
     Story.append(Paragraph("""
     We represent the state at each position as a mixture of $P$ Gaussian-Categorical components. Each component $i \in \{1,\dots,P\}$ is characterized by:
     """, styles["Justify"]))
     mix_items = [
-        ListItem(Paragraph("A mixture weight $w_i \in (0,1)$ with $\sum_i w_i = 1$", styles["Justify"])),
-        ListItem(Paragraph("A mixture weight $w_i \in (0,1)$ with $\sum_i w_i = 1", styles["Justify"])),
-        ListItem(Paragraph("A Gaussian base distribution $\mathcal{N}(\mu_i, \mathrm{diag}(\sigma_i^2))$ in $\mathbb{R}^D", styles["Justify"])),
-        ListItem(Paragraph("A categorical fiber distribution $p_i = \mathrm{softmax}(u_i)$ over $K$ categories", styles["Justify"]))
+        ListItem(Paragraph(r"A mixture weight $w_i \in (0,1)$ with $\sum_i w_i = 1$", styles["Justify"])),
+        ListItem(Paragraph(r"A Gaussian base distribution $\mathcal{N}(\mu_i, \mathrm{diag}(\sigma_i^2))$ in $\mathbb{R}^D$", styles["Justify"])),
+        ListItem(Paragraph(r"A categorical fiber distribution $p_i = \mathrm{softmax}(u_i)$ over $K$ categories", styles["Justify"]))
     ]
     Story.append(ListFlowable(mix_items, bulletType='bullet', start='circle'))
     
     Story.append(Paragraph("<b>Definition 3.2 (Bundle Affinity).</b> The affinity between components $i$ and $j$ is defined as:", styles["Justify"]))
-    Story.append(Paragraph("A_{ij} = \exp(-\\alpha \cdot D_{KL}^{base}(i,j) - \\beta \cdot D_{KL}^{fiber}(i,j))", styles["Math"]))
+    Story.append(Paragraph(r"A_{ij} = \exp(-\alpha \cdot D_{KL}^{base}(i,j) - \beta \cdot D_{KL}^{fiber}(i,j))", styles["Math"]))
 
     Story.append(Paragraph("3.3. Sheaf-Theoretic Consistency", styles["Heading2"]))
     Story.append(Paragraph("""
     A sheaf assigns data to open sets subject to gluing axioms.
     """, styles["Justify"]))
-    Story.append(Paragraph("JS(\bar{p}_r || \bar{p}_s) \leq \epsilon", styles["Math"]))
-    Story.append(Paragraph("""
-    where $\bar{p}_r$ is the weighted average fiber distribution on patch $r$, and JS denotes the Jensen-Shannon divergence. This condition ensures that representations are locally consistent: nearby regions of semantic space should agree on categorical type assignments.
-    """, styles["Justify"]))
+    Story.append(Paragraph(r"JS(\bar{p}_r || \bar{p}_s) \leq \epsilon", styles["Math"]))
+    Story.append(Paragraph(r"where $\bar{p}_r$ is the weighted average fiber distribution on patch $r$, and JS denotes the Jensen-Shannon divergence. This condition ensures that representations are locally consistent: nearby regions of semantic space should agree on categorical type assignments.", styles["Justify"]))
 
     # Figure 2: Sheaf
     Story.append(Spacer(1, 12))
@@ -174,7 +169,7 @@ def create_full_thesis(filename="IGBundle_Thesis.pdf"):
     # --- 4. Architecture ---
     Story.append(Paragraph("4. The IGBundle Adapter Architecture", styles["Heading1"]))
     Story.append(Paragraph("The IGBundle adapter is inserted into each transformer layer.", styles["Justify"]))
-    Story.append(Paragraph("The adapter projects the bottleneck state $\mu$ into the Poincaré Ball via a hyperbolic tangent map. Affinity matrices are computed using the geodesic distance $d_{\mathbb{B}}$ scaled by a learned temperature parameter $\sigma$ (interpreted as local inverse curvature).", styles["Justify"]))
+    Story.append(Paragraph(r"The adapter projects the bottleneck state $\mu$ into the Poincaré Ball via a hyperbolic tangent map. Affinity matrices are computed using the geodesic distance $d_{\mathbb{B}}$ scaled by a learned temperature parameter $\sigma$ (interpreted as local inverse curvature).", styles["Justify"]))
     
     # Figure 3: Architecture
     Story.append(Spacer(1, 12))
@@ -182,19 +177,19 @@ def create_full_thesis(filename="IGBundle_Thesis.pdf"):
     Story.append(Paragraph("Figure 3: IGBundle Adapter Architecture. Hidden states pass through bottleneck projection and bundle processing.", styles["Caption"]))
 
     Story.append(Paragraph("4.1. Bottleneck Projection to Bundle Space", styles["Heading2"]))
-    Story.append(Paragraph("Given input hidden states $x \in \mathbb{R}^{B \\times T \\times H}$, we first apply a bottleneck projection:", styles["Justify"]))
-    Story.append(Paragraph("h = W_{in} \cdot x, \quad W_{in} \in \mathbb{R}^{D_{bot} \\times H}", styles["Math"]))
+    Story.append(Paragraph(r"Given input hidden states $x \in \mathbb{R}^{B \times T \times H}$, we first apply a bottleneck projection:", styles["Justify"]))
+    Story.append(Paragraph(r"h = W_{in} \cdot x, \quad W_{in} \in \mathbb{R}^{D_{bot} \times H}", styles["Math"]))
     
     Story.append(Paragraph("4.2. Mixture State Representation", styles["Heading2"]))
-    Story.append(Paragraph("From the bottleneck representation $h$, we construct the mixture state:", styles["Justify"]))
-    Story.append(Paragraph("w = \mathrm{softmax}(W_w h), \quad \mu = W_\mu h, \quad \log \sigma = \mathrm{clamp}(W_\sigma h, -5, 5), \quad u = W_u h", styles["Math"]))
+    Story.append(Paragraph(r"From the bottleneck representation $h$, we construct the mixture state:", styles["Justify"]))
+    Story.append(Paragraph(r"w = \mathrm{softmax}(W_w h), \quad \mu = W_\mu h, \quad \log \sigma = \mathrm{clamp}(W_\sigma h, -5, 5), \quad u = W_u h", styles["Math"]))
     
     Story.append(Paragraph("4.3. Information-Geometric Updates", styles["Heading2"]))
     Story.append(Paragraph("""
     The aggregated messages inform updates to the mixture state parameters. We apply updates inspired by natural gradient descent on the statistical manifold:
     """, styles["Justify"]))
-    Story.append(Paragraph("u' = u + \eta_f \cdot S_u(m), \quad \lambda' = \lambda + \eta_b \cdot G_\lambda(m)", styles["Math"]))
-    Story.append(Paragraph("where $\lambda = \sigma^{-2}$ represents precision (inverse variance).", styles["Justify"]))
+    Story.append(Paragraph(r"u' = u + \eta_f \cdot S_u(m), \quad \lambda' = \lambda + \eta_b \cdot G_\lambda(m)", styles["Math"]))
+    Story.append(Paragraph(r"where $\lambda = \sigma^{-2}$ represents precision (inverse variance).", styles["Justify"]))
 
     # --- 5. Implementation ---
     Story.append(Paragraph("5. Implementation", styles["Heading1"]))

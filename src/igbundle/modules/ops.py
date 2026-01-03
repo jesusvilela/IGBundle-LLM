@@ -66,47 +66,67 @@ def compute_pairwise_kl_categorical(fiber_logits: torch.Tensor) -> torch.Tensor:
     return fiber_logits
 
 
-def compute_affinity_matrix(means: torch.Tensor, log_sigmas: torch.Tensor, fiber_divergences: torch.Tensor, alpha: float = 1.0, beta: float = 1.0) -> torch.Tensor:
+from .kl import kl_diag_gauss
+
+def compute_affinity_matrix(means: torch.Tensor, log_sigmas: torch.Tensor, fiber_divergences: torch.Tensor, alpha: float = 1.0, beta: float = 1.0, geometry: str = 'riemannian') -> torch.Tensor:
     """
-    Compute mixing weights A using Riemannian Geodesic Distance.
+    Compute mixing weights A using Riemannian (Poincare) or Euclidean (KL) geometry.
     
     Args:
-        means: (B, T, P, D) Mean vectors for base manifold.
-        log_sigmas: (B, T, P, D) Log standard deviations for scaling.
-        fiber_divergences: (B, T, P, P) Pairwise fiber divergences (e.g., KL Categorical).
-        alpha, beta: Scalar coefficients for combining base and fiber energies.
+        means: (B, T, P, D) Mean vectors.
+        log_sigmas: (B, T, P, D) Log stat deviations (or inverse curvature).
+        fiber_divergences: (B, T, P, P) Pairwise fiber divergences.
+        alpha, beta: Scalar coefficients.
+        geometry: 'riemannian' or 'euclidean'.
         
     Returns:
-        A: (B, T, P, P) normalized over last dim (rows sum to 1)
+        A: (B, T, P, P) normalized over last dim.
     """
-    # 1. Base Manifold: Hyperbolic (Poincare Ball)
-    # Project Euclidean means to Poincare Ball via Tanh
-    means_hyp = torch.tanh(means) 
     
-    # Compute Geodesic Distances
-    # We interpret 'log_sigmas' not as variance, but as Inverse Curvature / Temperature
-    # Higher sigma = flatter/wider = larger neighborhood = higher temperature
-    D_base = compute_poincare_distance(means_hyp, means_hyp)
-    
-    # 2. Fiber: Categorical Divergence (Jensen-Shannon or KL)
-    # We keep the "Fiber" logic as categorical distributions
-    # Assuming fiber_divergences is already the pairwise divergence matrix
-    D_fiber = fiber_divergences # This directly uses the input, assuming it's the pre-computed divergence.
-                                # If fiber_divergences were logits, we'd call compute_pairwise_kl_categorical(fiber_divergences)
-    
-    # 3. Combine
-    # Use sigma as temperature scaling for the base distance
-    # sigma = exp(log_sigma)
-    sigmas = torch.exp(log_sigmas).mean(dim=-1, keepdim=True) # Average sigma per component (B,T,P,1)
-    
-    # Adaptive Temperature: T_ij = sqrt(sigma_i * sigma_j)
-    sigmas_i = sigmas.unsqueeze(3)
-    sigmas_j = sigmas.unsqueeze(2)
-    T_ij = torch.sqrt(sigmas_i * sigmas_j) + 1e-6
-    
-    # Energy = alpha * (D_base / T_ij) + beta * D_fiber
-    # We effectively scale the hyperbolic distance by the learned uncertainty
-    energy = alpha * (D_base / T_ij) + beta * D_fiber
+    if geometry == 'euclidean':
+        # 1. Base Manifold: Euclidean (Gaussian KL)
+        # We assume means are in Euclidean space (no projection)
+        m_i = means.unsqueeze(3)
+        m_j = means.unsqueeze(2)
+        ls_i = log_sigmas.unsqueeze(3)
+        ls_j = log_sigmas.unsqueeze(2)
+        
+        # D_base = KL(N_i || N_j)
+        D_base = kl_diag_gauss(m_i, ls_i, m_j, ls_j)
+        
+        # 2. Fiber: Categorical Divergence
+        D_fiber = fiber_divergences
+        
+        # 3. Combine (Standard Energy)
+        # Energy = alpha * D_base + beta * D_fiber
+        energy = alpha * D_base + beta * D_fiber
+        
+    else: # riemannian (default)
+        # 1. Base Manifold: Hyperbolic (Poincare Ball)
+        # Project Euclidean means to Poincare Ball via Tanh
+        means_hyp = torch.tanh(means) 
+        
+        # Compute Geodesic Distances
+        # We interpret 'log_sigmas' not as variance, but as Inverse Curvature / Temperature
+        D_base = compute_poincare_distance(means_hyp, means_hyp)
+        
+        # 2. Fiber: Categorical Divergence
+        D_fiber = fiber_divergences
+        
+        # 3. Combine
+        # Use sigma as temperature scaling for the base distance
+        sigmas = torch.exp(log_sigmas).mean(dim=-1, keepdim=True) # (B,T,P,1)
+        
+        # Adaptive Temperature: T_ij = sqrt(sigma_i * sigma_j)
+        sigmas_i = sigmas.unsqueeze(3)
+        sigmas_j = sigmas.unsqueeze(2)
+        T_ij = (torch.sqrt(sigmas_i * sigmas_j) + 1e-6).squeeze(-1) # (B, T, P, P)
+        
+        # Debug shapes
+        # print(f"DEBUG: D_base={D_base.shape}, T_ij={T_ij.shape}, D_fiber={D_fiber.shape}")
+        
+        # Energy = alpha * (D_base / T_ij) + beta * D_fiber
+        energy = alpha * (D_base / T_ij) + beta * D_fiber
     
     # Affinity = Softmax(-Energy)
     A = F.softmax(-energy, dim=-1)

@@ -105,7 +105,8 @@ class IGBundleAdapter(nn.Module):
         
         # d_base = kl_diag_gauss(m_i, ls_i, m_j, ls_j) -- REPLACED by Poincare logic inside op
         d_fiber = kl_categorical_logits(u_i, u_j)
-        A = compute_affinity_matrix(m, log_sigma, d_fiber, self.cfg.alpha, self.cfg.beta) # (B, T, P, P)
+        geometry = getattr(self.cfg, 'geometry', 'riemannian')
+        A = compute_affinity_matrix(m, log_sigma, d_fiber, self.cfg.alpha, self.cfg.beta, geometry=geometry) # (B, T, P, P)
 
         
         # 3. Message Passing
