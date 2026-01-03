@@ -9,18 +9,20 @@
 
 <div align="center">
 
-![Interactive Manifold Topology](output/readme_visuals/riemannian_geometry.png)
+![Interactive Manifold Topology](assets/readme_visuals/riemannian_geometry.svg)
 
 **Figure 1**: *Visualization of the IGBundle fiber space projected onto a Riemannian manifold. Node activations reflect semantic density.*
+*(SVG placeholder; run the README visualization script for full-resolution plots.)*
 
-[**📄 Unified Project Thesis (PDF)**](IGBundle_Thesis_v1.0.md) | [**📊 Ablation Studies**](ablation_results/ablation_studies_summary.json)
+[**📄 Unified Project Thesis (PDF)**](output/thesis/IGBundle_Thesis.pdf) | [**📊 Ablation Studies**](ablation_results/ablation_studies_summary.json)
 
 </div>
 
 ---
 
-### 📦 Generated artifacts (not committed):
+### 📦 Generated artifacts (local build):
 - **Thesis PDF**: `python generate_thesis.py` -> `output/thesis/IGBundle_Thesis.pdf`
+- **README visualizations**: `python generate_readme_visualizations.py --output-dir output/readme_visuals`
 - **Topology visualization (lite)**: `python generate_braintop_viz.py --lite --output output/igbundle_topology_lite.html`
 
 ## 1. Abstract
