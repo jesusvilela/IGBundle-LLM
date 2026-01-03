@@ -1,3 +1,16 @@
+import sys
+import os as _os
+
+# Fix paths
+_src_path = _os.path.join(_os.path.dirname(__file__), "src")
+if _src_path not in sys.path:
+    sys.path.insert(0, _src_path)
+
+# Disable TorchAO and Fix Memory
+_os.environ['DISABLE_TORCHAO'] = '1'
+sys.modules['torchao'] = None
+_os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'max_split_size_mb:128'
+
 import torch
 from peft import PeftModel
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -35,13 +48,13 @@ def export_to_gguf_ready(base_model_id, checkpoint_path, output_dir):
     model.save_pretrained(merged_dir)
     tokenizer.save_pretrained(merged_dir)
     
-    # 5. Convert to GGUF using local script
-    print("Converting to GGUF using llama.cpp/convert_hf_to_gguf.py...")
+    # 5. Convert to GGUF using safe wrapper
+    print("Converting to GGUF using safe_convert_wrapper.py...")
     gguf_file = f"{output_dir}.gguf" # e.g. igbundle_qwen7b.gguf
     
     # Use sys.executable to ensure we use the same environment
     cmd = [
-        sys.executable, "llama.cpp/convert_hf_to_gguf.py", 
+        sys.executable, "safe_convert_wrapper.py", 
         merged_dir, 
         "--outfile", gguf_file, 
         "--outtype", "f16"

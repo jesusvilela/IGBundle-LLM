@@ -9,6 +9,9 @@ This script creates proper geometric diagrams showing:
 - Comparison of original vs corrected approaches
 """
 
+import argparse
+from pathlib import Path
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -21,7 +24,11 @@ import matplotlib.patheffects as path_effects
 plt.style.use('default')
 sns.set_palette("husl")
 
-def create_fiber_bundle_diagram():
+def _output_path(output_dir: Path, name: str) -> Path:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    return output_dir / name
+
+def create_fiber_bundle_diagram(output_dir: Path):
     """Create proper fiber bundle visualization π: E → M"""
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 8))
 
@@ -106,11 +113,11 @@ def create_fiber_bundle_diagram():
     ax2.axis('off')
 
     plt.tight_layout()
-    plt.savefig('../igbundle-llm/assets/fiber_bundle_structure.png',
+    plt.savefig(_output_path(output_dir, "fiber_bundle_structure.png"),
                 dpi=300, bbox_inches='tight', facecolor='white')
     plt.close()
 
-def create_lambda_calculus_diagram():
+def create_lambda_calculus_diagram(output_dir: Path):
     """Create lambda calculus operations visualization"""
     fig, ax = plt.subplots(1, 1, figsize=(14, 10))
 
@@ -179,11 +186,11 @@ def create_lambda_calculus_diagram():
     ax.axis('off')
 
     plt.tight_layout()
-    plt.savefig('../igbundle-llm/assets/lambda_calculus_operations.png',
+    plt.savefig(_output_path(output_dir, "lambda_calculus_operations.png"),
                 dpi=300, bbox_inches='tight', facecolor='white')
     plt.close()
 
-def create_riemannian_geometry_diagram():
+def create_riemannian_geometry_diagram(output_dir: Path):
     """Create Riemannian geometry visualization"""
     fig = plt.figure(figsize=(16, 10))
 
@@ -291,11 +298,11 @@ def create_riemannian_geometry_diagram():
     ax4.set_ylabel('v')
 
     plt.tight_layout()
-    plt.savefig('../igbundle-llm/assets/riemannian_geometry.png',
+    plt.savefig(_output_path(output_dir, "riemannian_geometry.png"),
                 dpi=300, bbox_inches='tight', facecolor='white')
     plt.close()
 
-def create_information_geometry_diagram():
+def create_information_geometry_diagram(output_dir: Path):
     """Create information geometry and natural gradients visualization"""
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(16, 12))
 
@@ -413,11 +420,11 @@ def create_information_geometry_diagram():
             bbox=dict(boxstyle="round,pad=0.3", facecolor="lightblue", alpha=0.8))
 
     plt.tight_layout()
-    plt.savefig('../igbundle-llm/assets/information_geometry.png',
+    plt.savefig(_output_path(output_dir, "information_geometry.png"),
                 dpi=300, bbox_inches='tight', facecolor='white')
     plt.close()
 
-def create_comparison_diagram():
+def create_comparison_diagram(output_dir: Path):
     """Create before/after comparison diagram"""
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 10))
 
@@ -492,11 +499,11 @@ def create_comparison_diagram():
     ax2.axis('off')
 
     plt.tight_layout()
-    plt.savefig('../igbundle-llm/assets/before_after_comparison.png',
+    plt.savefig(_output_path(output_dir, "before_after_comparison.png"),
                 dpi=300, bbox_inches='tight', facecolor='white')
     plt.close()
 
-def create_mathematical_equations():
+def create_mathematical_equations(output_dir: Path):
     """Create mathematical equation visualizations"""
     import matplotlib.patches as mpatches
 
@@ -607,45 +614,47 @@ def create_mathematical_equations():
     ax4.axis('off')
 
     plt.tight_layout()
-    plt.savefig('../igbundle-llm/assets/mathematical_equations.png',
+    plt.savefig(_output_path(output_dir, "mathematical_equations.png"),
                 dpi=300, bbox_inches='tight', facecolor='white')
     plt.close()
 
-def main():
+def main(output_dir: Path):
     """Generate all visualizations"""
-    import os
-
-    # Create assets directory
-    os.makedirs('../igbundle-llm/assets', exist_ok=True)
-
-    print("🎨 Generating mathematical visualizations...")
+    print("Generating README visualizations...")
 
     try:
-        create_fiber_bundle_diagram()
-        print("✅ Fiber bundle structure diagram created")
+        create_fiber_bundle_diagram(output_dir)
+        print("Fiber bundle structure diagram created")
 
-        create_lambda_calculus_diagram()
-        print("✅ Lambda calculus operations diagram created")
+        create_lambda_calculus_diagram(output_dir)
+        print("Lambda calculus operations diagram created")
 
-        create_riemannian_geometry_diagram()
-        print("✅ Riemannian geometry visualization created")
+        create_riemannian_geometry_diagram(output_dir)
+        print("Riemannian geometry visualization created")
 
-        create_information_geometry_diagram()
-        print("✅ Information geometry diagrams created")
+        create_information_geometry_diagram(output_dir)
+        print("Information geometry diagrams created")
 
-        create_comparison_diagram()
-        print("✅ Before/after comparison diagram created")
+        create_comparison_diagram(output_dir)
+        print("Before/after comparison diagram created")
 
-        create_mathematical_equations()
-        print("✅ Mathematical equations visualization created")
+        create_mathematical_equations(output_dir)
+        print("Mathematical equations visualization created")
 
-        print("\n🎉 All visualizations generated successfully!")
-        print("📁 Files saved in: ../igbundle-llm/assets/")
+        print("\nAll visualizations generated successfully.")
+        print(f"Files saved in: {output_dir}")
 
     except Exception as e:
-        print(f"❌ Error generating visualizations: {e}")
+        print(f"Error generating visualizations: {e}")
         import traceback
         traceback.print_exc()
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Generate README visualizations.")
+    parser.add_argument(
+        "--output-dir",
+        default="output/readme_visuals",
+        help="Directory to write README visualizations",
+    )
+    args = parser.parse_args()
+    main(Path(args.output_dir))

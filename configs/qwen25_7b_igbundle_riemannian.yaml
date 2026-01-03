@@ -24,14 +24,14 @@ lora:
 training:
   output_dir: "./output/igbundle_qwen7b_riemannian"
   num_train_epochs: 1
-  max_steps: 25 # Very short run for rapid ablation
+  max_steps: 100 # Extended training run
   per_device_train_batch_size: 1
   optim: paged_adamw_8bit
   gradient_accumulation_steps: 1
   learning_rate: 2e-4
   max_grad_norm: 0.3
   logging_steps: 1
-  save_steps: 25 # Save at end
+  save_steps: 50 # Save halfway and end
   bf16: true
   gradient_checkpointing: true
 

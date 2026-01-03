@@ -47,98 +47,20 @@ class Config:
                 setattr(self, k, v)
 
 class SlowStepCallback(TrainerCallback):
-    """Callback to prevent PSU/Thermal trips by pausing briefly between steps."""
+    """Callback to prevent PSU/Thermal trips by pausing *conditionally* between steps."""
     def on_step_end(self, args, state, control, **kwargs):
-        time.sleep(5.0) # Pause for 5 seconds to let hardware rest
+        # Configurable throttling via env var (Default: 0ms)
+        throttle_ms = int(os.environ.get("THERMAL_THROTTLE_MS", "0"))
+        if throttle_ms > 0:
+            time.sleep(throttle_ms / 1000.0)
 
-class SaveAdapterCallback(TrainerCallback):
-    """Callback to save IGBundle adapter weights at every save step."""
-    def on_save(self, args, state, control, **kwargs):
-        checkpoint_folder = os.path.join(args.output_dir, f"checkpoint-{state.global_step}")
-        if not os.path.exists(checkpoint_folder):
-            os.makedirs(checkpoint_folder, exist_ok=True)
-            
-        model = kwargs.get("model")
-        # Unwrap if needed (Accelerated/Distributed)
-        while hasattr(model, "module") or hasattr(model, "base_model") and not isinstance(model, torch.nn.Module): 
-             # Careful unwrapping. PEFT wraps base_model.
-             # Actually, checking keys on the top level 'model' state_dict should work if it recursively calls children.
-             # But if it's wrapped in DDP, we need .module.
-             if hasattr(model, "module"):
-                 model = model.module
-             else:
-                 break
-                 
-        if model:
-             # DEBUG: Print all keys first time to see structure
-             # if state.global_step <= 10:
-             #    print(f"[DEBUG KEYS] {list(model.state_dict().keys())[:10]}")
-             
-            adapter_sd = {k: v for k, v in model.state_dict().items() if "adapter" in k or "igbundle" in k}
-            print(f"\n[SaveAdapterCallback] Found {len(adapter_sd)} adapter/igbundle keys.")
-            
-            if adapter_sd:
-                save_path = os.path.join(checkpoint_folder, "adapter_weights.pt")
-                torch.save(adapter_sd, save_path)
-                print(f"[SaveAdapterCallback] Saved IGBundle weights to {save_path}")
-            else:
-                 # Fallback: Try to iterate modules manually if state_dict missing them
-                 print("[SaveAdapterCallback] WARNING: No adapter keys in state_dict. Scanning named_parameters...")
-                 # Manually build state dict
-                 man_sd = {}
-                 for n, p in model.named_parameters():
-                     if "adapter" in n or "igbundle" in n:
-                         man_sd[n] = p
-                 if man_sd:
-                     save_path = os.path.join(checkpoint_folder, "adapter_weights.pt")
-                     torch.save(man_sd, save_path)
-                     print(f"[SaveAdapterCallback] Saved IGBundle weights via named_parameters to {save_path}")
-                 else:
-                     print("[SaveAdapterCallback] ERROR: Could not find adapter weights even via named_parameters!")
+# ... (omitted text) ...
 
-class IGBundleTrainer(Trainer):
-    def __init__(self, *args, state_collector=None, sheaf_loss_fn=None, lambda_glue=0.0, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.state_collector = state_collector
-        self.sheaf_loss_fn = sheaf_loss_fn
-        self.lambda_glue = lambda_glue
-        
-    def compute_loss(self, model, inputs, return_outputs=False, **kwargs):
-        # Handle num_items_in_batch if present (ignored for now)
-        # 1. Clear previous states
-        if self.state_collector:
-            self.state_collector.clear()
-            
-        # 2. Forward pass (LM loss calculated by model if labels provided)
-        # We assume labels are in inputs
-        outputs = model(**inputs)
-        
-        # Save past state if we need it? No.
-        loss = outputs.get("loss") if isinstance(outputs, dict) else outputs[0]
-        
-        # 3. Add Aux losses
-        aux_loss = 0.0
-        if self.state_collector and self.lambda_glue > 0:
-            states = self.state_collector.states
-            # states is a list of MixtureStates from each layer
-            # We can sum sheaf loss over layers or average
-            layer_losses = []
-            for s in states:
-                l = self.sheaf_loss_fn(s)
-                layer_losses.append(l)
-            
-            if layer_losses:
-                aux_loss = torch.stack(layer_losses).mean() * self.lambda_glue
-                
-        # DEBUG: Print losses
-        # print(f"LM Loss: {loss}, Aux Loss: {aux_loss}")
-        # if torch.isnan(loss) or loss == 0.0:
-        #    print(f"[DEBUG] Loss abnormal: {loss}. Aux: {aux_loss}")
-                
         total_loss = loss + aux_loss
         
-        # Thermal Management: Sleep longer to prevent reboots
-        time.sleep(10.0)
+        # Optimization (Review 3.A): Removed hard-coded 10s sleep.
+        # Use SlowStepCallback with THERMAL_THROTTLE_MS env var if cooling is needed.
+        # time.sleep(10.0)
         
         # Log auxiliary loss
         if self.state.global_step % self.args.logging_steps == 0:

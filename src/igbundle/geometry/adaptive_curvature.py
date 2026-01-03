@@ -122,34 +122,42 @@ class AdaptiveCurvatureTargeting(nn.Module):
         return final_curvatures
 
     def _compute_local_curvatures(self, positions: torch.Tensor) -> torch.Tensor:
-        """Compute curvature based on local geometry patterns."""
+        """Compute curvature based on local geometry patterns (Vectorized)."""
         B, T, P, D = positions.shape
+        
+        # 1. Flatten Batch and Time for Batched Computation
+        # positions_flat: (N, P, D) where N = B*T
+        positions_flat = positions.view(-1, P, D)
+        
+        # 2. Batched Pairwise Distance Computation
+        # distances: (N, P, P)
+        distances = torch.cdist(positions_flat, positions_flat)
 
-        # Analyze local density and distribution
-        position_flat = positions.view(B * T, P, D)
-        curvatures = []
-
-        for b in range(B * T):
-            pos_b = position_flat[b]  # (P, D)
-
-            # Compute pairwise distances
-            distances = torch.cdist(pos_b, pos_b)  # (P, P)
-
-            # Local density estimation
-            k = min(3, P - 1)  # Number of nearest neighbors
-            if k > 0:
-                nearest_distances, _ = torch.topk(distances, k + 1, largest=False, dim=-1)
-                local_density = 1.0 / (nearest_distances[:, 1:].mean(dim=-1) + 1e-6)
-
-                # Convert density to curvature (high density -> high negative curvature)
-                density_normalized = F.tanh(local_density)
-                curvature_component = -2.0 * density_normalized  # Range: [-2, 0]
-
-                curvatures.append(curvature_component)
-            else:
-                curvatures.append(torch.full((P,), -1.0, device=positions.device))
-
-        curvatures = torch.stack(curvatures).view(B, T, P)
+        # 3. Local Density Estimation using Top-K Neighbors
+        # Find k nearest neighbors (excluding self at index 0)
+        k = min(3, P - 1)
+        if k > 0:
+            # topk returns largest, so we negate or look at smallest. 
+            # torch.topk with largest=False is standard.
+            # values: (N, P, k+1) - includes self (dist=0)
+            nearest_distances, _ = torch.topk(distances, k + 1, largest=False, dim=-1)
+            
+            # Compute mean distance to neighbors (skip the first one which is self/0)
+            # mean_dist: (N, P)
+            mean_dist = nearest_distances[:, :, 1:].mean(dim=-1)
+            
+            # Density = Inverse Distance
+            local_density = 1.0 / (mean_dist + 1e-6)
+            
+            # Convert to Curvature: High Density -> High Negative Curvature [-2, 0]
+            density_normalized = torch.tanh(local_density)
+            curvatures = -2.0 * density_normalized
+        else:
+            # Fallback for very small P
+            curvatures = torch.full((B * T, P), -1.0, device=positions.device)
+            
+        # 4. Reshape back to (B, T, P)
+        return curvatures.view(B, T, P)
 
         # Neural network refinement
         curvature_refined = []

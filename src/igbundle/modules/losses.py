@@ -79,10 +79,8 @@ class SheafLoss(torch.nn.Module):
         p_s = p_bar.unsqueeze(2)
         
         m_dist = 0.5 * (p_r + p_s)
-        # KL(p_r || m)
-        kl_r = (p_r * (torch.log(p_r + 1e-8) - torch.log(m_dist + 1e-8))).sum(dim=-1)
-        kl_s = (p_s * (torch.log(p_s + 1e-8) - torch.log(m_dist + 1e-8))).sum(dim=-1)
-        js_rs = 0.5 * (kl_r + kl_s) # (B, T, R, R)
+        # Refactor (Review 2.E): Use unified JS divergence helper
+        js_rs = jensen_shannon_divergence(p_r, p_s, epsilon=1e-8) # (B, T, R, R)
         
         weighted_js = omega * js_rs
         

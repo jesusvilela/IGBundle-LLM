@@ -2,6 +2,15 @@ import torch
 import numpy as np
 import os
 import argparse
+from pathlib import Path
+
+# Add braintop/src to path for local development import
+import sys
+base_dir = os.path.dirname(os.path.abspath(__file__))
+braintop_src = os.path.join(base_dir, "braintop", "src")
+if braintop_src not in sys.path:
+    sys.path.append(braintop_src)
+
 from braintop.utils.builders import TopologyBuilder
 from braintop.core.visualizer import TopologyVisualizer
 
@@ -65,6 +74,9 @@ def generate_viz(checkpoint_path, output_file, lite_mode=False):
     
     topology = builder.build()
     
+    output_path = Path(output_file)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
     print(f"Generating visualization to {output_file}...")
     visualizer = TopologyVisualizer(topology)
     visualizer.save(output_file)
@@ -84,7 +96,7 @@ def generate_viz(checkpoint_path, output_file, lite_mode=False):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--checkpoint", default="trained_adapter")
-    parser.add_argument("--output", default="igbundle_topology.html")
+    parser.add_argument("--output", default="output/igbundle_topology.html")
     parser.add_argument("--lite", action="store_true", help="Generate lightweight version for web preview")
     args = parser.parse_args()
     

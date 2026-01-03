@@ -25,14 +25,19 @@ def compute_poincare_distance(x: torch.Tensor, y: torch.Tensor, epsilon: float =
     y_sq_norm = torch.sum(y_j.pow(2), dim=-1)
     
     # Clip norms to ensure stability (stay inside ball)
-    x_sq_norm = torch.clamp(x_sq_norm, max=1.0-epsilon)
-    y_sq_norm = torch.clamp(y_sq_norm, max=1.0-epsilon)
+    # Critical Fix (Review 2.D): Ensure norms never strictly equal 1.0 (boundary singularity)
+    x_sq_norm = torch.clamp(x_sq_norm, max=1.0 - epsilon)
+    y_sq_norm = torch.clamp(y_sq_norm, max=1.0 - epsilon)
     
     # Argument for arccosh
-    alpha_num_stab = 1e-7 # Numerical stabilizer
-    val = 1.0 + 2.0 * sq_euc_dist / ((1.0 - x_sq_norm) * (1.0 - y_sq_norm) + alpha_num_stab)
+    # Critical Fix (Review 2.D): Prevent denominator collapse
+    alpha_num_stab = 1e-7 
+    denom = (1.0 - x_sq_norm) * (1.0 - y_sq_norm) + alpha_num_stab
+    
+    val = 1.0 + 2.0 * sq_euc_dist / denom
     
     # Arccosh
+    # Critical Fix (Review 2.D): Ensure val >= 1 + epsilon for stable gradient
     dist = torch.acosh(torch.clamp(val, min=1.0 + epsilon))
     return dist
 

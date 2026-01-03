@@ -14,7 +14,74 @@ import torch
 import gradio as gr
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from peft import PeftModel
-from igbundle.integrations.hf_patch import wrap_hf_candidate
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+import io
+from PIL import Image as PILImage
+
+# Global Viz State
+VIZ_STATE = {
+    "curvature": [],
+    "affinity": []
+}
+
+class HookManager:
+    """Manages forward hooks to capture intermediate geometric states."""
+    def __init__(self, model):
+        self.hooks = []
+        self.model = model
+        
+    def _curvature_hook(self, module, input, output):
+        # Expected output from ManifoldKernel: (projected, curvature, ...)
+        # Or if it's the Adapter output...
+        # Let's inspect the module structure. 
+        # For now, we assume we hook into the 'igbundle_adapter' layers.
+        # If output is a tuple and len > 1, 2nd element is usually curvature/aux.
+        if isinstance(output, tuple) and len(output) > 1:
+            # We treat the second element as curvature scalar field if shape matches
+            curv = output[1]
+            if isinstance(curv, torch.Tensor):
+                VIZ_STATE["curvature"].append(curv.detach().cpu().numpy())
+
+    def _affinity_hook(self, module, input, output):
+        # Attention weights are tricky to hook in PEFT.
+        # We might need to rely on the model returning attentions.
+        pass
+
+    def attach(self):
+        # Find all IGBundle modules
+        for name, module in self.model.named_modules():
+            if "igbundle" in name.lower() and "kernel" in name.lower():
+                h = module.register_forward_hook(self._curvature_hook)
+                self.hooks.append(h)
+                print(f"Hooked {name} for curvature.")
+
+    def detach(self):
+        for h in self.hooks:
+            h.remove()
+        self.hooks = []
+        
+def plot_curvature():
+    """Generate a plot of the curvature distribution."""
+    if not VIZ_STATE["curvature"]:
+        return None
+    
+    data = np.concatenate([c.flatten() for c in VIZ_STATE["curvature"]])
+    
+    plt.figure(figsize=(8, 4))
+    sns.histplot(data, bins=30, kde=True, color="purple")
+    plt.title("Curvature $\sigma(x)$ Distribution (Riemannian Dispersion)")
+    plt.xlabel("Local Curvature Value")
+    plt.ylabel("Frequency")
+    plt.axvline(x=-1.0, color='r', linestyle='--', label="Hyperbolic Ideal (-1)")
+    plt.legend()
+    
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png')
+    plt.close()
+    buf.seek(0)
+    return PILImage.open(buf)
 
 def load_model(config_path, checkpoint_path):
     print(f"Loading config from {config_path}")
@@ -151,34 +218,83 @@ def generate_response(message, history):
     generated = TOKENIZER.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
     return generated
 
+def generate_with_viz(message, history):
+    if MODEL is None:
+        return "Model not loaded.", None
+        
+    # Clear previous state
+    VIZ_STATE["curvature"] = []
+    VIZ_STATE["affinity"] = []
+    
+    # Generate
+    response = generate_response(message, history)
+    
+    # Create Plots
+    curv_plot = plot_curvature()
+    
+    return response, curv_plot
+
 def launch_app(config_path, checkpoint_path):
     global MODEL, TOKENIZER
     MODEL, TOKENIZER = load_model(config_path, checkpoint_path)
     
-    chat_interface = gr.ChatInterface(
-        fn=generate_response,
-        chatbot=gr.Chatbot(height=600),
-        textbox=gr.Textbox(placeholder="Ask me anything...", container=False, scale=7),
-        title="ManifoldGL: Geometric Bundle LLM",
-        description="""
-        **ManifoldGL**: LLM operating in layers of concave spaces using Information-Geometric Bundle Adapter.
-        
-        (c) Jesús Vilela Jato, all rights reserved.
-        """,
-        examples=["What is the nature of consciousness?", "Explain quantum entanglement.", "Write a python function to merge sort."],
-        cache_examples=False,
-    )
+    # Convert to standard Model Structure?
+    # We need to attach hooks now that we have the model instance.
+    hooks = HookManager(MODEL)
+    hooks.attach()
     
-    chat_interface.launch(share=True)
+    with gr.Blocks(title="ManifoldGL Explorer", theme=gr.themes.Soft()) as demo:
+        gr.Markdown(
+            """
+            # 🌌 ManifoldGL: Geometric Bundle LLM Explorer
+            **Model**: Qwen2.5-7B + IGBundle (Riemannian) | **Checkpoint**: Step 50
+            
+            Explore how the model adapts its semantic geometry in real-time.
+            """
+        )
+        
+        with gr.Tab("Inference"):
+            with gr.Row():
+                with gr.Column(scale=2):
+                    chatbot = gr.Chatbot(height=500, label="Hyperbolic Dialogue")
+                    msg = gr.Textbox(placeholder="Ask me about the nature of reality...", label="User Input")
+                    clear = gr.Button("Clear")
+                
+                with gr.Column(scale=1):
+                    gr.Markdown("### Geometric Telemetry")
+                    curv_plot = gr.Plot(label="Curvature Distribution $\sigma$")
+                    # affinity_plot = gr.Plot(label="Fiber Affinity Matrix") # Placeholder
+            
+            def user(user_message, history):
+                return "", history + [[user_message, None]]
+
+            def bot(history):
+                user_message = history[-1][0]
+                bot_message, plot = generate_with_viz(user_message, history[:-1])
+                history[-1][1] = bot_message
+                return history, plot
+
+            msg.submit(user, [msg, chatbot], [msg, chatbot], queue=False).then(
+                bot, [chatbot], [chatbot, curv_plot]
+            )
+            clear.click(lambda: None, None, chatbot, queue=False)
+            
+        with gr.Tab("System Architecture"):
+            gr.Markdown("### IGBundle Topological View")
+            gr.HTML('<iframe src="file/output/igbundle_topology_lite.html" width="100%" height="600px"></iframe>')
+
+    demo.launch(share=True)
 
 if __name__ == "__main__":
     base_dir = os.path.dirname(os.path.abspath(__file__))
     default_config = os.path.join(base_dir, "configs", "qwen25_7b_igbundle_lora.yaml")
     
     # Try to find the latest checkpoint automatically or default to valid path
-    default_checkpoint_dir = os.path.join(base_dir, "output", "igbundle_qwen7b")
-    # If checkpoint-50 exists, use it
-    if os.path.exists(os.path.join(default_checkpoint_dir, "checkpoint-50")):
+    default_checkpoint_dir = os.path.join(base_dir, "output", "igbundle_qwen7b_riemannian")
+    # If checkpoint-100 exists, use it (Gold Master)
+    if os.path.exists(os.path.join(default_checkpoint_dir, "checkpoint-100")):
+        default_checkpoint = os.path.join(default_checkpoint_dir, "checkpoint-100")
+    elif os.path.exists(os.path.join(default_checkpoint_dir, "checkpoint-50")):
         default_checkpoint = os.path.join(default_checkpoint_dir, "checkpoint-50")
     else:
         default_checkpoint = default_checkpoint_dir

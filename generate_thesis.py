@@ -38,6 +38,55 @@ from reportlab.pdfbase.ttfonts import TTFont
 INLINE_CODE_RE = re.compile(r"`([^`]+)`")
 BOLD_RE = re.compile(r"\*\*([^*]+)\*\*")
 ITALIC_RE = re.compile(r"\*([^*]+)\*")
+MATH_BLOCK_RE = re.compile(r"\$\$([\s\S]+?)\$\$")
+
+# LaTeX Renderer
+try:
+    import matplotlib.pyplot as plt
+    import matplotlib
+    import hashlib
+    # Use Computer Modern for academic look
+    matplotlib.rcParams['mathtext.fontset'] = 'cm'
+    MATPLOTLIB_AVAILABLE = True
+except ImportError:
+    MATPLOTLIB_AVAILABLE = False
+    print("Warning: Matplotlib not found. LaTeX rendering disabled.")
+
+class MathRenderer:
+    def __init__(self, output_dir="output/thesis/equations_cache"):
+        self.output_dir = Path(output_dir)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        
+    def render(self, tex):
+        if not MATPLOTLIB_AVAILABLE:
+            return None
+            
+        # Hash text for filename
+        h = hashlib.md5(tex.encode('utf-8')).hexdigest()
+        filename = self.output_dir / f"eq_{h}.png"
+        
+        if filename.exists():
+            return str(filename)
+            
+        try:
+            # Clean tex
+            tex = tex.strip()
+            
+            # Estimate width based on length?
+            # Matplotlib auto-sizing is tricky with just text
+            fig = plt.figure(figsize=(0.01, 0.01))
+            fig.text(0, 0, f"${tex}$", fontsize=14)
+            
+            # Render to buffer to crop? 
+            # Easier strategy: Render to file with bbox_inches='tight'
+            plt.axis('off')
+            plt.savefig(filename, dpi=300, bbox_inches='tight', pad_inches=0.1, transparent=True)
+            plt.close()
+            return str(filename)
+        except Exception as e:
+            print(f"Failed to render LaTeX '{tex}': {e}")
+            plt.close()
+            return None
 
 
 def _register_unicode_font() -> str | None:
@@ -295,6 +344,45 @@ def parse_markdown(md_text: str, styles) -> list:
                 print(f"Error loading image {img_path}: {e}")
                 
             i += 1
+            continue
+
+        if line.startswith("$$") or MATH_BLOCK_RE.match(line):
+            # Single line $$...$$ or start of block
+            tex_content = ""
+            if line.replace("$", "").strip(): 
+                # Inline block "$$ x = y $$"
+                tex_content = line.replace("$", "").strip()
+                i += 1
+            else:
+                # Multi-line block
+                i += 1
+                while i < len(lines) and not lines[i].strip().startswith("$$"):
+                    tex_content += lines[i] + " "
+                    i += 1
+                if i < len(lines): i += 1 # Skip closing $$
+            
+            # Render
+            renderer = MathRenderer()
+            img_path = renderer.render(tex_content)
+            
+            if img_path:
+                img = Image(img_path)
+                # Scale down high DPI image
+                # 300 DPI -> 72 DPI scale factor ~ 0.24
+                # But bbox_tight varies. Let's fix height to something reasonable or constrain width
+                desired_width = 300 # Max width
+                sf = img.imageWidth / desired_width
+                if sf < 1: sf = 1
+                
+                img.drawWidth = img.imageWidth / 3 # Roughly 300 dpi -> 100 dpi equivalent on page
+                img.drawHeight = img.imageHeight / 3
+                
+                story.append(Spacer(1, 6))
+                story.append(img)
+                story.append(Spacer(1, 6))
+            else:
+                story.append(Preformatted(f"$$ {tex_content} $$", styles["CodeBlock"]))
+                
             continue
 
         if line.startswith("```"):

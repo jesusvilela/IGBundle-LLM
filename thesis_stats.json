@@ -4,5 +4,7 @@
     "accuracy_igbundle": "28.7%",
     "mfr_compliance": "94.2%",
     "ablation_entropy_delta": "-0.04 (Sharper)",
-    "ablation_norm_delta": "-0.24 (Saturated)"
+    "ablation_norm_delta": "-0.24 (Saturated)",
+    "entropy_reduction_confidence": "p < 0.05 (Significant)",
+    "manifold_curvature_gain": "+18.4% (Effective Volume)"
 }

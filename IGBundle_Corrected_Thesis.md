@@ -345,6 +345,41 @@ The original thesis contained fundamental mathematical errors that undermined it
 
 ---
 
+## 🧭 **ADDENDUM: 2026 RESEARCH EXTENSIONS & THESIS IMPROVEMENTS**
+
+This addendum documents post-correction research extensions that build on the corrected foundations. These items are implemented as prototypes and are pending empirical validation unless explicitly noted.
+
+### **A. Implemented Prototype Extensions (Pending Validation)**
+1. **Adaptive Curvature Targeting**
+   - **Implementation**: `src/igbundle/geometry/adaptive_curvature.py`
+   - **Mechanisms**: learned curvature targets from local geometry, semantic context, and training progress
+   - **Hypothesis**: improved curvature alignment and training stability vs fixed curvature schedules
+
+2. **Multi-Scale Geometric Attention**
+   - **Implementation**: `src/igbundle/geometry/multiscale_attention.py`
+   - **Mechanisms**: multi-scale metrics, cross-scale parallel transport, learned scale attention weights
+   - **Hypothesis**: stronger compositional semantics and multi-resolution geometric structure
+
+3. **Information-Geometric Meta-Learning**
+   - **Implementation**: `src/igbundle/training/meta_geometric_optimization.py`
+   - **Mechanisms**: meta-learned Fisher approximations, hierarchical natural gradients by parameter group
+   - **Hypothesis**: faster convergence with improved stability under geometric constraints
+
+### **B. Validation Framework (In Progress)**
+- **Protocol**: `experimental_validation_protocols.py` defines 9 experiments across adaptive curvature, multi-scale attention, and meta-learning
+- **Analysis tooling**: `geometric_analysis.py` and `comparative_studies.py` provide standardized metrics and statistical tests
+- **Status**: experiments specified; results pending execution
+
+### **C. Theoretical Extensions (Planned)**
+- **Quantum-Inspired Fiber Operations**: superposition and entanglement analogs for fiber composition
+- **Topological Memory via Persistent Homology**: long-range structure tracking during representation evolution
+- **Status**: theoretical frameworks drafted; implementation pending
+
+### **D. Research Traceability**
+- **Research report**: `AI_SCIENTIST_RESEARCH_REPORT.md` records hypotheses, expected effect sizes, and integration notes
+
+---
+
 ## 📚 **CORRECTED REFERENCES**
 
 ### **Differential Geometry**

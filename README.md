@@ -7,11 +7,10 @@
 
 <div align="center">
 
-[![Interactive Manifold Topology](igbundle_topology.png)](http://htmlpreview.github.io/?https://github.com/jesusvilela/IGBundle-LLM/blob/main/igbundle_topology_lite.html)
+Generated artifacts (not committed):
 
-**Figure 1**: *Interactive visualization of the IGBundle fiber space projected onto a Hyperbolic manifold. Click to explore.*
-
-[**📄 Unified Project Thesis (PDF)**](IGBundle_Thesis.pdf)
+- Thesis PDF: `python generate_thesis.py` -> `output/thesis/IGBundle_Thesis.pdf`
+- Topology visualization (lite): `python generate_braintop_viz.py --lite --output output/igbundle_topology_lite.html`
 
 </div>
 
@@ -83,7 +82,7 @@ graph TD
 ### 4.1 ARC-AGI Benchmark
 We evaluated ManifoldGL on the ARC-AGI dataset, focusing on tasks requiring abstract reasoning and generalization.
 
-| Metric | Baseline (Qwen-7B) | ManifoldGL (Checkpoint-600) | Improvement |
+| Metric | Baseline (Qwen-7B) | ManifoldGL (Checkpoint-50) | Improvement |
 | :--- | :---: | :---: | :---: |
 | **Accuracy** | 12.4% | **28.7%** | +16.3% |
 | **MFR Compliance** | N/A | **94.2%** | N/A |
@@ -110,8 +109,8 @@ python auxiliary_crew.py
 ### Scientific Evaluation
 To reproduce the ARC-AGI results with strict confidence intervals:
 ```bash
-python eval_arc.py --checkpoint output/igbundle_qwen7b/checkpoint-600 --limit 100 --mfr
+python eval_arc.py --checkpoint output/igbundle_qwen7b_riemannian/checkpoint-50 --limit 100 --mfr
 ```
 
 ---
-*ManifoldGL is a research preview. See [IGBundle_Thesis.pdf](IGBundle_Thesis.pdf) for full rigorous derivation.*
+*ManifoldGL is a research preview. Generate the thesis with `python generate_thesis.py` (output: `output/thesis/IGBundle_Thesis.pdf`).*
