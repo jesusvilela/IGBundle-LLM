@@ -1,20 +1,10 @@
 # ManifoldGL: Information-Geometric Bundle Adapters for LLMs
 
-[![License: All Rights Reserved](https://img.shields.io/badge/License-All_Rights_Reserved-red.svg)](LICENSE)
-![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)
-![PyTorch 2.6](https://img.shields.io/badge/PyTorch-2.6-ee4c2c.svg)
-![Status: Research](https://img.shields.io/badge/Status-Research_Preview-purple.svg)
+**License**: All Rights Reserved | **Python**: 3.10+ | **PyTorch**: 2.6 | **Status**: Research
 
-<div align="center">
-
-Generated artifacts (not committed):
-
-- Thesis PDF: `python generate_thesis.py` -> `output/thesis/IGBundle_Thesis.pdf`
-- Topology visualization (lite): `python generate_braintop_viz.py --lite --output output/igbundle_topology_lite.html`
-
-</div>
-
----
+### Generated artifacts (not committed):
+- **Thesis PDF**: `python generate_thesis.py` -> `output/thesis/IGBundle_Thesis.pdf`
+- **Topology visualization (lite)**: `python generate_braintop_viz.py --lite --output output/igbundle_topology_lite.html`
 
 ## 1. Abstract
 **ManifoldGL** introduces a novel parameter-efficient fine-tuning method that adapts Large Language Models (LLMs) by enforcing **Information-Geometric** constraints. Unlike standard LoRA, which updates weight matrices in Euclidean space, ManifoldGL models the semantic latent space as a **Fiber Bundle** over a **Hyperbolic Base Manifold**. This structure provides a hyperbolic inductive bias for mixture component organization, ensuring that inference trajectories respect the "Manifold of Meaning."
