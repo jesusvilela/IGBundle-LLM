@@ -30,6 +30,7 @@
 
 ## 2. Mathematical Foundation
 📐 Theoretical Foundation
+
 Our work is grounded in Differential Geometry and Sheaf Theory. We hypothesize that the "meaning" of a token is not a fixed point in vector space, but a Fiber ($F$) over a structural manifold ($M$).
 
 ### Fiber Bundle Definition
@@ -49,6 +50,7 @@ The Sheaf Consistency Loss enforcing topological agreement across patches.
 
 ## 3. System Architecture
 🛠️ System Architecture
+
 The IGBundle Adapter is a bottleneck architecture ($H \to 256 \to H$) injected into a Qwen2.5-7B base model.
 
 ### Key Mechanisms
@@ -61,7 +63,7 @@ Standard LLMs suffer from "Semantic Drift" because their flat Euclidean geometry
 $$ \kappa(x) = -1 \quad \forall x \in M $$
 This ensures that the volume of the semantic space expands exponentially, providing an inductive bias suitable for hierarchical concept organization.
 
-## 3. System Architecture
+## 4. System Architecture
 
 The repository is structured to separate geometric kernels from model adapters.
 
@@ -73,7 +75,7 @@ graph TD
     D -->|Transport| E{"Parallel Transport"}
     E -->|Map| F["Fiber Space"]
     F -->|Output| A
-    
+
     subgraph "verification"
         G["Geometric Verification"]
         G -->|Verify| D
@@ -86,9 +88,9 @@ graph TD
 *   `auxiliary_crew.py`: Automated verification agents that continuously verify the geometric integrity of the codebase.
 *   `eval_arc.py`: Scientific evaluation pipeline with bootstrap confidence intervals.
 
-## 4. Experimental Validation
+## 5. Experimental Validation
 
-### 4.1 ARC-AGI Benchmark
+### 5.1 ARC-AGI Benchmark
 We evaluated ManifoldGL on the ARC-AGI dataset, focusing on tasks requiring abstract reasoning and generalization.
 
 | Metric | Baseline (Qwen-7B) | ManifoldGL (Checkpoint-50) | Improvement |
@@ -99,10 +101,10 @@ We evaluated ManifoldGL on the ARC-AGI dataset, focusing on tasks requiring abst
 
 *> **Note**: Confidence intervals calculated using Wilson Score Interval ($\alpha=0.05$).*
 
-### 4.2 Geometric Consistency
+### 5.2 Geometric Consistency
 The **Verification System** monitors the `curvature_dampening` factor during training. Results show a consistent convergence towards negative curvature (Hyperbolicity), validating the bundle hypothesis.
 
-## 5. Usage
+## 6. Usage
 
 ### Installation
 ```bash
