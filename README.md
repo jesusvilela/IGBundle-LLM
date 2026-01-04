@@ -12,7 +12,6 @@
 ![Interactive Manifold Topology](assets/readme_visuals/riemannian_geometry.svg)
 
 **Figure 1**: *Visualization of the IGBundle fiber space projected onto a Riemannian manifold. Node activations reflect semantic density.*
-*(SVG placeholder; run the README visualization script for full-resolution plots.)*
 
 ### Fiber Bundle Topology Structure
 
@@ -243,4 +242,5 @@ python eval_arc.py --checkpoint output/igbundle_qwen7b_riemannian/checkpoint-50 
 
 ---
 *ManifoldGL is a research preview. Generate the thesis with `python generate_thesis.py` (output: `output/thesis/IGBundle_Thesis.pdf`).*
+
 
