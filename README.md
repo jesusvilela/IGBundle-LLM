@@ -58,7 +58,7 @@ graph TB
 
 **Figure 2**: *Fiber bundle structure π: E → M showing projection from categorical fiber distributions to hyperbolic base manifold. Parallel transport maintains geometric consistency across fibers.*
 
-[**📄 Unified Project Thesis**](IGBundle_Corrected_Thesis.md)
+[**📄 Project Thesis**](IGBundle_Thesis.md)
 
 </div>
 
