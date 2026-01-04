@@ -236,7 +236,8 @@ python eval_arc.py --checkpoint output/igbundle_qwen7b_riemannian/checkpoint-50 
 ```
 
 ---
-*ManifoldGL is a research preview. Generate the thesis with `python generate_thesis.py` (output: `output/thesis/IGBundle_Thesis.pdf`).*
+*ManifoldGL is a research preview. (c) Jesús Vilela Jato, all rights reserved.
+
 
 
 
