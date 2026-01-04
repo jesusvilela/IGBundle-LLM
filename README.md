@@ -9,9 +9,10 @@
 
 <div align="center">
 
-![Interactive Manifold Topology](output/readme_visuals/riemannian_geometry.png)
+![Interactive Manifold Topology](assets/readme_visuals/riemannian_geometry.svg)
 
-**Figure 1**: *Interactive visualization of the IGBundle fiber space projected onto a hyperbolic manifold. Click to explore.*
+**Figure 1**: *Visualization of the IGBundle fiber space projected onto a Riemannian manifold. Node activations reflect semantic density.*
+*(SVG placeholder; run the README visualization script for full-resolution plots.)*
 
 ### Fiber Bundle Topology Structure
 
@@ -63,9 +64,10 @@ graph TB
 
 ---
 
-### 📦 Generated artifacts (not committed):
-- **Thesis PDF**: `python generate_thesis.py` → `output/thesis/IGBundle_Thesis.pdf`
-- **Topology visualization**: `python generate_braintop_viz.py --lite --output output/igbundle_topology_lite.html`
+### 📦 Generated artifacts (local build):
+- **Thesis PDF**: `python generate_thesis.py` -> `output/thesis/IGBundle_Thesis.pdf`
+- **README visualizations**: `python generate_readme_visualizations.py --output-dir output/readme_visuals`
+- **Topology visualization (lite)**: `python generate_braintop_viz.py --lite --output output/igbundle_topology_lite.html`
 
 ## 1. Abstract
 **ManifoldGL** introduces a novel parameter-efficient fine-tuning method that adapts Large Language Models (LLMs) by enforcing **Information-Geometric** constraints. Unlike standard LoRA, which updates weight matrices in Euclidean space, ManifoldGL models the semantic latent space as a **Fiber Bundle** over a **Hyperbolic Base Manifold**. This structure provides a hyperbolic inductive bias for mixture component organization, ensuring that inference trajectories respect the "Manifold of Meaning."
