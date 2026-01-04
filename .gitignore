@@ -32,6 +32,7 @@ validate_result.txt
 PEER_REVIEW_*.md
 equations_cache/
 *.pdf
+!IGBundle_Thesis.pdf
 !requirements.txt
 
 # IDE
