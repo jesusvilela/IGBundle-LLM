@@ -63,11 +63,6 @@ graph TB
 
 ---
 
-### 📦 Generated artifacts (local build):
-- **Thesis PDF**: `python generate_thesis.py` -> `output/thesis/IGBundle_Thesis.pdf`
-- **README visualizations**: `python generate_readme_visualizations.py --output-dir output/readme_visuals`
-- **Topology visualization (lite)**: `python generate_braintop_viz.py --lite --output output/igbundle_topology_lite.html`
-
 ## 1. Abstract
 **ManifoldGL** introduces a novel parameter-efficient fine-tuning method that adapts Large Language Models (LLMs) by enforcing **Information-Geometric** constraints. Unlike standard LoRA, which updates weight matrices in Euclidean space, ManifoldGL models the semantic latent space as a **Fiber Bundle** over a **Hyperbolic Base Manifold**. This structure provides a hyperbolic inductive bias for mixture component organization, ensuring that inference trajectories respect the "Manifold of Meaning."
 
@@ -242,5 +237,6 @@ python eval_arc.py --checkpoint output/igbundle_qwen7b_riemannian/checkpoint-50 
 
 ---
 *ManifoldGL is a research preview. Generate the thesis with `python generate_thesis.py` (output: `output/thesis/IGBundle_Thesis.pdf`).*
+
 
 
