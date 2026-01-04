@@ -93,7 +93,6 @@ The Sheaf Consistency Loss enforcing topological agreement across patches.
 ---
 
 ## 3. System Architecture
-🛠️ System Architecture
 
 The IGBundle Adapter is a bottleneck architecture ($H \to 256 \to H$) injected into a Qwen2.5-7B base model.
 
@@ -107,7 +106,7 @@ Standard LLMs suffer from "Semantic Drift" because their flat Euclidean geometry
 $$ \kappa(x) = -1 \quad \forall x \in M $$
 This ensures that the volume of the semantic space expands exponentially, providing an inductive bias suitable for hierarchical concept organization.
 
-## 4. System Architecture
+### Data Flow Architecture
 
 The repository is structured to separate geometric kernels from model adapters.
 
