@@ -57,7 +57,7 @@ graph TB
 
 **Figure 2**: *Fiber bundle structure π: E → M showing projection from categorical fiber distributions to hyperbolic base manifold. Parallel transport maintains geometric consistency across fibers.*
 
-[**📄 Project Thesis**](https://github.com/jesusvilela/IGBundle-LLM/blob/main/thesis/IGBundle_Thesis.pdf)
+[**📄 Project Thesis**](https://github.com/jesusvilela/IGBundle-LLM/blob/main/thesis/ManifoldGL_Final_Thesis_2.pdf)
 
 </div>
 
@@ -237,6 +237,7 @@ python eval_arc.py --checkpoint output/igbundle_qwen7b_riemannian/checkpoint-50 
 
 ---
 *ManifoldGL is a research preview. (c) Jesús Vilela Jato, all rights reserved.
+
 
 
 
