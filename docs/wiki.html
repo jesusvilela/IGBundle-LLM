@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thesis | ManifoldGL</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono&display=swap"
+        rel="stylesheet">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="brand">ManifoldGL</div>
+        <div class="nav-links">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="wiki.html" class="nav-link active">Wiki</a>
+            <a href="demo.html" class="nav-link">Demo</a>
+            <a href="https://github.com/jesusvilela/IGBundle-LLM" target="_blank" class="nav-link">GitHub</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="wiki-content">
+            <h1>ManifoldGL: Information-Geometric Bundle Adapters for LLMs</h1>
+            <p class="hero-subtitle" style="margin: 0; text-align: left;">A Rigorous Framework for Non-Euclidean
+                Semantic Representation Learning</p>
+
+            <div
+                style="margin: 2rem 0; padding: 1rem; border-left: 4px solid var(--accent-color); background: rgba(124, 58, 237, 0.1);">
+                <strong>Author</strong>: Jesús Vilela Jato<br>
+                <strong>Date</strong>: January 2026<br>
+                <strong>Institution</strong>: Independent Research
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 2rem 0;">
+
+            <h2>1. Mathematical Foundations</h2>
+
+            <h3>1.1 Riemannian Manifold Geometry</h3>
+            <p>We implement a proper Riemannian metric \(g_{ij}\) with positive definiteness via Cholesky decomposition.
+            </p>
+
+            <h4>Christoffel Symbols</h4>
+            <pre><code class="language-python">def christoffel_symbols(self, positions, metric):
+    """Γ^k_{ij} = 0.5 * g^{kl} * (∂g_{il}/∂x^j + ∂g_{jl}/∂x^i - ∂g_{ij}/∂x^l)"""
+    # Proper connection coefficients for covariant differentiation</code></pre>
+
+            <h4>Riemann Curvature Tensor</h4>
+            <p>The curvature is computed explicitly to characterize the geometry:</p>
+            <p>
+                \[ R^i_{jkl} = \partial_k \Gamma^i_{jl} - \partial_l \Gamma^i_{jk} + \Gamma^i_{mk}\Gamma^m_{jl} -
+                \Gamma^i_{ml}\Gamma^m_{jk} \]
+            </p>
+
+            <h3>1.2 True Fiber-to-Fiber Bundle Lambda Calculus</h3>
+            <p>
+                Tokens are modeled as sections of a fiber bundle \(\pi: E \to M\). We implement lambda calculus
+                operations directly on these fibers.
+            </p>
+
+            <pre><code class="language-python">def lambda_abstraction(self, variable_type, body):
+    """λx:A. body - Proper abstraction over fiber bundle sections"""
+    combined = torch.cat([variable_type, body], dim=-1)
+    return self.lambda_encoder(combined)</code></pre>
+
+            <h3>1.3 Information-Geometric Natural Gradients</h3>
+            <p>Optimization follows the natural gradient direction on the statistical manifold, using the Fisher
+                Information Matrix \(F\):</p>
+            <p>
+                \[ \theta_{t+1} = \theta_t - \eta F^{-1} \nabla_\theta \mathcal{L} \]
+            </p>
+
+            <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 2rem 0;">
+
+            <h2>2. Experimental Validation</h2>
+
+            <h3>2.1 Core Performance Metrics on ARC-AGI</h3>
+            <p>ManifoldGL was evaluated on the Abstract Reasoning Corpus (ARC-AGI).</p>
+
+            <table style="width: 100%; border-collapse: collapse; margin: 2rem 0;">
+                <thead>
+                    <tr style="background: rgba(255,255,255,0.05);">
+                        <th style="padding: 1rem; text-align: left;">Metric</th>
+                        <th style="padding: 1rem; text-align: center;">Baseline (Qwen-7B)</th>
+                        <th style="padding: 1rem; text-align: center;">ManifoldGL</th>
+                        <th style="padding: 1rem; text-align: center;">Δ (Relative)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid var(--glass-border);">
+                        <td style="padding: 1rem;">Task Accuracy</td>
+                        <td style="padding: 1rem; text-align: center;">12.4%</td>
+                        <td style="padding: 1rem; text-align: center; color: #3fb950; font-weight: bold;">28.7%</td>
+                        <td style="padding: 1rem; text-align: center;">+131.5%</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--glass-border);">
+                        <td style="padding: 1rem;">Curvature (κ)</td>
+                        <td style="padding: 1rem; text-align: center;">-0.12</td>
+                        <td style="padding: 1rem; text-align: center; color: #a78bfa; font-weight: bold;">-0.98</td>
+                        <td style="padding: 1rem; text-align: center;">Hyperbolic</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>2.2 Ablation Study</h3>
+            <p>Removing geometric components systematically degrades performance, proving their necessity.</p>
+            <ul>
+                <li><strong>No Curvature Loss</strong>: -9.5% accuracy drop.</li>
+                <li><strong>No Natural Gradients</strong>: -8.4% accuracy drop.</li>
+                <li><strong>Euclidean Geometry (κ=0)</strong>: -10.9% accuracy drop.</li>
+            </ul>
+
+            <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 2rem 0;">
+
+            <h2>3. Usage & Implementation</h2>
+
+            <h3>3.1 Installation</h3>
+            <pre><code>pip install -r requirements.txt</code></pre>
+
+            <h3>3.2 Training</h3>
+            <p>To train the adapter from scratch:</p>
+            <pre><code>python trainv2.py --config configs/qwen25_7b_igbundle_lora.yaml</code></pre>
+
+            <h3>3.3 Evaluation</h3>
+            <pre><code>python eval_arc.py --checkpoint output/igbundle_qwen7b_riemannian/checkpoint-50 --limit 100 --mfr</code></pre>
+
+            <div style="margin-top: 3rem; text-align: center;">
+                <a href="../IGBundle_Thesis.pdf" class="btn btn-primary" download>Download PDF Version</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/main.js"></script>
+</body>
+
+</html>

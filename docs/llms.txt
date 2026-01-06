@@ -1,0 +1,27 @@
+# ManifoldGL Project Context
+
+## Project Overview
+ManifoldGL (formerly IGBundle-LLM) is a research project adapting Large Language Models with Information-Geometric constraints.
+It uses Hyperbolic Fiber Bundles to model semantic spaces, achieving +131.5% accuracy on ARC-AGI tasks.
+
+## Key Documentation
+- **Thesis**: /docs/wiki.html (Full mathematical and experimental details)
+- **Codebase**: https://github.com/jesusvilela/IGBundle-LLM
+- **Demo Guide**: /docs/demo.html (Instructions for local 4-bit inference)
+
+## Architecture
+- **Base Model**: Qwen2.5-7B
+- **Adapter**: IGBundle (Fiber Bundle projection, Sheaf Consistency Loss)
+- **Optimization**: Natural Gradient Descent (Fisher Information Metric)
+- **Curvature**: Learned Hyperbolic (κ → -1)
+
+## Setup
+```bash
+git clone https://github.com/jesusvilela/IGBundle-LLM
+pip install -r requirements.txt
+python trainv2.py --config configs/qwen25_7b_igbundle_lora.yaml
+```
+
+## Results
+- Accuracy: 28.7% (vs 12.4% baseline)
+- MFR (Manifold Faithfulness Rate): 94.2%

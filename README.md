@@ -9,7 +9,7 @@
 
 <div align="center">
 
-![Interactive Manifold Topology](assets/readme_visuals/riemannian_geometry.svg)
+![Interactive Manifold Topology](https://raw.githubusercontent.com/jesusvilela/IGBundle-LLM/main/assets/readme_visuals/riemannian_geometry.svg)
 
 **Figure 1**: *Visualization of the IGBundle fiber space projected onto a Riemannian manifold. Node activations reflect semantic density.*
 
@@ -234,6 +234,16 @@ To reproduce the ARC-AGI results with strict confidence intervals:
 ```bash
 python eval_arc.py --checkpoint output/igbundle_qwen7b_riemannian/checkpoint-50 --limit 100 --mfr
 ```
+
+### External Benchmarks (llama.cpp server)
+This repo does not include the full evaluation harnesses for benchmarks like GPQA, MMLU-Pro, SWE-Bench, or TauBench. A common workflow is to serve the model via an OpenAI-compatible API and point third-party harnesses to it.
+
+```powershell
+scripts/run_llama_server.ps1 -ModelPath igbundle_qwen7b.gguf
+scripts/set_eval_env.ps1
+```
+
+See `docs/external_benchmarks.md` for a short list of common harnesses and mappings.
 
 ---
 *ManifoldGL is a research preview. (c) Jesús Vilela Jato, all rights reserved.

@@ -1,0 +1,63 @@
+\documentclass{article}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{natbib}
+\geometry{a4paper, margin=1in}
+
+\title{ManifoldGL: Information-Geometric Bundle Adapters for \\ Large Language Models}
+\author{Jesús Vilela Jato, A.I. Scientist, H.A.L. 9000}
+\date{January 2026}
+
+\begin{document}
+
+\maketitle
+
+\vspace{1cm}
+\begin{center}
+    \textit{To Edurne, my wife, and my family.}
+\end{center}
+\vspace{1cm}
+
+\begin{abstract}
+We present \textbf{ManifoldGL}, a theoretical framework integrating Riemannian geometry, fiber bundles, and sheaf theory into Large Language Models (LLMs). By treating the latent space as a fiber bundle equipped with a learnable Riemannian metric, we enable rigorous lambda calculus operations on fiber sections. Preliminary experiments confirm the successful learning of non-Euclidean geometry (learned $\sigma \approx 2.2$) and strict adherence to geometric constraints (100\% Manifold Faithfulness Rate), though zero-shot performance on abstract reasoning tasks (ARC-AGI) remains at baseline levels in early trials. This work serves as a proof-of-concept for geometrically rigorous neuro-symbolic architectures.
+\end{abstract}
+
+\section{Introduction}
+Current LLMs operate primarily in Euclidean vector spaces. We propose that hierarchical and compositional semantics are better represented in curved manifolds with fiber bundle structures. ManifoldGL implements these structures via a custom adapter architecture.
+
+\section{Methodology}
+Our approach relies on three pillars:
+\begin{itemize}
+    \item \textbf{Riemannian Geometry}: We parameterize the metric tensor $g_{ij}$ via Cholesky factors to ensure positive definiteness.
+    \item \textbf{Natural Gradient Descent}: We utilize Information Geometry to optimize on the statistical manifold, using the Fisher Indormation Matrix.
+    \item \textbf{Sheaf Consistency}: We enforce local consistency across data patches using sheaf-theoretic gluing conditions.
+\end{itemize}
+
+\section{Preliminary Results}
+We evaluated ManifoldGL on the ARC-AGI benchmark.
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{lc}
+        \hline
+        \textbf{Metric} & \textbf{Value} \\
+        \hline
+        Manifold Faithfulness Rate (MFR) & 100\% \\
+        Learned Curvature Parameter ($\sigma$) & $\approx 2.2$ \\
+        ARC-AGI Task Accuracy & 0.0\% \\
+        \hline
+    \end{tabular}
+    \caption{Preliminary Experimental Results}
+    \label{tab:results}
+\end{table}
+
+While the model has not yet solved ARC-AGI tasks, the high MFR indicates that the geometric constraints are being learned and respected. The convergence of $\sigma$ to a non-zero value suggests that the data naturally prefers a non-Euclidean representation.
+
+\section{Conclusion}
+ManifoldGL establishes a verified mathematical foundation for geometric deep learning in LLMs. Future work will focus on scaling training to unlock the reasoning capabilities enabled by this geometry.
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}
