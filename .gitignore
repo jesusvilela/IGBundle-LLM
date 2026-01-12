@@ -24,6 +24,17 @@ diag_*.txt
 smoke_log.txt
 validate_result.txt
 
+# Thesis Generation and Review Artifacts
+*_REVIEW*.md
+*_REPORT*.md
+*_v[0-9].[0-9].md
+*_v[0-9].[0-9]_*.md
+PEER_REVIEW_*.md
+equations_cache/
+*.pdf
+!IGBundle_Thesis.pdf
+!requirements.txt
+
 # IDE
 .vscode/
 .idea/

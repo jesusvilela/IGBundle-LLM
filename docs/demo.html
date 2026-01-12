@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Launcher | ManifoldGL</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="brand">ManifoldGL</div>
+        <div class="nav-links">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="wiki.html" class="nav-link">Wiki</a>
+            <a href="demo.html" class="nav-link active">Demo</a>
+            <a href="https://github.com/jesusvilela/IGBundle-LLM" target="_blank" class="nav-link">GitHub</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <h1>Interactive Demo Platform</h1>
+            <p class="hero-subtitle">Real-time Abstract Reasoning Interface</p>
+        </div>
+
+        <div class="wiki-content" style="text-align: center; margin: 0 auto; max-width: 800px;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">🚀</div>
+            <h2>Launch Local Engine</h2>
+            <p>
+                Due to the advanced nature of the **7B parameter** ManifoldGL model (running on 4-bit quantization),
+                the inference engine runs locally on your machine for maximum privacy and performance.
+            </p>
+
+            <div
+                style="background: rgba(46, 160, 67, 0.1); border: 1px solid rgba(46, 160, 67, 0.2); border-radius: 8px; padding: 2rem; margin: 2rem 0; text-align: left;">
+                <h3 style="color: #3fb950; margin-top: 0;">Step 1: Get the Code</h3>
+                <pre style="margin: 1rem 0;"><code>git clone https://github.com/jesusvilela/IGBundle-LLM.git
+cd IGBundle-LLM</code></pre>
+
+                <h3 style="color: #3fb950;">Step 2: Launch Optimized Engine</h3>
+                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Windows users
+                    (Double-click the file):</p>
+                <div style="background: #111; padding: 1rem; border-radius: 6px; font-family: monospace; color: #fff;">
+                    .\launch_optimized.bat
+                </div>
+            </div>
+
+            <p style="color: var(--text-secondary); margin-top: 2rem;">
+                This will automatically:
+                <br>1. Check for **CUDA Acceleration**.
+                <br>2. Activate the **Unsloth** environment.
+                <br>3. Open the **Local Bridge** portal in your browser.
+            </p>
+        </div>
+    </div>
+
+    <script src="assets/js/main.js"></script>
+</body>
+
+</html>

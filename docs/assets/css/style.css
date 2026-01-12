@@ -1,0 +1,247 @@
+:root {
+    --bg-color: #0d1117;
+    --text-primary: #e6edf3;
+    --text-secondary: #8b949e;
+    --accent-color: #7c3aed;
+    --accent-hover: #6d28d9;
+    --glass-bg: rgba(22, 27, 34, 0.7);
+    --glass-border: rgba(240, 246, 252, 0.1);
+    --card-bg: #161b22;
+    --header-height: 60px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* Typography */
+h1,
+h2,
+h3,
+h4 {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+a {
+    color: var(--accent-color);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+a:hover {
+    color: var(--accent-hover);
+}
+
+/* Layout */
+.navbar {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    height: var(--header-height);
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--glass-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 2rem;
+    z-index: 1000;
+}
+
+.brand {
+    font-size: 1.25rem;
+    font-weight: 800;
+    background: linear-gradient(45deg, #7c3aed, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.nav-links {
+    display: flex;
+    gap: 2rem;
+}
+
+.nav-link {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    color: var(--text-primary);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: calc(var(--header-height) + 2rem) 2rem 4rem;
+}
+
+/* Hero Section */
+.hero {
+    text-align: center;
+    padding: 6rem 1rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(124, 58, 237, 0.2) 0%, transparent 70%);
+    z-index: -1;
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.1;
+    background: linear-gradient(90deg, #fff, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.hero-subtitle {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+    max-width: 600px;
+    margin: 0 auto 2.5rem;
+}
+
+.btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: var(--accent-color);
+    color: white;
+    border: 1px solid var(--accent-color);
+}
+
+.btn-primary:hover {
+    background: var(--accent-hover);
+}
+
+.btn-secondary {
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    margin-left: 1rem;
+}
+
+.btn-secondary:hover {
+    border-color: var(--text-secondary);
+}
+
+/* Cards */
+.features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 4rem;
+}
+
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 2rem;
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    border-color: var(--accent-color);
+}
+
+.card-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.card-title {
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+}
+
+.card-text {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+/* Wiki Content */
+.wiki-content {
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 3rem;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.wiki-content h2 {
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--glass-border);
+    padding-bottom: 0.5rem;
+}
+
+.wiki-content pre {
+    background: #0d1117;
+    padding: 1rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    border: 1px solid var(--glass-border);
+    margin: 1.5rem 0;
+}
+
+.wiki-content code {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.9rem;
+}
+
+/* Demo Iframe */
+.iframe-container {
+    width: 100%;
+    height: 80vh;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--glass-border);
+    background: #000;
+}
+
+.demo-status {
+    text-align: center;
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    background: rgba(46, 160, 67, 0.1);
+    color: #3fb950;
+    border-radius: 6px;
+    border: 1px solid rgba(46, 160, 67, 0.2);
+}
+
+.demo-status.error {
+    background: rgba(248, 81, 73, 0.1);
+    color: #f85149;
+    border-color: rgba(248, 81, 73, 0.2);
+}
