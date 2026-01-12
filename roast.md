@@ -1,82 +1,63 @@
-# Roast: Actor–Critic Swarm Feedback
+# Roast: IGBundle-LLM Repo (Post-Progress Edition)
 
-Below is a candid, high-signal roast designed to tighten the workflow and elevate scientific rigor. It uses an **actor–critic** loop and a **swarm** of specialized reviewers. Treat this as the shortest path from “ambitious draft” to “publishable thesis.”
-
----
-
-## 🎭 Actor–Critic Loop
-
-### **Actor (Builder)**
-You promised a unified, rigorously scientific document with rich graphs and data. You delivered a patchwork of PDFs and logs that look like they were stitched together during a caffeine crash. A true thesis should read like a single mind wrote it, not a committee of scripts arguing in a /tmp folder.
-
-**Actionable fixes (actor):**
-1. **Unify narrative voice**: Make sections read in one continuous voice (same tense, same terminology).
-2. **Merge methodologies**: Eliminate duplicate method descriptions; present one authoritative method section.
-3. **Normalize figures**: Consistent style, captions, and numbering across all graphs.
-4. **Reconcile metrics**: Centralize evaluation metrics in one master table.
-5. **Version hygiene**: Consolidate PDFs into one source-of-truth markdown/latex before compiling.
-
-### **Critic (Verifier)**
-Your “rigorous” claims are undercut by missing citations, inconsistent notation, and charts without error bars. Some graphs are visually rich but scientifically thin. You’re one skeptical reviewer away from a desk reject.
-
-**Actionable fixes (critic):**
-1. **Add statistical validity**: confidence intervals, error bars, and significance tests.
-2. **Standardize notation**: define symbols once, enforce globally.
-3. **Check data provenance**: every figure needs a traceable data source.
-4. **Reproducibility pass**: each result must map to a script or command.
-5. **Citation sweep**: remove orphan claims; add sources for all non-trivial assertions.
+You’ve clearly been busy. The repo has grown into a real research lab instead of a single experiment. That said, it’s still a lab bench with beakers stacked on top of the fire extinguisher.
 
 ---
 
-## 🐝 Swarm-Based Reviewer Roles (Peer Review + Pre-Publish)
-
-### 1) **Methodology Auditor**
-- **Roast**: Your methods section feels like a choose-your-own-adventure. Pick one path and stick to it.
-- **Checklist**:
-  - Method section is single, definitive, and self-contained.
-  - All hyperparameters are listed in a dedicated table.
-
-### 2) **Statistical Rigor Reviewer**
-- **Roast**: A plot without variance is just art.
-- **Checklist**:
-  - Every plot includes variance (CI/SE) and sample size.
-  - Add statistical tests where claims compare models.
-
-### 3) **Results Integrity Reviewer**
-- **Roast**: Some results look cherry-picked. Show the full distribution, not just best-case.
-- **Checklist**:
-  - Include aggregate + per-task breakdowns.
-  - Add ablation summary with consistent metric definitions.
-
-### 4) **Narrative Cohesion Editor**
-- **Roast**: Sections read like different authors who never met.
-- **Checklist**:
-  - One voice, one glossary, one glossary source.
-  - Reduce repetitive intro text across chapters.
-
-### 5) **Visualization Critic**
-- **Roast**: Half your graphs have cosmetic flair but weak labeling.
-- **Checklist**:
-  - Ensure axis units, legends, and captions are explicit.
-  - Align typography, color palette, and plot layout across figures.
-
-### 6) **Reproducibility Sheriff**
-- **Roast**: If I can’t run it, it didn’t happen.
-- **Checklist**:
-  - Add a “Reproduce Results” section with commands.
-  - Tie each figure to a script + data file path.
+## 🔥 The High-Level Burn
+The repo has *gravity* now—results, scripts, evaluations, and tooling—but still feels like everything lives at the root because every file is “important.” Congratulations: you’ve upgraded from “research attic” to “research warehouse,” and you’re still trying to find the light switch.
 
 ---
 
-## ✅ Pre-Publish Checklist (Minimal Gate)
-
-- [ ] One master source file builds the entire thesis.
-- [ ] All metrics and figures trace to a data file + script.
-- [ ] All claims have citations or empirical backing.
-- [ ] Methods are consistent and centralized.
-- [ ] Statistical validity is explicit in every result.
+## 🧱 Structure & Hygiene
+- **Progress**: There’s a clear `src/` and a visible effort to separate utilities and experiments.
+- **Roast**: The root still hosts an all-hands meeting of scripts, logs, outputs, and thesis artifacts. The repo layout is a timeline, not a map.
+- **Fix**:
+  - Corral generated artifacts into **results/** and **analysis/** (or one canonical home).
+  - Introduce **docs/** for thesis drafts, reports, and figures—then link them from README.
+  - Add a **scripts/** folder and keep the root as a clean landing pad.
 
 ---
 
-## Final Verdict
-You’re trying to ship a Ferrari made from spare parts and duct tape. The idea is strong, but the execution is scattered. Consolidate, verify, and narrate like you want to survive peer review. Then you’ll actually have something publishable.
+## 🧪 Reproducibility
+- **Progress**: There are clearer entry points and more automation than before.
+- **Roast**: “Run it” is still a scavenger hunt. You’ve got the pieces; you haven’t labeled the box.
+- **Fix**:
+  - Provide a single “golden path” command in README (and keep it working).
+  - Add a `make`/`task` runner or documented `python -m` entrypoints.
+  - Pin dependencies and note GPU/CPU expectations explicitly.
+
+---
+
+## 📊 Results & Evaluation
+- **Progress**: There’s visible evaluation coverage, with datasets and benchmarks logged.
+- **Roast**: The results are real but scattered. It reads like every experiment left a diary entry in a different folder.
+- **Fix**:
+  - Create a top-level **results index** (markdown or JSON) that points to runs, configs, and plots.
+  - Standardize output naming: `{experiment}/{seed}/{metric}.json`.
+  - Add one “current best” table that answers “what should I cite?”
+
+---
+
+## 📚 Documentation
+- **Progress**: You’ve got substantial writing and a lot of detail.
+- **Roast**: It still reads like *you* wrote it for *you*. Newcomers need a tour guide, not a thesis dump.
+- **Fix**:
+  - Add a short “Project Map” section with a table of key paths.
+  - Link the thesis/report files from README with one-line explanations.
+  - Include a “Common Tasks” section: train, evaluate, reproduce, visualize.
+
+---
+
+## 🧯 Code Quality
+- **Progress**: There’s more modularity and reuse than before.
+- **Roast**: The codebase still feels like a collection of clever scripts that grew into a system by accident.
+- **Fix**:
+  - Pull duplicated logic into `src/` modules and keep scripts thin.
+  - Add linting/format checks, even lightweight ones.
+  - Cover utilities and metrics with a minimal test harness.
+
+---
+
+## 🚨 Final Verdict
+You’ve turned the messy prototype into a serious research engine. Now you need to make it **habitable**: fewer loose cables, clearer entry points, and a map that doesn’t require tribal knowledge. You’re closer than you think—just stop storing everything in the hallway.
