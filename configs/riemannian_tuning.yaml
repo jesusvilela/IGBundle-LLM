@@ -1,0 +1,51 @@
+base_model_id: "unsloth/Qwen2.5-7B-Instruct"
+
+ig_adapter:
+  hidden_size: 3584
+  num_components: 4
+  num_categories: 16
+  bottleneck_dim: 128
+  latent_dim: 64
+  alpha: 1.0
+  beta: 1.0
+  eta_f: 0.1
+  eta_b: 0.01
+  eta_w: 0.01
+  adapter_scale: 0.1
+  dropout: 0.05
+
+geometric_training:
+  lambda_curvature: 0.02 # Increased for enhanced Riemannian bias
+  lambda_sheaf: 0.005
+  lambda_bundle: 0.005
+  use_natural_gradients: true
+  fisher_update_freq: 5
+  target_curvature_schedule: "exponential"
+  initial_target_curvature: -1.0 # Hyperbolic geometry
+  final_target_curvature: -1.0
+
+lora:
+  r: 8
+  lora_alpha: 32
+  target_modules: ["q_proj", "k_proj", "v_proj", "o_proj"]
+  lora_dropout: 0.05
+
+training:
+  output_dir: "./output/igbundle_qwen7b_riemannian"
+  num_train_epochs: 3 # Ensure enough epochs to cover the 100 steps if dataset is small
+  max_steps: 700 # 600 (existing) + 100 (new)
+  per_device_train_batch_size: 1
+  optim: paged_adamw_8bit
+  gradient_accumulation_steps: 8
+  learning_rate: 1e-4 # Slightly lower for fine-tuning
+  max_grad_norm: 0.3
+  logging_steps: 1
+  save_steps: 25 # Save frequently
+  bf16: true
+  gradient_checkpointing: true
+  dataset_path: "unrestricted_long_context_data.jsonl" # Custom field
+
+loss:
+  lambda_glue: 0.01
+  num_patches: 8
+  tau: 1.0

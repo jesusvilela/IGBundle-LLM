@@ -1,0 +1,39 @@
+model_name: "unsloth/Qwen2.5-7B-Instruct"
+dataset_path: "igbundle-llm/data/deepplanning_train.jsonl"
+output_dir: "igbundle-llm/igbundle_deepplanning_training"
+report_to: "tensorboard"
+
+# Fiber Bundle & Manifold Settings
+hidden_size: 3584 # Qwen 7B
+adapter_dim: 128
+latent_dim: 64
+num_components: 8
+num_categories: 16
+manifold_type: "kan" # Learnable Geometry
+use_dynamics: true
+use_geodesic_attn: true
+
+# Geometric Optimization
+curvature: 1.0 # Initial Curvature
+eta_b: 0.01    # Base learning rate scaling
+eta_f: 0.01    # Fiber learning rate scaling
+manifold_optimization: true # Enable Riemannian Adam
+
+# Training Hyperparameters
+learning_rate: 2.0e-4
+num_train_epochs: 1
+per_device_train_batch_size: 2 # Low batch size for VRAM constrained system
+gradient_accumulation_steps: 4
+max_seq_length: 2048 # Long context for planning
+warmup_steps: 10
+logging_steps: 1
+save_steps: 50
+fp16: true
+bf16: false # System dependent
+optim: "adamw_8bit" # Efficient Optimizer
+
+# LoRA Specifics (if applicable, though GeometricAdapter replaces this mostly)
+lora_r: 16
+lora_alpha: 32
+lora_dropout: 0.05
+target_modules: ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]

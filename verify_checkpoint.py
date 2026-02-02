@@ -1,55 +1,32 @@
+
 import torch
 import os
-from safetensors.torch import load_file
 
-def check_checkpoint(path):
-    print(f"Checking {path}...")
-    if not os.path.exists(path):
-        print("Path does not exist.")
-        return
-        
-    # Check for .safetensors
-    st_path = os.path.join(path, "adapter_model.safetensors")
-    
-    # Check for IGBundle custom weights
-    ig_path = os.path.join(path, "adapter_weights.pt")
-    if os.path.exists(ig_path):
-        print(f"[OK] Found IGBundle weights: {ig_path}")
-        ig_weights = torch.load(ig_path, map_location="cpu")
-        # Check IG weights for NaNs
-        for k, v in ig_weights.items():
-            if torch.isnan(v).any():
-                print(f"NAN found in IGBundle weight: {k}")
-                has_nan = True
-            if torch.isinf(v).any():
-                print(f"INF found in IGBundle weight: {k}")
-                has_nan = True
-    else:
-        print("[WARNING] IGBundle weights (adapter_weights.pt) NOT found!")
+checkpoint_dir = "output/igbundle_qwen7b_resized/checkpoint-600"
+files = [f for f in os.listdir(checkpoint_dir) if f.endswith('.pt')]
 
-    if os.path.exists(st_path):
-        state_dict = load_file(st_path)
-    else:
-        # Fallback to .bin
-        bin_path = os.path.join(path, "adapter_model.bin")
-        if not os.path.exists(bin_path):
-            print("No adapter_model found.")
-            return
-        state_dict = torch.load(bin_path, map_location="cpu")
+print(f"Checking files in {checkpoint_dir}...")
+
+for f in files:
+    path = os.path.join(checkpoint_dir, f)
+    print(f"\nLoading {f}...")
+    try:
+        state = torch.load(path, map_location="cpu")
+        print(f"Keys: {len(state)}")
         
-    has_nan = False
-    for k, v in state_dict.items():
-        if torch.isnan(v).any():
-            print(f"NAN found in {k}")
-            has_nan = True
-        if torch.isinf(v).any():
-            print(f"INF found in {k}")
-            has_nan = True
+        all_bf16 = True
+        for k, v in state.items():
+            if torch.is_tensor(v):
+                if v.dtype != torch.bfloat16:
+                    print(f"  ❌ {k}: {v.dtype} (Expected bfloat16)")
+                    all_bf16 = False
+                # else:
+                #     print(f"  ✅ {k}: {v.dtype}")
+        
+        if all_bf16:
+            print("  ✅ All tensors are BFloat16.")
+        else:
+            print("  ❌ Some tensors are NOT BFloat16.")
             
-    if not has_nan:
-        print("Checkpoint is CLEAN (no NaNs or Infs).")
-    else:
-        print("Checkpoint is CORRUPT (NaNs or Infs found).")
-
-if __name__ == "__main__":
-    check_checkpoint("h:/LLM-MANIFOLD/igbundle-llm/output/igbundle_qwen7b/checkpoint-1")
+    except Exception as e:
+        print(f"  ❌ Error loading {f}: {e}")

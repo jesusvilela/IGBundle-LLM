@@ -75,7 +75,7 @@ def evaluate_arc(model_id, checkpoint_path, split="validation", limit=None, use_
         
     model, tokenizer = FastLanguageModel.from_pretrained(
         model_name = checkpoint_path if checkpoint_path else model_id,
-        max_seq_length = 1024,
+        max_seq_length = 8192,
         load_in_4bit = True,
         device_map = {"": 0}
     )

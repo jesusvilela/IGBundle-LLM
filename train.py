@@ -24,20 +24,24 @@ import time
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from accelerate import Accelerator
 # Check early for Windows to avoid Unsloth/Triton compatibility issues
-if os.name == 'nt':
-    print("Windows detected: Disabling Unsloth to avoid Triton errors.")
+# Check early for Windows to avoid Unsloth/Triton compatibility issues
+# if os.name == 'nt':
+#     print("Windows detected: Disabling Unsloth to avoid Triton errors.")
+#     HAS_UNSLOTH = False
+# else:
+try:
+    # from unsloth import FastLanguageModel
+    # HAS_UNSLOTH = True
     HAS_UNSLOTH = False
-else:
-    try:
-        from unsloth import FastLanguageModel
-        HAS_UNSLOTH = True
-    except ImportError:
-        HAS_UNSLOTH = False
+except ImportError:
+    HAS_UNSLOTH = False
 
 from igbundle.integrations.hf_patch import wrap_hf_candidate, StateCollector
 from igbundle.modules.losses import SheafLoss
+from igbundle.core.config import IGBundleConfig
+from igbundle.training.geometric_trainer import GeometricTrainer
 
-# Simple Config Object
+# Simple Config Object (Deprecated for V2, used for outer script args)
 class Config:
     def __init__(self, dictionary):
         for k, v in dictionary.items():
@@ -46,28 +50,57 @@ class Config:
             else:
                 setattr(self, k, v)
 
+                setattr(self, k, v)
+
+class SaveAdapterCallback(TrainerCallback):
+    """Callback to save adapter weights specifically."""
+    def on_save(self, args, state, control, model=None, **kwargs):
+        if hasattr(model, "module"): # DataParallel
+            model = model.module
+            
+        # We want to save the 'adapter' module if it exists
+        checkpoint_dir = os.path.join(args.output_dir, f"checkpoint-{state.global_step}")
+        os.makedirs(checkpoint_dir, exist_ok=True)
+        
+        adapter_path = os.path.join(checkpoint_dir, "geometric_adapter_v2.pt")
+        
+        # Find adapter
+        adapter = None
+        if hasattr(model, "adapter"):
+            adapter = model.adapter
+        elif hasattr(model, "base_model") and hasattr(model.base_model, "adapter"):
+             adapter = model.base_model.adapter
+             
+        if adapter is not None:
+            torch.save(adapter.state_dict(), adapter_path)
+            print(f"Saved V2 Adapter to {adapter_path}")
+            
 class SlowStepCallback(TrainerCallback):
     """Callback to prevent PSU/Thermal trips by pausing *conditionally* between steps."""
     def on_step_end(self, args, state, control, **kwargs):
-        # Configurable throttling via env var (Default: 0ms)
-        throttle_ms = int(os.environ.get("THERMAL_THROTTLE_MS", "0"))
+        # Configurable throttling via env var (Default: 2000ms for safety)
+        throttle_ms = int(os.environ.get("THERMAL_THROTTLE_MS", "2000"))
         if throttle_ms > 0:
             time.sleep(throttle_ms / 1000.0)
 
-# ... (omitted text) ...
-
-        total_loss = loss + aux_loss
+class ClearCollectorCallback(TrainerCallback):
+    """
+    CRITICAL MEMORY FIX: Clears the StateCollector after every step to prevent
+    infinite accumulation of tensors with gradient history (OOM / Leak).
+    """
+    def __init__(self, collector):
+        self.collector = collector
         
-        # Optimization (Review 3.A): Removed hard-coded 10s sleep.
-        # Use SlowStepCallback with THERMAL_THROTTLE_MS env var if cooling is needed.
-        # time.sleep(10.0)
-        
-        # Log auxiliary loss
-        if self.state.global_step % self.args.logging_steps == 0:
-            # This is a bit hacky to log inside compute_loss, but effective
-            pass 
+    def on_step_end(self, args, state, control, **kwargs):
+        if self.collector:
+            self.collector.clear()
+            # Force garbage collection to prevent RAM creep
+            import gc; gc.collect()
+            torch.cuda.empty_cache() # Aggressive VRAM cleanup
 
-        return (total_loss, outputs) if return_outputs else total_loss
+# Enable Anomaly Detection for debugging "element 0... does not require grad"
+torch.autograd.set_detect_anomaly(True)
+
 
 def train():
     parser = argparse.ArgumentParser()
@@ -126,6 +159,7 @@ def train():
                 load_in_4bit=True,
                 bnb_4bit_compute_dtype=torch.bfloat16,
                 bnb_4bit_quant_type="nf4",
+                llm_int8_enable_fp32_cpu_offload=True, # Safety net to prevent Reboots
             )
             model = AutoModelForCausalLM.from_pretrained(
                 cfg.base_model_id,
@@ -157,15 +191,39 @@ def train():
     # Disable use_cache for compatibility
     model.config.use_cache = False
     
-    # 3. Wrap with IGBundle (Do this AFTER LoRA/Unsloth loading)
-    print("Injecting IGBundle adapters...")
+    # 3. Wrap with IGBundle
+    print("Injecting IGBundle adapters (V2)...")
+    from igbundle.modules.geometric_adapter import GeometricIGBundleAdapter, create_geometric_adapter
+    
     # Overwrite hidden_size from model config to ensure matching shapes
     actual_model = model.model if hasattr(model, "model") else model
     if hasattr(actual_model.config, "hidden_size"):
         print(f"Detected model hidden_size: {actual_model.config.hidden_size}")
         cfg.ig_adapter.hidden_size = actual_model.config.hidden_size
         
-    model = wrap_hf_candidate(model, cfg.ig_adapter)
+    # Convert to IGBundleConfig for V2
+    if isinstance(cfg.ig_adapter, dict):
+        v2_config = IGBundleConfig(**cfg.ig_adapter)
+    else:
+        v2_config = IGBundleConfig(**vars(cfg.ig_adapter))
+        
+    # Ensure dropout is set
+    print(f"[DEBUG] V2 Config Dropout: {v2_config.dropout}")
+
+    # Use wrap_hf_candidate with V2 class
+    model = wrap_hf_candidate(model, v2_config, adapter_class=GeometricIGBundleAdapter)
+    
+    # Check if adapter was attached
+    print("Verifying adapter attachment...")
+    has_adapter = False
+    for name, module in model.named_modules():
+        if isinstance(module, GeometricIGBundleAdapter):
+            has_adapter = True
+            break
+    if not has_adapter:
+        print("WARNING: GeometricIGBundleAdapter not found in model modules!")
+    else:
+        print("Success: GeometricIGBundleAdapter found.")
     
     # Ensure IGBundle parameters are trainable (PEFT might have frozen them)
     print("Checking parameter freezing status...")
@@ -259,15 +317,16 @@ def train():
         dataloader_pin_memory=False,
     )
     
-    trainer = IGBundleTrainer(
+    trainer = GeometricTrainer(
         model=model,
+        geometric_gamma=0.1, # Default gamma
         args=training_args,
         train_dataset=tokenized_datasets,
         data_collator=DataCollatorForLanguageModeling(tokenizer, mlm=False),
         state_collector=collector,
         sheaf_loss_fn=sheaf_loss,
         lambda_glue=float(cfg.loss.lambda_glue),
-        callbacks=[SaveAdapterCallback(), SlowStepCallback()] # Re-enabled for stability
+        callbacks=[SaveAdapterCallback(), SlowStepCallback(), ClearCollectorCallback(collector)] # Fix Memory Leak + Thermal Safety
     )
     
     print("Starting training...")

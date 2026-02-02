@@ -1,4 +1,4 @@
-base_model_id: "Qwen/Qwen2.5-7B"
+base_model_id: "unsloth/Qwen2.5-7B-Instruct"
 
 ig_adapter:
   hidden_size: 3584 # Qwen2.5-7B hidden size

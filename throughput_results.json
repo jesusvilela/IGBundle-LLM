@@ -1,0 +1,6 @@
+{
+  "Baseline (Auto)": 1.0990888184401288,
+  "Max Offload": 1.2496115114012494,
+  "Max Offload + FlashAttn": 1.3038328325259272,
+  "Optimized Batching": 0.8088961885118977
+}

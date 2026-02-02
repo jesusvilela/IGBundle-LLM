@@ -1,0 +1,27 @@
+{
+  "metrics": {
+    "avg_curvature": 1.70703125
+  },
+  "samples": [
+    {
+      "prompt": "Pattern: Red->Blue. Input: Red box. Output:",
+      "curvature_score": 1.75,
+      "output": "Pattern: Red->Blue. Input: Red box. Output: Blue box.\nThe pattern you've described is a"
+    },
+    {
+      "prompt": "Sequence: 1, 2, 4, 8, 16. Next:",
+      "curvature_score": 1.6796875,
+      "output": "Sequence: 1, 2, 4, 8, 16. Next: \nA. 32\nB. "
+    },
+    {
+      "prompt": "Grid transformation: Rotate 90 degrees. [[1,0],[0,1]] ->",
+      "curvature_score": 1.7265625,
+      "output": "Grid transformation: Rotate 90 degrees. [[1,0],[0,1]] -> [[0,1],[-1,0]]\nTo"
+    },
+    {
+      "prompt": "Reasoning: If all A are B, and x is A, then x is",
+      "curvature_score": 1.671875,
+      "output": "Reasoning: If all A are B, and x is A, then x is B. If all B are C, and x"
+    }
+  ]
+}

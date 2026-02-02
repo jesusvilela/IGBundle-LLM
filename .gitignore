@@ -20,6 +20,7 @@ output/
 !trained_adapter/*.json
 crash.txt
 braintop/
+memory/
 diag_*.txt
 smoke_log.txt
 validate_result.txt
@@ -50,3 +51,13 @@ igbundle_merged_hf/
 *.gguf
 llama.cpp/
 unsloth_compiled_cache/
+
+# Logs
+*.log
+*.txt
+!requirements.txt
+!CMakeLists.txt
+
+# Training Outputs
+igbundle_full_scale_reasoning/
+

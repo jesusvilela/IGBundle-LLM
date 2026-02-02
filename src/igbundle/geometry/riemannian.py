@@ -55,9 +55,20 @@ class RiemannianGeometry(nn.Module):
 
         # Learnable metric parameters (Cholesky factors)
         # g_ij = L * L^T where L is lower triangular
+        # Stability: Initialize L close to Identity to start with Euclidean geometry
+        # This prevents inverse metric explosion (singularities) at the start.
         self.metric_chol = nn.Parameter(
-            torch.randn(self.num_components, self.dim, self.dim) * 0.01
+            torch.eye(self.dim).unsqueeze(0).repeat(self.num_components, 1, 1)
         )
+        # Add small noise to break symmetry if needed, but Identity is safest start.
+        self.metric_chol.data += torch.randn_like(self.metric_chol) * 0.01
+
+        # Stability: Register hook to scale gradients of metric_chol
+        # Because it is broadcast over B*T, gradients accumulate massively.
+        # We scale down by estimated factor of 0.001 to keep updates stable.
+        self.metric_chol.register_hook(lambda grad: grad * 0.001)
+        
+        self.manifold_type = getattr(config, 'manifold_type', 'riemannian')
 
         # Christoffel symbol computation network
         self.christoffel_net = nn.Sequential(
@@ -77,12 +88,27 @@ class RiemannianGeometry(nn.Module):
             RiemannianMetric with tensor shape (B, T, P, D, D)
         """
         B, T, P, D = positions.shape
+        
+        # Safe Mode: Euclidean Manifold (Identity Metric)
+        # Bypasses learned metric instability if configured
+        if self.manifold_type == 'euclidean':
+            eye = torch.eye(D, device=positions.device)
+            metric = eye.unsqueeze(0).unsqueeze(0).unsqueeze(0).expand(B, T, P, D, D)
+            # Create metric with NO Cholesky gradients flowing
+            return RiemannianMetric(metric)
 
         # Extract Cholesky factor for each component
         L = torch.tril(self.metric_chol)  # (P, D, D) lower triangular
 
         # Compute metric as g = L * L^T
+        # Stability: Clamp L to prevent explosion of the metric
+        L = torch.clamp(L, min=-5.0, max=5.0)
+        
         metric = torch.matmul(L, L.transpose(-1, -2))  # (P, D, D)
+        
+        # Stability: Add epsilon to diagonal HERE to prevent singular matrices before any operations
+        eye = torch.eye(D, device=metric.device).expand_as(metric)
+        metric = metric + 1e-5 * eye
 
         # Broadcast to batch dimensions
         metric = metric.unsqueeze(0).unsqueeze(0).expand(B, T, -1, -1, -1)
@@ -104,6 +130,12 @@ class RiemannianGeometry(nn.Module):
 
         # For learned geometry, use neural network to approximate Christoffel symbols
         # In practice, this could be computed via automatic differentiation of the metric
+        
+        # Ensure input dtype matches network weights (Fix for Mixed Precision)
+        target_dtype = self.christoffel_net[0].weight.dtype
+        if positions.dtype != target_dtype:
+            positions = positions.to(target_dtype)
+            
         christoffel_flat = self.christoffel_net(positions)  # (B, T, P, D^3)
         christoffel = christoffel_flat.view(B, T, P, D, D, D)
 
@@ -176,6 +208,91 @@ class RiemannianGeometry(nn.Module):
         denominator = torch.clamp(denominator, min=1e-8)  # Avoid division by zero
 
         return R_uvvu / denominator
+
+    def estimate_sectional_curvature_stochastic(self, positions: torch.Tensor, 
+                                              num_samples: int = 1) -> torch.Tensor:
+        """
+        Efficiently estimate sectional curvature using stochastic pairs of basis vectors.
+        Avoids O(D^2) computation of full Riemann tensor.
+        
+        Args:
+            positions: (B, T, P, D)
+            num_samples: number of random planes to sample
+            
+        Returns:
+            avg_curvature: (B, T, P) - average estimated curvature
+        """
+        B, T, P, D = positions.shape
+        total_k = 0.0
+        
+        eps = 1e-3
+        metric = self.get_metric(positions)
+        
+        for _ in range(num_samples):
+            # Pick random indices k != l
+            k = torch.randint(0, D, (1,)).item()
+            l = torch.randint(0, D, (1,)).item()
+            while k == l:
+                l = torch.randint(0, D, (1,)).item()
+                
+            # We want to approximate R(e_k, e_l, e_l, e_k)
+            # This involves derivates of Gamma^i_jl w.r.t x^k
+            
+            # Finite difference along x^k
+            pos_plus = positions.clone()
+            pos_plus[..., k] += eps
+            pos_minus = positions.clone()
+            pos_minus[..., k] -= eps
+            
+            gamma_plus = self.christoffel_symbols(pos_plus, metric)
+            gamma_minus = self.christoffel_symbols(pos_minus, metric)
+            
+            # d/dx^k (Gamma^i_jl) -> focusing on relevant components
+            # We need the term that creates R^i_{jkl} where we contract with u=e_j, v=e_k? 
+            # Sectional curvature K(e_k, e_l) ~ <R(e_k, e_l)e_l, e_k>
+            # = R^k_{lkl} (roughly, assuming metric is near identity)
+            
+            # R^m_{ijk} = d_j Gamma^m_{ik} - d_k Gamma^m_{ij} + ...
+            # Let u=e_k, v=e_l.
+            # R(u,v)v = R(e_k, e_l)e_l = R^m_{kll} e_m (sum over m) -> Wait indices are tricky.
+            # Standard: R(X,Y)Z = \nabla_X \nabla_Y Z - \nabla_Y \nabla_X Z - \nabla_[X,Y] Z
+            # K(e_k, e_l) = <R(e_k, e_l)e_l, e_k>
+            
+            # Simplified: Just compute the dGamma/dx term relevant to R^k_{lkl}
+            # R^k_{lkl} involves d_k Gamma^k_{ll} - d_l Gamma^k_{lk} + terms
+            
+            # We compute specific derivative slices:
+            # d_k Gamma^k_{ll} approx:
+            dgamma_k_ll = (gamma_plus[..., k, l, l] - gamma_minus[..., k, l, l]) / (2 * eps)
+            
+            # NOW we need d_l Gamma^k_{lk}
+            pos_plus_l = positions.clone()
+            pos_plus_l[..., l] += eps
+            pos_minus_l = positions.clone()
+            pos_minus_l[..., l] -= eps
+            
+            gamma_plus_l = self.christoffel_symbols(pos_plus_l, metric)
+            gamma_minus_l = self.christoffel_symbols(pos_minus_l, metric)
+            
+            dgamma_l_lk = (gamma_plus_l[..., k, l, k] - gamma_minus_l[..., k, l, k]) / (2 * eps)
+            
+            # Commutator terms (Gamma * Gamma)
+            # Gamma^k_{m k} * Gamma^m_{ll}
+            gamma = self.christoffel_symbols(positions, metric)
+            term1 = torch.einsum('...kmk,...mll->...', gamma, gamma) # Approx
+            # Gamma^k_{m l} * Gamma^m_{lk}
+            term2 = torch.einsum('...kml,...mlk->...', gamma, gamma)
+            
+            # Riemann component approximation
+            R_klkl = dgamma_k_ll - dgamma_l_lk + term1 - term2
+            
+            # Normalize by area |u|^2|v|^2 - <u,v>^2
+            # Assuming basis vectors are roughly orthonormal in current metric:
+            # denom ~ 1.0. For estimation this is sufficient.
+            
+            total_k = total_k + R_klkl
+            
+        return total_k / num_samples
 
     def inner_product(self, u: torch.Tensor, v: torch.Tensor, metric: RiemannianMetric) -> torch.Tensor:
         """

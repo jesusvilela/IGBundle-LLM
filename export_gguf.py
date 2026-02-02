@@ -43,7 +43,7 @@ def export_to_gguf_ready(base_model_id, checkpoint_path, output_dir):
     model = model.merge_and_unload()
     
     # 4. Save Merged HF Model
-    merged_dir = "igbundle_merged_hf"
+    merged_dir = args.merge_dir if args.merge_dir else "igbundle_merged_hf"
     print(f"Saving merged model to {merged_dir}...")
     model.save_pretrained(merged_dir)
     tokenizer.save_pretrained(merged_dir)
@@ -70,6 +70,7 @@ if __name__ == "__main__":
     parser.add_argument("--base", default="Qwen/Qwen2.5-7B")
     parser.add_argument("--checkpoint", required=True, help="Path to checkpoint folder")
     parser.add_argument("--output", default="igbundle_qwen7b") # Filename without extension
+    parser.add_argument("--merge-dir", default=None, help="Directory to save merged model")
     args = parser.parse_args()
     
     export_to_gguf_ready(args.base, args.checkpoint, args.output)

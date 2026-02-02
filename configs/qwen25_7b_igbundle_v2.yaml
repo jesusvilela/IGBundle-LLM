@@ -1,0 +1,40 @@
+base_model_id: "unsloth/Qwen2.5-7B-Instruct"
+
+ig_adapter:
+  hidden_size: 4096 # Will be overwritten by detection
+  adapter_dim: 32 # Align to Warp Size (32)
+  latent_dim: 32
+  num_components: 2
+  num_categories: 8
+  manifold_type: "riemannian" # Stability: Re-enabled with Gradient Scaling Hook
+  curvature: -1.0
+  # V2 Features
+  use_dynamics: true
+  use_geodesic_attn: false # Save VRAM/Compute
+  vision_dim: 1152
+  eta_b: 0.01
+  eta_f: 0.01
+  dropout: 0.05
+
+lora:
+  r: 8
+  lora_alpha: 32
+  target_modules: ["q_proj", "v_proj"] # Pruned for VRAM efficiency
+  lora_dropout: 0.05
+
+training:
+  output_dir: "output/qwen25_7b_igbundle_v2"
+  per_device_train_batch_size: 1  # Low VRAM safe
+  gradient_accumulation_steps: 8
+  learning_rate: 5.0e-5
+  num_train_epochs: 1
+  logging_steps: 10
+  save_steps: 100
+  bf16: true
+  optim: "adamw_8bit"
+  max_grad_norm: 0.3
+
+loss:
+  num_patches: 4
+  tau: 0.1
+  lambda_glue: 0.1

@@ -1,0 +1,16 @@
+{
+  "results": {
+    "gsm8k_cot_zeroshot": {
+      "alias": "gsm8k_cot_zeroshot",
+      "exact_match,strict-match": 0.0,
+      "exact_match_stderr,strict-match": 0.0,
+      "exact_match,flexible-extract": 0.0,
+      "exact_match_stderr,flexible-extract": 0.0
+    },
+    "aime25": {
+      "alias": "aime25",
+      "exact_match,none": 0.0,
+      "exact_match_stderr,none": 0.0
+    }
+  }
+}

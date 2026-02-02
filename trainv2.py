@@ -45,6 +45,7 @@ from transformers import (
     AutoModelForCausalLM, AutoTokenizer, TrainingArguments,
     BitsAndBytesConfig, TrainerCallback, Trainer
 )
+from torch.utils.tensorboard import SummaryWriter
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from datasets import load_dataset, Dataset
 
@@ -266,6 +267,21 @@ class SlowStepCallback(TrainerCallback):
     def on_step_end(self, args, state, control, **kwargs):
         time.sleep(self.delay_seconds)
 
+class ReuseTensorBoardCallback(TrainerCallback):
+    """Log metrics to TensorBoard."""
+    def __init__(self, log_dir: str):
+        self.writer = SummaryWriter(log_dir=log_dir)
+        
+    def on_log(self, args, state, control, logs=None, **kwargs):
+        if logs:
+            for k, v in logs.items():
+                if isinstance(v, (int, float)):
+                    self.writer.add_scalar(k, v, global_step=state.global_step)
+            self.writer.flush()
+            
+    def on_train_end(self, args, state, control, **kwargs):
+        self.writer.close()
+
 class SaveAdapterCallback(TrainerCallback):
     """Save only adapter weights at checkpoints."""
 
@@ -301,6 +317,15 @@ class Config:
                 setattr(self, k, Config(v))
             else:
                 setattr(self, k, v)
+    
+    def to_dict(self):
+        result = {}
+        for k, v in self.__dict__.items():
+            if isinstance(v, Config):
+                result[k] = v.to_dict()
+            else:
+                result[k] = v
+        return result
 
 def create_geometric_config(yaml_config: dict) -> GeometricTrainingConfig:
     """Create GeometricTrainingConfig from YAML configuration."""
@@ -424,6 +449,10 @@ def apply_adapter(model, config: Config, mode: str = TrainingMode.GEOMETRIC):
 
     logger.info(f"Trainable adapter parameters: {adapter_params:,}")
 
+    # Enable gradient checkpointing with reentrant=False for compatibility with RiemannianOptimizer
+    if hasattr(model, 'gradient_checkpointing_enable'):
+        model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
+
     # Print trainable parameters summary
     if hasattr(model, 'print_trainable_parameters'):
         model.print_trainable_parameters()
@@ -434,34 +463,66 @@ def load_dataset_for_training(tokenizer, config: Config, dataset_size: Optional[
     """Load and prepare dataset for training."""
     logger.info("Loading dataset...")
 
-    if dataset_size and dataset_size <= 1000:
-        # Create small synthetic dataset for testing/optimization
-        logger.info(f"Creating synthetic dataset with {dataset_size} examples")
-        examples = []
-        for i in range(dataset_size):
-            text = f"This is example number {i+1}. " * 10  # Repeat for sufficient length
-            examples.append({"text": text + tokenizer.eos_token})
-        data = Dataset.from_list(examples)
-    else:
-        # Load full Alpaca dataset
-        logger.info("Loading Alpaca dataset...")
-        data = load_dataset("yahma/alpaca-cleaned", split="train")
-
-        if dataset_size:
-            data = data.select(range(min(dataset_size, len(data))))
-            logger.info(f"Using {len(data)} examples from Alpaca dataset")
-
-        # Format Alpaca examples
-        def format_alpaca(example):
-            if example.get('instruction') and example.get('output'):
-                prompt = f"Below is an instruction. Write a response.\n\n### Instruction:\n{example['instruction']}\n\n### Response:\n"
-                text = prompt + example['output'] + tokenizer.eos_token
+    # Check for custom dataset path in config
+    custom_dataset_path = getattr(config.training, 'dataset_path', None)
+    if custom_dataset_path and os.path.exists(custom_dataset_path):
+        logger.info(f"Loading custom dataset from {custom_dataset_path}...")
+        try:
+            if custom_dataset_path.endswith('.jsonl') or custom_dataset_path.endswith('.json'):
+                data = load_dataset('json', data_files=custom_dataset_path, split='train')
+            elif custom_dataset_path.endswith('.txt'):
+                data = load_dataset('text', data_files=custom_dataset_path, split='train')
             else:
-                # Fallback for malformed examples
-                text = f"Example: {example.get('instruction', 'No instruction')}" + tokenizer.eos_token
-            return {"text": text}
+                data = load_dataset(custom_dataset_path, split='train')
+                
+            logger.info(f"Loaded {len(data)} examples from custom dataset")
+            
+            # Simple text field check
+            if "text" not in data.column_names:
+                # If no text col, try to format based on instruction/response if available
+                if "instruction" in data.column_names and "response" in data.column_names:
+                     def format_custom(example):
+                        return {"text": f"### Instruction:\n{example['instruction']}\n\n### Response:\n{example['response']}{tokenizer.eos_token}"}
+                     data = data.map(format_custom)
+                elif "prompt" in data.column_names and "completion" in data.column_names:
+                     def format_custom_pc(example):
+                        return {"text": f"{example['prompt']}{example['completion']}{tokenizer.eos_token}"}
+                     data = data.map(format_custom_pc)
+        except Exception as e:
+            logger.error(f"Failed to load custom dataset: {e}. Falling back to Alpaca.")
+            data = None
+    else:
+        data = None
 
-        data = data.map(format_alpaca, remove_columns=data.column_names)
+    if data is None:
+        if dataset_size and dataset_size <= 1000:
+            # Create small synthetic dataset for testing/optimization
+            logger.info(f"Creating synthetic dataset with {dataset_size} examples")
+            examples = []
+            for i in range(dataset_size):
+                text = f"This is example number {i+1}. " * 10  # Repeat for sufficient length
+                examples.append({"text": text + tokenizer.eos_token})
+            data = Dataset.from_list(examples)
+        else:
+            # Load full Alpaca dataset
+            logger.info("Loading Alpaca dataset...")
+            data = load_dataset("yahma/alpaca-cleaned", split="train")
+
+            if dataset_size:
+                data = data.select(range(min(dataset_size, len(data))))
+                logger.info(f"Using {len(data)} examples from Alpaca dataset")
+
+            # Format Alpaca examples
+            def format_alpaca(example):
+                if example.get('instruction') and example.get('output'):
+                    prompt = f"Below is an instruction. Write a response.\n\n### Instruction:\n{example['instruction']}\n\n### Response:\n"
+                    text = prompt + example['output'] + tokenizer.eos_token
+                else:
+                    # Fallback for malformed examples
+                    text = f"Example: {example.get('instruction', 'No instruction')}" + tokenizer.eos_token
+                return {"text": text}
+
+            data = data.map(format_alpaca, remove_columns=data.column_names)
 
     # Tokenize
     def tokenize_function(examples):
@@ -491,10 +552,12 @@ def setup_geometric_trainer(model, config: Config, geometric_config: GeometricTr
     trainer = GeometricTrainer(model, geometric_config)
 
     # Setup callbacks
+    tb_log_dir = os.path.join(output_dir, "runs")
     callbacks = [
-        GeometricMetricsCallback(output_dir, config.__dict__ if hasattr(config, '__dict__') else {}),
+        GeometricMetricsCallback(output_dir, config.to_dict()),
         SlowStepCallback(delay_seconds=5.0),  # Thermal management
-        SaveAdapterCallback(adapter_class="geometric")
+        SaveAdapterCallback(adapter_class="geometric"),
+        ReuseTensorBoardCallback(log_dir=tb_log_dir)
     ]
 
     logger.info("Geometric trainer configured with RiemannianOptimizer")
@@ -559,7 +622,8 @@ def setup_standard_trainer(model, config: Config, tokenized_data, output_dir: st
     return trainer, callbacks
 
 def run_geometric_training(trainer: GeometricTrainer, callbacks: List[TrainerCallback],
-                         tokenized_data, config: Config, geometric_config: GeometricTrainingConfig):
+                         tokenized_data, config: Config, geometric_config: GeometricTrainingConfig,
+                         start_step: int = 0):
     """Run geometric training with custom training loop."""
     logger.info("Starting geometric training loop...")
 
@@ -571,7 +635,11 @@ def run_geometric_training(trainer: GeometricTrainer, callbacks: List[TrainerCal
             callback.on_train_begin(None, None, None)
 
     # Simple training loop
-    for step in range(geometric_config.max_steps):
+    if start_step:
+        trainer.step_count = start_step
+        logger.info(f"Resuming geometric training at step {start_step}")
+
+    for step in range(start_step, geometric_config.max_steps):
         # Trigger step begin callbacks
         for callback in callbacks:
             if hasattr(callback, 'on_step_begin'):
@@ -580,7 +648,7 @@ def run_geometric_training(trainer: GeometricTrainer, callbacks: List[TrainerCal
         try:
             # Sample batch
             batch_size = min(geometric_config.batch_size, len(tokenized_data))
-            indices = torch.randint(0, len(tokenized_data), (batch_size,))
+            indices = torch.randint(0, len(tokenized_data), (batch_size,)).tolist()
             batch_texts = [tokenized_data[i]["input_ids"] for i in indices]
 
             # Pad batch
@@ -598,9 +666,10 @@ def run_geometric_training(trainer: GeometricTrainer, callbacks: List[TrainerCal
             losses = trainer.train_step(batch)
 
             # Create logs for callbacks
+            # losses from GeometricTrainer uses 'total' instead of 'total_loss'
             logs = {
-                "loss": losses.get("total_loss", 0.0),
-                "curvature_loss": losses.get("curvature_loss", 0.0),
+                "loss": losses.get("total", losses.get("total_loss", 0.0)),
+                "curvature_loss": losses.get("curvature_loss", 0.0), # Note: keys might be prefixed with adapter name
                 "sheaf_loss": losses.get("sheaf_loss", 0.0),
                 "bundle_loss": losses.get("bundle_loss", 0.0),
                 "lambda_loss": losses.get("lambda_loss", 0.0),
@@ -631,8 +700,10 @@ def run_geometric_training(trainer: GeometricTrainer, callbacks: List[TrainerCal
                 logger.info(f"Checkpoint saved: {checkpoint_dir}")
 
         except Exception as e:
+            import traceback
             logger.error(f"Training step {step} failed: {e}")
-            # Continue training on single step failure
+            logger.error(traceback.format_exc())
+            torch.cuda.empty_cache()
             continue
 
     # Training complete
@@ -643,6 +714,45 @@ def run_geometric_training(trainer: GeometricTrainer, callbacks: List[TrainerCal
     for callback in callbacks:
         if hasattr(callback, 'on_train_end'):
             callback.on_train_end(None, final_state, None)
+
+def _parse_checkpoint_step(checkpoint_dir: str) -> int:
+    if not checkpoint_dir:
+        return 0
+    base = os.path.basename(checkpoint_dir.rstrip(os.sep))
+    if base.startswith("checkpoint-"):
+        try:
+            return int(base.split("checkpoint-")[1])
+        except ValueError:
+            return 0
+    return 0
+
+def _load_adapter_checkpoint(model, checkpoint_dir: str) -> bool:
+    """Load adapter weights from checkpoint directory."""
+    if not checkpoint_dir or not os.path.isdir(checkpoint_dir):
+        return False
+
+    candidates = [
+        os.path.join(checkpoint_dir, "geometric_adapter_weights.pt"),
+        os.path.join(checkpoint_dir, "standard_adapter_weights.pt"),
+        os.path.join(checkpoint_dir, "adapter_weights.pt")
+    ]
+    for path in candidates:
+        if os.path.exists(path):
+            logger.info(f"Loading adapter weights from {path}")
+            state = torch.load(path, map_location="cpu")
+            state = torch.load(path, map_location="cpu")
+            model.load_state_dict(state, strict=False)
+            
+            # FAIL-SAFE: Ensure adapter parameters refer to correct dtype
+            if torch.cuda.is_available() and torch.cuda.is_bf16_supported():
+                logger.info("Ensuring adapter parameters are BFloat16...")
+                for name, param in model.named_parameters():
+                    if "adapter" in name or "igbundle" in name:
+                        if param.dtype != torch.bfloat16:
+                            param.data = param.data.to(torch.bfloat16)
+                            
+            return True
+    return False
 
 def memory_cleanup():
     """Aggressive memory cleanup for trial isolation."""
@@ -660,6 +770,7 @@ def main():
     parser.add_argument("--dataset_size", type=int, default=None, help="Limit dataset size for testing")
     parser.add_argument("--optuna_trial", type=int, default=None, help="Optuna trial number (for optimization)")
     parser.add_argument("--output_dir", type=str, default=None, help="Override output directory")
+    parser.add_argument("--resume_from_checkpoint", type=str, default=None, help="Resume from checkpoint directory")
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
 
     args = parser.parse_args()
@@ -713,8 +824,17 @@ def main():
             geometric_config = create_geometric_config(cfg_dict)
             trainer, callbacks = setup_geometric_trainer(model, config, geometric_config, config.training.output_dir)
 
+            resume_step = 0
+            if args.resume_from_checkpoint:
+                loaded = _load_adapter_checkpoint(model, args.resume_from_checkpoint)
+                resume_step = _parse_checkpoint_step(args.resume_from_checkpoint)
+                if loaded:
+                    logger.info(f"✅ Loaded adapter weights. Resume step: {resume_step}")
+                else:
+                    logger.warning("⚠️ Resume checkpoint not found or invalid; starting from scratch.")
+
             logger.info("🚀 Starting geometric training...")
-            run_geometric_training(trainer, callbacks, tokenized_data, config, geometric_config)
+            run_geometric_training(trainer, callbacks, tokenized_data, config, geometric_config, start_step=resume_step)
 
         else:
             # Standard HuggingFace training
@@ -725,7 +845,7 @@ def main():
                 trainer.add_callback(callback)
 
             logger.info("🚀 Starting standard training...")
-            trainer.train()
+            trainer.train(resume_from_checkpoint=args.resume_from_checkpoint)
 
         logger.info("✅ Training completed successfully")
 

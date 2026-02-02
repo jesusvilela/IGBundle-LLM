@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  app:
+    build: .
+    container_name: igbundle_app
+    ports:
+      - "7860:7860"
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - ./igbundle_qwen7b.gguf:/app/igbundle_qwen7b.gguf # Map model specifically or whole folder
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - GRADIO_SERVER_NAME=0.0.0.0
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    command: python app.py --model_path /app/igbundle_qwen7b.gguf --host 0.0.0.0 --port 7860

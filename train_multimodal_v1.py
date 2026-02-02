@@ -99,41 +99,77 @@ def train():
         {'params': [p for n, p in llm.named_parameters() if "adapter" in n and p.requires_grad], 'lr': 2e-4}
     ])
     
-    # 5. Load Data
-    with open(DATA_PATH, 'r') as f:
-        data = [json.loads(line) for line in f]
-        
-    logger.info(f"Training on {len(data)} geometric samples...")
-    model.train()
+    # 5. Load HF ScienceQA Dataset (Streaming)
+    from datasets import load_dataset
+    import io
+    logger.info("Loading ScienceQA dataset (Streaming)...")
+    dataset = load_dataset("derek-thomas/ScienceQA", split="train", streaming=True)
     
-    for epoch in range(1): # Quick adaptation
-        for item in data:
-            # Prepare Inputs
-            prompt = item['text'].replace("<image>", "") # Remove token, handled by prepend
-            inputs = tokenizer(prompt, return_tensors="pt").to(llm.device)
+    # Filter for Physics/Natural Science with Images
+    def is_physics_vision(example):
+        return example['image'] is not None and example['topic'] in ['natural science', 'physics']
+    
+    filtered_dataset = dataset.filter(is_physics_vision).take(200) # Train on 200 relevant examples for this dev cycle
+    
+    model.train()
+    accumulation_steps = 4 
+    optimizer.zero_grad()
+    
+    step = 0
+    total_loss = 0
+    
+    logger.info("Starting robust training loop...")
+    for item in filtered_dataset:
+        try:
+            # Prepare Text
+            question = item['question']
+            choices = item['choices']
+            answer_idx = item['answer']
+            explanation = item['solution']
+            # Format: User: <Q> + <Choices> \n Assistant: <Answer> + <Explanation>
+            prompt = f"User: {question}\nOptions: {choices}\nAssistant: The answer is {choices[answer_idx]}. {explanation}"
             
-            # Load Image
-            image_path = item['image']
-            image = Image.open(image_path).convert("RGB")
+            inputs = tokenizer(prompt, return_tensors="pt", max_length=512, truncation=True).to(llm.device)
+            
+            # Prepare Image
+            image_data = item['image']
+            if isinstance(image_data, dict) and 'bytes' in image_data:
+                image = Image.open(io.BytesIO(image_data['bytes']))
+            else:
+                image = image_data # Already PIL or handled otherwise
+                
+            if image.mode != "RGB":
+                image = image.convert("RGB")
+                
             pixel_values = processor(images=image, return_tensors="pt").pixel_values.to(llm.device).to(torch.bfloat16)
             
             # Forward
-            optimizer.zero_grad()
             outputs = model(input_ids=inputs.input_ids, pixel_values=pixel_values, labels=inputs.input_ids)
-            loss = outputs.loss
-            
+            loss = outputs.loss / accumulation_steps
             loss.backward()
-            optimizer.step()
             
-            logger.info(f"Sample Loss: {loss.item():.4f}")
+            total_loss += loss.item() * accumulation_steps
+            
+            if (step + 1) % accumulation_steps == 0:
+                optimizer.step()
+                optimizer.zero_grad()
+                logger.info(f"Step {step+1}: Loss = {total_loss / accumulation_steps:.4f}")
+                total_loss = 0
+                
+            step += 1
+            if step >= 100: # Cap at 100 steps for this dev cycle
+                break
+                
+        except Exception as e:
+            logger.warning(f"Skipping sample due to error: {e}")
+            continue
             
     # Save adapter
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     torch.save(projector.state_dict(), os.path.join(OUTPUT_DIR, "vision_projector.pt"))
-    # Extract adapter weights loop...
     adapter_state = {n: p for n, p in llm.named_parameters() if "adapter" in n}
     torch.save(adapter_state, os.path.join(OUTPUT_DIR, "geometric_adapter.pt"))
-    logger.info("Training Complete. Weights saved.")
+    logger.info("Training Complete (ScienceQA Physics). Weights saved.")
 
 if __name__ == "__main__":
     train()
