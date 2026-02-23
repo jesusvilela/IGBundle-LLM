@@ -61,7 +61,7 @@ TELEMETRY_STATE = {
     "last_geo_pos": None, # For computing d_M(t, t-1)
     "last_euc_pos": None,
     "manifold_trace": [], # List of (x,y) coordinates for plotting
-    "gibbs_beta": 4.6,  # Effective inverse temperature (Rajakumar-Watson)
+    "gibbs_beta": 4.6,  # Effective inverse temperature
     "damping": 0.01     # Damping parameter for Gibbs calculation
 }
 
@@ -69,7 +69,7 @@ TELEMETRY_STATE = {
 def compute_gibbs_temperature(damping: float) -> float:
     """
     Compute effective inverse temperature β from damping parameter.
-    Per Rajakumar & Watson (2026): β > 1.87 → classically intractable.
+    Note: High β > 1.87 represents a highly coherent sampling regime.
     """
     import math
     if damping > 0 and damping < 1:

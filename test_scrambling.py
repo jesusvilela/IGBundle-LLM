@@ -51,7 +51,7 @@ def test_scrambling_diagnostic():
     beta = diagnostic.gibbs_temperature()
     print(f"\n--- Gibbs Temperature Mapping ---")
     print(f"Damping q = 0.01 → β = {beta:.2f}")
-    print(f"Rajakumar-Watson threshold: β > 1.87")
+    print(f"Coherence threshold: β > 1.87")
     print(f"Above hardness threshold: {diagnostic.is_above_hardness_threshold()}")
     
     # Run scrambling measurement
@@ -113,7 +113,7 @@ def test_scrambling_diagnostic():
     print(f"✓ OTOC analog computed successfully")
     
     if result.above_hardness_threshold:
-        print(f"\n⚡ QUANTUM ADVANTAGE REGIME: Per Rajakumar & Watson (2026),")
+        print(f"\n⚡ HIGH COHERENCE REGIME:")
         print(f"   sampling from this Gibbs state is classically hard!")
     
     return result

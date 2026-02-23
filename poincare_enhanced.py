@@ -22,7 +22,7 @@ import math
 def compute_gibbs_temperature(damping: float) -> float:
     """
     Compute effective inverse temperature β from damping parameter.
-    Per Rajakumar & Watson (2026): β > 1.87 → classically intractable.
+    Note: High β > 1.87 represents a highly coherent sampling regime.
     """
     if damping > 0 and damping < 1:
         return -math.log(damping / (1 - damping))

@@ -11,7 +11,7 @@ This mirrors quantum scrambling where localized information spreads across
 all degrees of freedom. We measure this WITHOUT quantum hardware by tracking
 how perturbations propagate through Hamiltonian flow on the manifold.
 
-Reference: Rajakumar & Watson (2026) - Gibbs Sampling Quantum Advantage
+Reference: Gibbs Sampling Coherence Limits
 """
 
 import torch
@@ -30,7 +30,7 @@ class ScramblingResult:
     distance_trajectory: List[float] # d(t) over time
     is_chaotic: bool                # True if λ > 0
     effective_temperature: float    # β from damping parameter
-    above_hardness_threshold: bool  # β > 1.87 (Rajakumar-Watson)
+    above_hardness_threshold: bool  # β > 1.87
 
 
 class GeometricScramblingDiagnostic(nn.Module):
@@ -74,7 +74,7 @@ class GeometricScramblingDiagnostic(nn.Module):
     def gibbs_temperature(self) -> float:
         """
         Effective inverse temperature from damping parameter.
-        Per Rajakumar & Watson (2026), β > 1.87 implies classical hardness.
+        β > 1.87 implies a high coherence sampling regime.
         
         Mapping: q = e^{-β}/(1 + e^{-β}) → β = -log(q/(1-q))
         """

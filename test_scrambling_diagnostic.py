@@ -9,7 +9,7 @@ Key metrics:
 - Scrambling time τ_s: When information spreads across all bundles
 - Lyapunov exponent λ: Rate of exponential divergence  
 - OTOC analog: Cross-fiber influence matrix
-- Gibbs temperature β: Per Rajakumar & Watson (2026)
+- Gibbs temperature β: Coherence Threshold
 
 Author: Jesús Vilela Jato
 Date: February 2026
@@ -270,7 +270,7 @@ def test_scrambling_diagnostic():
     beta = hamiltonian.gibbs_temperature()
     print(f"Damping parameter q: {config.damping}")
     print(f"Effective inverse temperature β: {beta:.4f}")
-    print(f"Rajakumar-Watson threshold: β > 1.87")
+    print(f"Coherence threshold: β > 1.87")
     print(f"Status: {'ABOVE THRESHOLD ✓' if beta > 1.87 else 'BELOW THRESHOLD ✗'}")
     
     print(f"\n[2] GEOMETRIC SCRAMBLING TIME")

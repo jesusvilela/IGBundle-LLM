@@ -95,7 +95,7 @@ At the bottom of the plot you'll see:
 ```
 
 ### β (Gibbs Temperature)
-Per Rajakumar & Watson (2026):
+Notes:
 - **β > 1.87** (✓): System operates in "quantum advantage" regime
 - **β < 1.87** (✗): Classical sampling regime
 
