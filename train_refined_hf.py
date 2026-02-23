@@ -7,19 +7,35 @@ from torch.utils.data import DataLoader, IterableDataset
 from transformers import (
     AutoTokenizer, 
     AutoModelForCausalLM, 
+    AutoModelForCausalLM, 
     BitsAndBytesConfig
 )
+from datasets import load_dataset
+import logging
+print("DEBUG: Imports done.")
+
+try:
+    import bitsandbytes as bnb
+    HAS_BNB = True
+    print("DEBUG: BNB Found.")
+except ImportError:
+    HAS_BNB = False
+    print("DEBUG: BNB NOT Found.")
+    logger = logging.getLogger("RefinedTrainer")
+    logger.warning("BitsAndBytes not found. Switching to CPU Offload Strategy (Slower but compatible).")
+
 from peft import prepare_model_for_kbit_training
 import random
-import logging
+
 import json
 from typing import Dict, List, Optional, Tuple, Iterator
-from datasets import load_dataset
 import numpy as np
+import gc
 
 sys.path.append(os.path.abspath("src"))  
 from igbundle.core.config import IGBundleConfig
 from igbundle.modules.geometric_adapter import create_geometric_adapter
+from igbundle.modules.regularization import LipschitzPenalty, spectral_normalize_module
 
 # Logging Setup
 logging.basicConfig(
@@ -34,14 +50,14 @@ logging.basicConfig(
 logger = logging.getLogger("RefinedTrainer")
 
 # Configuration
-MODEL_ID = "../igbundle_qwen7b_cp600" 
-OUTPUT_DIR = "igbundle_refined_training"
-MAX_STEPS = 500 # Refinement phase usually shorter
+MODEL_ID = "h:/LLM-MANIFOLD/igbundle_qwen7b_cp600" 
+OUTPUT_DIR = "igbundle_phase8_training"
+MAX_STEPS = 5000 # Full Scale Phase 8 Run
 BATCH_SIZE = 1 
 GRAD_ACCUM = 16 
-LEARNING_RATE = 1e-4 # Lower LR for refinement
+LEARNING_RATE = 5e-5 # Lower LR for stability in long run
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-CHECKPOINT_SOURCE = "igbundle_diverse_training/checkpoint-1000/adapter_weights.pt"
+CHECKPOINT_SOURCE = "igbundle_phase8_training/checkpoint-3900" # Resume from Step 3900
 
 class CompositeStreamingDataset(IterableDataset):
     def __init__(self, datasets, weights=None, transform=None):
@@ -85,43 +101,113 @@ class RefinedTrainer:
     def setup_model(self):
         logger.info(f"Loading Base Model: {MODEL_ID}")
         
-        self.tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, trust_remote_code=True)
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            MODEL_ID, 
+            trust_remote_code=True,
+            fix_mistral_regex=True
+        )
+        print("DEBUG: Tokenizer initialized.")
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
             
-        bnb_config = BitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_quant_type="nf4",
-            bnb_4bit_use_double_quant=True,
-            bnb_4bit_compute_dtype=torch.bfloat16
-        )
+        # BNB / Quantization Logic
+        if HAS_BNB:
+            bnb_config = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_quant_type="nf4",
+                bnb_4bit_use_double_quant=True,
+                bnb_4bit_compute_dtype=torch.bfloat16
+            )
+            model_kwargs = {
+                "quantization_config": bnb_config,
+                "device_map": "auto",
+                "max_memory": {0: "7GB"}, # Leave headroom
+                "trust_remote_code": True
+            }
+        else:
+            # Fallback: Float16 with Offloading
+            model_kwargs = {
+                "torch_dtype": torch.float16,
+                "device_map": "auto",
+                "max_memory": {0: "7GB", "cpu": "32GB"}, # Allow CPU offload
+                "trust_remote_code": True,
+                "low_cpu_mem_usage": True
+            }
         
+        print("DEBUG: Loading Model...")
         self.llm = AutoModelForCausalLM.from_pretrained(
             MODEL_ID,
-            quantization_config=bnb_config,
-            device_map="auto",
-            trust_remote_code=True
+            **model_kwargs
         )
-        self.llm = prepare_model_for_kbit_training(self.llm)
+        print("DEBUG: Model Loaded.")
+        
+        if HAS_BNB:
+             print("DEBUG: Preparing for kbit training...")
+             self.llm = prepare_model_for_kbit_training(self.llm)
+        else:
+             # Enable Gradient Checkpointing manually for memory saving
+             self.llm.gradient_checkpointing_enable() 
+
         self.llm.config.use_cache = False
         
+        print("DEBUG: Initializing Adapter...")
         logger.info("Initializing Geometric IGBundle Adapter (With Fiber Refinement)...")
         self.adapter = create_geometric_adapter(self.config).to(DEVICE)
         
-        # Load Checkpoint and strictly handle mismatches (new modules vs old checkpoint)
-        if os.path.exists(CHECKPOINT_SOURCE):
-            logger.info(f"RESUMING from Diverse Checkpoint: {CHECKPOINT_SOURCE}")
-            # strict=False allows loading weights even if fiber_latents are new/missing in checkpoint
-            # We explicitly want to keep new random initialization for fiber_store if it wasn't in checkpoint.
-            keys = self.adapter.load_state_dict(torch.load(CHECKPOINT_SOURCE), strict=False)
-            logger.info(f"Missing Keys (New Modules): {keys.missing_keys}")
-            logger.info(f"Unexpected Keys: {keys.unexpected_keys}")
+        # DEBUG after to(DEVICE)
+        if torch.isnan(self.adapter.output_proj.weight).any():
+             print(f"CRITICAL: Adapter weights corrupted after .to({DEVICE})")
         else:
-            logger.warning(f"Checkpoint {CHECKPOINT_SOURCE} not found! Starting fresh.")
+             print(f"DEBUG: Adapter weights CLEAN after .to({DEVICE})")
+        
+        # Apply Spectral Normalization for Kirszbraun Guarantee (Epic 38)
+        # DISABLE spectral norm for now as it causes NaN with Zero-Init output_proj
+        # spectral_normalize_module(self.adapter)
+        print("DEBUG: Spectral Normalization DISABLED.")
+        
+        # RESUME LOGIC
+        self.start_step = 0
+        latest_ckpt = self._find_latest_checkpoint()
+        
+        if latest_ckpt:
+             logger.info(f"RESUMING from Latest Refined Checkpoint: {latest_ckpt}")
+             self.adapter.load_state_dict(torch.load(latest_ckpt), strict=False)
+             # Parse step from path .../checkpoint-100/adapter_weights.pt
+             try:
+                 step_str = os.path.basename(os.path.dirname(latest_ckpt)).split("-")[1]
+                 self.start_step = int(step_str)
+                 logger.info(f"Resuming at Step {self.start_step}")
+             except:
+                 logger.warning("Could not parse step from checkpoint path, starting at 0.")
+        elif CHECKPOINT_SOURCE and os.path.exists(CHECKPOINT_SOURCE):
+             logger.info(f"Loading Source Weights from: {CHECKPOINT_SOURCE}")
+             try:
+                 state_dict = torch.load(CHECKPOINT_SOURCE)
+                 self.adapter.load_state_dict(state_dict, strict=False)
+                 print("DEBUG: Source Adapter Weights Loaded.")
+             except Exception as e:
+                 logger.error(f"Failed to load source checkpoint: {e}")
+        else:
+             logger.info("Starting FRESH (Random Initialization)")
+             print("DEBUG: Fresh Adapter Initialized.")
         
         logger.info("Injecting Adapter Hook at Layer 12...")
         self._inject_adapter()
-        
+
+    def _find_latest_checkpoint(self):
+        if not os.path.exists(OUTPUT_DIR):
+            return None
+        checkpoints = [d for d in os.listdir(OUTPUT_DIR) if d.startswith("checkpoint-")]
+        if not checkpoints:
+            return None
+        # Sort by number
+        checkpoints.sort(key=lambda x: int(x.split("-")[1]))
+        latest = checkpoints[-1]
+        ckpt_path = os.path.join(OUTPUT_DIR, latest, "adapter_weights.pt")
+        if os.path.exists(ckpt_path):
+             return ckpt_path
+        return None
+
     def _inject_adapter(self):
         target_layer_idx = 12
         layers = self.llm.model.layers
@@ -207,7 +293,16 @@ class RefinedTrainer:
         logger.info(f"Starting Refined Training Loop (Target Steps: {MAX_STEPS})...")
         self.llm.train()
         
-        for step in range(MAX_STEPS):
+        if not hasattr(self, 'start_step'): self.start_step = 0
+        
+        # Adjust iter_loader if needed? No, streaming dataset is infinite usually or shuffled.
+        # Just skipping steps in loader is hard for streaming.
+        # We assume independent batches.
+        
+        logger.info(f"Starting Refined Training Loop (Steps {self.start_step} -> {MAX_STEPS})...")
+        self.llm.train()
+        
+        for step in range(self.start_step, MAX_STEPS):
             optimizer.zero_grad()
             try:
                 batch = next(iter_loader)
@@ -232,6 +327,26 @@ class RefinedTrainer:
             if self._current_geo_state:
                 geo_losses = self.adapter.compute_geometric_losses(self._current_geo_state)
                 loss_geo = sum(geo_losses.values())
+                
+                # Kirszbraun Lipschitz Penalty (Epic 38)
+                # Compute penalty on input batch -> output manifold projection
+                # We need access to the projector within adapter. 
+                # Assuming adapter has 'fiber_projector' or similar. 
+                # For now, we apply it if 'fiber_projector' exists.
+                loss_lip = 0.0
+                if hasattr(self.adapter, 'fiber_projector'):
+                     # Use input hidden states (approximate as we don't have them handy here without hook interception)
+                     # Actually, `compute_geometric_losses` might be too late.
+                     # But we can use the 'base_coords' from _current_geo_state if available?
+                     # Let's assume _current_geo_state has 'base_coords' (B, T, D)
+                     if hasattr(self._current_geo_state, 'base_coords'):
+                         loss_lip = LipschitzPenalty.compute_penalty(
+                             self.adapter.fiber_projector, 
+                             self._current_geo_state.base_coords,
+                             c=self.config.manifold_curvature
+                         )
+                
+                loss_geo += loss_lip
                 
                 # Active Index Logging & Telemetry
                 if step % 5 == 0:
@@ -260,9 +375,30 @@ class RefinedTrainer:
             total_loss.backward()
             
             if (step + 1) % GRAD_ACCUM == 0:
-                torch.nn.utils.clip_grad_norm_(self.adapter.parameters(), 1.0)
-                optimizer.step()
+                # GRADIENT CLINIC: Sanitize gradients before step
+                grad_norm = torch.nn.utils.clip_grad_norm_(self.adapter.parameters(), 1.0)
+                
+                # Check for NaN/Inf in gradients and zero them out if found
+                found_nan_grad = False
+                for p in self.adapter.parameters():
+                    if p.grad is not None:
+                        if torch.isnan(p.grad).any() or torch.isinf(p.grad).any():
+                            # logger.warning(f"NaN/Inf gradient detected in {p.shape}. Zeroing grad.")
+                            p.grad = None # Zero out (skip update for this param)
+                            found_nan_grad = True
+                
+                if found_nan_grad:
+                     logger.warning(f"Step {step}: NaN gradients detected! Skipped update for corrupted params.")
+                
+                if not found_nan_grad:
+                    optimizer.step()
+                
                 optimizer.zero_grad()
+                
+                # THERMAL THROTTLE: Sleep briefly to let GPU cool
+                import time
+                if step % 10 == 0:
+                    time.sleep(1.0)
             
             if step % 10 == 0:
                 logger.info(f"Step {step}: Total Loss = {total_loss.item():.4f} (LLM={loss_llm.item():.4f})")

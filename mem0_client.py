@@ -30,7 +30,7 @@ class LLMOSMemory:
             "vector_store": {
                 "provider": "qdrant",
                 "config": {
-                    "collection_name": "igbundle_memories_v2",
+                    "collection_name": "igbundle_memories_v3",
                     "path": "./memory/qdrant_data"
                 }
             },

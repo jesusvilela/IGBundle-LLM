@@ -30,21 +30,22 @@ from ..geometry.riemannian import (
 from .state import MixtureState
 from .kl import kl_diag_gauss, kl_categorical_logits
 from ..core.config import IGBundleConfig
-from ..dynamics.hamiltonian import HamiltonianSystem
+from ..dynamics.hamiltonian import HamiltonianSystem, LeapfrogIntegrator
+from ..dynamics.potential import NeuralPotential
+from ..geometry.poincare import PoincareBall
+from ..geometry.kan_manifold import KanManifold
 from .attention import PoincareAttention
 from .vision import VisionProjector
 from .compiler import ManifoldDecompiler
 from .memory import GeometricPhaseMemory
 from .consensus import SheafConsensus
-from .manifold_gl_fiber_bundle_v1 import (
-    ManifoldConfig as V1ManifoldConfig, 
-    HamiltonianConfig as V1HamiltonianConfig, 
-    SymplecticIntegrator as V1SymplecticIntegrator,
-    RiemannianGeometry as V1RiemannianGeometry
-)
+# Phase 2 Upgrade: Removed V1 prototype imports
+from ..fibers.latent_store import FiberLatentStore
+from ..fibers.executor import FiberExecutor
 from ..fibers.latent_store import FiberLatentStore
 from ..fibers.executor import FiberExecutor
 from ..fibers.closure import compute_closure
+from ..cognition.meta import MetaCognitiveLoop
 
 @dataclass
 class GeometricState:
@@ -67,6 +68,11 @@ class GeometricState:
     op_logits: Optional[torch.Tensor] = None # Epic 3: Compiler Output
     consensus_loss: Optional[torch.Tensor] = None # Epic 7: Sheaf Consensus Loss
     active_indices: Optional[torch.Tensor] = None # Epic 1: Sparse Hamiltonian Indices
+    meta_info: Optional[Dict[str, Any]] = None # Epic 36: System 2 Trace
+    # Phase 4 Telemetry
+    hamiltonian_energy: Optional[float] = None
+    retrospection_loss: Optional[float] = None
+    fhn_phase: Optional[str] = "Free"
 
 class GeometricIGBundleAdapter(nn.Module):
     """
@@ -97,20 +103,45 @@ class GeometricIGBundleAdapter(nn.Module):
         self.riemannian_geometry = RiemannianGeometry(config)
         self.lambda_calculus = FiberBundleLambdaCalculus(config)
         
-        # --- ManifoldGL V1 Integration ---
-        self.v1_m_config = V1ManifoldConfig(latent_dim=self.D)
-        self.v1_h_config = V1HamiltonianConfig(
-            use_dynamics=getattr(config, 'use_dynamics', True),
-            num_leapfrog_steps=4,
-            step_size=0.01
-        )
-        self.v1_geo = V1RiemannianGeometry(self.v1_m_config)
-        # Bind compute_hamiltonian_potential as the custom potential function
-        self.dynamics_engine = V1SymplecticIntegrator(
-            self.v1_geo, 
-            self.v1_h_config, 
-            potential_fn=self.compute_hamiltonian_potential
-        )
+
+        
+        if config.use_dynamics:
+            # --- Phase 2: Hamiltonian Dynamics Engine ---
+            # Initialize Poincare Ball Geometry (K=-1)
+
+            self.manifold_type = getattr(config, 'manifold_type', 'poincare')
+            if self.manifold_type == 'kan':
+                 print("GeometricIGBundle: Initialization KAN Manifold (Learnable Geometry)")
+                 self.manifold = KanManifold(dim=self.D, hidden_dim=64, base_manifold='poincare')
+            else:
+                 self.manifold = PoincareBall(dim=self.D)
+            
+            # Epic 35: Semantic Potential Field (V)
+            self.potential_net = NeuralPotential(latent_dim=self.D, hidden_dim=256)
+            
+            # Initialize Hamiltonian Field (H = T + V)
+            print(f"DEBUG: Initializing HamiltonianSystem. Manifold: {self.manifold} Type: {type(self.manifold)}")
+            if isinstance(self.manifold, int):
+                 print("CRITICAL ERROR: Manifold is INT. Forcing correction to PoincareBall.")
+                 # from igbundle.geometry.poincare import PoincareBall # Removed to fix UnboundLocalError
+                 self.manifold = PoincareBall(dim=self.D)
+            self.vf = HamiltonianSystem(self.manifold, potential_module=self.potential_net)
+            self.dynamics = self.vf  # Alias for compatibility
+            
+            # Initialize Symplectic Integrator
+            self.num_leapfrog_steps = getattr(config, 'num_leapfrog_steps', 4)
+            self.step_size = getattr(config, 'step_size', 0.01)
+            self.integrator = LeapfrogIntegrator(
+                self.vf, 
+                step_size=self.step_size, 
+                num_steps=self.num_leapfrog_steps
+            )
+            
+            # Epic 36: Recursive Meta-Cognition
+            self.meta_loop = MetaCognitiveLoop(self.vf, threshold=0.5)
+        else:
+            self.integrator = None
+            self.meta_loop = None
 
         # Input/Output projections
         self.input_proj = nn.Linear(self.H, self.D_bot)
@@ -182,8 +213,7 @@ class GeometricIGBundleAdapter(nn.Module):
             self.vision_projector = None
             self.vision_attn = None
 
-        # EPIC 1: Hamiltonian Dynamics
-        self.dynamics = HamiltonianSystem(self.D) # Operates on latent D
+        # EPIC 1: Hamiltonian Dynamics (Moved to Phase 2 block above)
         self.use_dynamics = getattr(config, 'use_dynamics', False)
 
         # EPIC 2: Geodesic Attention
@@ -244,6 +274,12 @@ class GeometricIGBundleAdapter(nn.Module):
              # Future: Inject vision tokens into x or h_bot
              pass
 
+        # Handle 2D inputs (e.g. from Flash Attn flattening)
+        is_2d = False
+        if x.dim() == 2:
+            is_2d = True
+            x = x.unsqueeze(1)
+            
         B, T, H = x.shape
 
         # 1. Project to bottleneck space
@@ -321,11 +357,28 @@ class GeometricIGBundleAdapter(nn.Module):
              router_confidence = torch.max(transformed_sections, dim=-1)[0].squeeze(1) # (B, P)
              _, active_indices = torch.topk(router_confidence, k=k_active, dim=-1) # (B, k)
              
+             # Phase 2.5: Update Resonant Dynamics
+             # We flatten the batch for the resonator or take the mode?
+             # For now, we union the active indices across batch
+             flat_indices = active_indices.view(-1).unique().tolist()
+             self.fiber_executor.update_resonance(flat_indices)
+
              # Symplectic integration of the Hamiltonian system
              updated_coords, updated_sections = self._symplectic_integrate(
                  transported_coords, transformed_sections, metric, active_indices=active_indices
              )
+             
+             # Epic 36: Recursive Meta-Cognition (System 2)
+             # If Meta-Loop is active, verify and refine the thought.
+             # Note: We can expose a 'force_refine' flag in forward args if needed.
+             if self.meta_loop is not None and getattr(self.cfg, 'enable_meta_cognition', False):
+                 # Refine the coordinates
+                 updated_coords, meta_info = self.meta_loop(updated_coords)
+                 # We could log meta_info['final_energy'] or 'refined' status here
         else:
+             # Static manifold projection (no dynamics)
+             updated_coords = transported_coords
+             updated_sections = transformed_sections
              # Fallback to Information Geometric Update (Legacy)
              updated_coords, updated_sections = self._information_geometric_update(
                  transported_coords, transformed_sections, metric
@@ -429,10 +482,19 @@ class GeometricIGBundleAdapter(nn.Module):
             metric=metric,
             op_logits=op_logits,
             consensus_loss=consensus_loss,
-            active_indices=active_indices
+            active_indices=active_indices,
+            meta_info=meta_info if 'meta_info' in locals() else None,
+            # Phase 4
+            hamiltonian_energy=0.0, # Placeholder, populated by hook or executor
+            retrospection_loss=0.0,
+            fhn_phase="Free"
         )
 
-        return x + self.scale * output, geo_state
+        final_output = x + self.scale * output
+        if is_2d:
+            final_output = final_output.squeeze(1)
+            
+        return final_output, geo_state
 
     def refine_latents(self, active_indices: torch.Tensor, adjacency: Optional[Dict[int, Set[int]]] = None):
         """
@@ -495,7 +557,9 @@ class GeometricIGBundleAdapter(nn.Module):
         curr_coords = base_coords[:, 1:, :, :]   # (B, T-1, P, D)
         
         # Simple geometric correction (matches previous logic but vectorized)
-        correction = 0.1 * (curr_coords - prev_coords)
+        # Ensure scalar 0.1 is handled without promoting to float32
+        correction = curr_coords - prev_coords
+        correction = correction * 0.1 
         
         transported_coords[:, 1:, :, :] = curr_coords - correction
         
@@ -518,9 +582,10 @@ class GeometricIGBundleAdapter(nn.Module):
 
         # Scale updates by metric (simplified natural gradient)
         # In full implementation, would use inverse metric tensor
+        # Scale updates by metric (simplified natural gradient)
+        # In full implementation, would use inverse metric tensor
         metric_inv_diag = 1.0 / (torch.diagonal(metric.metric_tensor, dim1=-2, dim2=-1) + 1e-6)
-        if metric_inv_diag.dtype != base_update.dtype:
-            metric_inv_diag = metric_inv_diag.to(base_update.dtype)
+        metric_inv_diag = metric_inv_diag.to(base_update.dtype) # Strict Cast
             
         scaled_base_update = base_update * metric_inv_diag
 
@@ -528,7 +593,11 @@ class GeometricIGBundleAdapter(nn.Module):
         eta_base = self.cfg.eta_b
         eta_fiber = self.cfg.eta_f
 
-        updated_coords = coords + eta_base * scaled_base_update
+        # updated_coords = coords + eta_base * scaled_base_update
+        # Phase 3.5: Use Manifold Exponential Map
+        v_update = eta_base * scaled_base_update
+        updated_coords = self._exp_map(coords, v_update)
+        
         updated_sections = sections + eta_fiber * fiber_update
         
         # Enforce dtype consistency
@@ -580,6 +649,45 @@ class GeometricIGBundleAdapter(nn.Module):
 
         return current_mean
 
+    def _exp_map(self, coords: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
+        """Helper to invoke manifold exp_map with boundary check."""
+        # KanManifold and PoincareBall both support exp_map(x, v)
+        updated_coords = self.manifold.exp_map(coords, v)
+        
+        # Enforce boundary if needed
+        if hasattr(self.manifold, 'proj'):
+             updated_coords = self.manifold.proj(updated_coords)
+        elif hasattr(self.manifold, 'base_geo') and self.manifold.base_geo:
+             updated_coords = self.manifold.base_geo.proj(updated_coords)
+             
+        return updated_coords
+
+    def _exp_map(self, coords: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
+        """Helper to invoke manifold exp_map with boundary check."""
+        # KanManifold and PoincareBall both support exp_map(x, v)
+        updated_coords = self.manifold.exp_map(coords, v)
+        
+        # Enforce boundary if needed
+        if hasattr(self.manifold, 'proj'):
+             updated_coords = self.manifold.proj(updated_coords)
+        elif hasattr(self.manifold, 'base_geo') and self.manifold.base_geo:
+             updated_coords = self.manifold.base_geo.proj(updated_coords)
+             
+        return updated_coords
+
+    def _exp_map(self, coords: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
+        """Helper to invoke manifold exp_map with boundary check."""
+        # KanManifold and PoincareBall both support exp_map(x, v)
+        updated_coords = self.manifold.exp_map(coords, v)
+        
+        # Enforce boundary if needed
+        if hasattr(self.manifold, 'proj'):
+             updated_coords = self.manifold.proj(updated_coords)
+        elif hasattr(self.manifold, 'base_geo') and self.manifold.base_geo:
+             updated_coords = self.manifold.base_geo.proj(updated_coords)
+             
+        return updated_coords
+
     def compute_geometric_losses(self, state: GeometricState) -> Dict[str, torch.Tensor]:
         """Compute geometric regularization losses."""
         losses = {}
@@ -624,8 +732,11 @@ class GeometricIGBundleAdapter(nn.Module):
              # Re-compute energy of the states
              # We assume p=0 for static states to check potential
              p_zero = torch.zeros_like(state.base_coordinates)
-             energy = self.dynamics.hamiltonian(state.base_coordinates, p_zero)
-             losses['hamiltonian_energy'] = energy.mean() * 0.01 # Scale down
+             energy = self.dynamics.total_energy(state.base_coordinates, p_zero)
+             # Phase 6: Logarithmic Loss Scaling to prevent Explosion (1e27 -> 100)
+             # Apply log1p on the mean energy
+             scaled_energy = torch.log1p(torch.abs(energy.mean())) 
+             losses['hamiltonian_energy'] = scaled_energy * 0.1
              
         # EPIC 3: Task Compiler Consistency (Entropy Regularization)
         # Encourage the compiler to be confident (Low Entropy on op_logits)
@@ -797,48 +908,61 @@ class GeometricIGBundleAdapter(nn.Module):
     def _symplectic_integrate(self, coords: torch.Tensor, sections: torch.Tensor, metric: RiemannianMetric, 
                             active_indices: Optional[torch.Tensor] = None) -> Tuple[torch.Tensor, torch.Tensor]:
         """
-        Delegate to ManifoldGL V1 SymplecticIntegrator.
+        Phase 2 Symplectic Integration (Hamiltonian Dynamics).
+        Evolve the 'thought' (coords) using Hamiltonian H(q, p) = T(p) + V(q).
         """
-        # Create mask from active_indices (B, k) -> (B, P)
-        allowed_mask = None
-        if active_indices is not None:
-            B, T, P, _ = coords.shape
-            mask_flat = torch.zeros(B, P, device=coords.device)
-            
-            # Ensure indices are long
-            indices = active_indices.long()
-            # Ensure indices are 2D (B, k)
-            if indices.dim() == 1:
-                indices = indices.unsqueeze(0)
-            if indices.dim() > 2:
-                indices = indices.view(B, -1)
-                
-            # Scatter 1s
-            mask_flat.scatter_(1, indices, 1.0)
-            # Expand to (B, T, P, 1) to match coords
-            allowed_mask = mask_flat.view(B, 1, P, 1) # (B, 1, P, 1) -> broadcasts to T
-            
-        # Initialize Momentum (p)
-        p_coords = torch.zeros_like(coords)
-        p_sections = torch.zeros_like(sections)
+        B, T, P, D = coords.shape
         
-        z_coords = coords
-        z_sections = sections
+        # 1. State q = coords
+        q = coords
         
-        # Integration Loop (Steps defined in config)
-        steps = self.v1_h_config.num_leapfrog_steps
+        # 2. State p (Momentum)
+        # For Phase 2 Generation, we initialize momentum thermally (random Gaussian).
+        # In a fully recurrent model, p would come from previous state.
+        # Here, we treat each forward pass as an "impulse" of thought.
+        # But wait, self.fiber_store.p exists!
+        # If we want PERSISTENCE, we should load p from fiber_store.
+        # However, fiber_store.p is (P, D). coords is (B, T, P, D).
+        # We broadcast p across B, T? Or just use it as 'canonical' momentum?
+        # Let's simple Thermal Sampling for v1 "Creativity" boost, as per Integration Plan.
+        p = torch.randn_like(q) * 0.1
         
-        for _ in range(steps):
-             z_coords, z_sections, p_coords, p_sections = self.dynamics_engine.leapfrog_bundle_step(
-                 z_coords, z_sections, p_coords, p_sections,
-                 metric=metric,
-                 allowed_mask=allowed_mask
-             )
+        # 3. Integrate (Leapfrog)
+        # We need to temporarily bind 'sections' and 'metric' to the instance 
+        # so the potential proxy can see them.
+        # This is not thread-safe but fine for single-threaded train/inf.
+        self._temp_potential_context = {'sections': sections, 'metric': metric}
         
-        # Ensure Probability Simplex for Sections (Optional, or handled by potential/softmax later)
-        # z_sections is usually logits in this architecture, softmax applied at aggregation.
+        # Run Integrator
+        # q, p shapes are (B, T, P, D)
+        # Leapfrog handles batch dimensions natively as long as operations are vectorized.
+        # Manifold ops (exp_map) in poincare.py are vectorized.
+        q_new, p_new = self.integrator(q, p)
+        
+        # Cleanup context
+        self._temp_potential_context = None
+        
+        # 4. Return new Q (Updated Coords)
+        # Sections are currently NOT evolved by Hamiltonian (q-only dynamics in Option A).
+        # So we return original sections (or maybe we should update them via lambda calc later?)
+        # For now, return original sections.
+        return q_new, sections
+
+    def _adapter_potential_energy_proxy(self, q: torch.Tensor) -> torch.Tensor:
+        """
+        Proxy method to calculate V(q) using context available during integration.
+        Bound to self.hamiltonian.potential_energy.
+        """
+        if not hasattr(self, '_temp_potential_context') or self._temp_potential_context is None:
+             # Fallback: Zero potential (Free particle)
+             return torch.zeros(q.shape[:-1], device=q.device)
              
-        return z_coords, z_sections
+        sections = self._temp_potential_context['sections']
+        metric = self._temp_potential_context['metric']
+        
+        # Re-use existing potential logic
+        # Note: q matches shape of coords in context? Yes.
+        return self.compute_hamiltonian_potential(q, sections, metric)
 
 def create_geometric_adapter(config) -> GeometricIGBundleAdapter:
     """Factory function to create geometrically rigorous adapter."""

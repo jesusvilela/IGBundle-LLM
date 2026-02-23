@@ -16,18 +16,24 @@ class FiberLatentStore(nn.Module):
         # The learnable/evolvable latent state of each fiber
         self.s = nn.Parameter(torch.zeros(n_fibers, d_s, device=device, dtype=dtype))
         
+        # Phase 2: Momentum State (p) for Hamiltonian Dynamics
+        # Represented as tangent vectors at the origin (or transported to s)
+        self.p = nn.Parameter(torch.zeros(n_fibers, d_s, device=device, dtype=dtype))
+        
         # Snapshots for refinement and drift calculation
         self.s_prev: Optional[torch.Tensor] = None
         self.s_prev2: Optional[torch.Tensor] = None
+        self.p_prev: Optional[torch.Tensor] = None
         
-        # Initialize with small random noise or orthogonal vectors?
-        # Zero initialization allows the gate to start neutral (if bias=0)
+        # Initialize with small random noise
         nn.init.normal_(self.s, std=0.01)
+        nn.init.normal_(self.p, std=0.01) # Thermal initialization
 
     def snapshot(self):
         """Take a snapshot of the current state."""
         self.s_prev2 = None if self.s_prev is None else self.s_prev.clone().detach()
         self.s_prev = self.s.clone().detach()
+        self.p_prev = self.p.clone().detach()
 
     def get(self, fiber_idx: torch.Tensor) -> torch.Tensor:
         """

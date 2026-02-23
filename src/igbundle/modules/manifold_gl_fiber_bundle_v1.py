@@ -20,7 +20,6 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Set, Tuple, Optional, Union, Any
 import math
 import copy
-import copy
 import logging
 
 # Phase 2.5 Resonant Dynamics
@@ -29,6 +28,11 @@ try:
 except ImportError:
     # Fallback/Dummy if path not setup
     FHNIntegrator = None
+
+try:
+    from igbundle.geometry.hyperbolic import PoincareBall as _PoincareBall
+except ImportError:
+    _PoincareBall = None
 
 # Configuration
 @dataclass
@@ -123,38 +127,36 @@ class AdjacencyGraph:
         return 1.0 # Tree edges are strong connections
 
 # --- Riemannian Geometry Core (Poincare Ball) ---
+# Delegates to the canonical PoincareBall kernel in geometry/hyperbolic.py
+# to eliminate duplicate implementations. Falls back to inline ops if unavailable.
 
 class RiemannianGeometry:
+    """Thin adapter wrapping PoincareBall for v1 ManifoldConfig compatibility."""
     def __init__(self, config: ManifoldConfig):
         self.c = abs(config.curvature)
         self.min_norm = config.min_norm
         self.max_norm = config.max_norm
+        self._ball = _PoincareBall
         
     def mobius_add(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         """Mobius addition in Poincare Ball."""
+        if self._ball is not None:
+            return self._ball.mobius_add(x, y, self.c)
+        # Inline fallback
         x2 = torch.sum(x * x, dim=-1, keepdim=True)
         y2 = torch.sum(y * y, dim=-1, keepdim=True)
         xy = torch.sum(x * y, dim=-1, keepdim=True)
-        
         num = (1 + 2 * self.c * xy + self.c * y2) * x + (1 - self.c * x2) * y
         denom = 1 + 2 * self.c * xy + self.c**2 * x2 * y2
         return num / (denom + 1e-8)
         
     def exp_map(self, x: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
         """Exponential map: Tangent space -> Manifold."""
-        # For x=0 (origin), simplifies to tanh
-        # General case (approximate for small v, rigorous for v at origin)
-        # Using retraction approximation for efficiency if x is not origin?
-        # Let's use rigorous origin exp map for now assuming local charts centered at origin (tangent space)
-        # Actually, for general x, we need full mapping.
-        # Simplified: z_new = x + v (Euclidean) projected back.
-        # Rigorous formulation:
+        if self._ball is not None:
+            return self._ball.exp_map(x, v, self.c)
+        # Inline fallback
         sqrt_c = math.sqrt(self.c)
         v_norm = v.norm(dim=-1, keepdim=True).clamp_min(1e-8)
-        
-        # This is Exp_0(v)
-        # To do Exp_x(v), we rely on parallel transport or mobius add
-        # z = x (+) (tanh(lambda_x * |v| / 2) * v / |v|)
         lambda_x = 2 / (1 - self.c * torch.sum(x * x, dim=-1, keepdim=True)).clamp_min(1e-8)
         coeff = torch.tanh(lambda_x * sqrt_c * v_norm / 2) / (sqrt_c * v_norm)
         u = coeff * v
@@ -162,14 +164,19 @@ class RiemannianGeometry:
         
     def log_map(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         """Log map: Manifold -> Tangent space at x."""
+        if self._ball is not None:
+            return self._ball.log_map(x, y, self.c)
+        # Inline fallback
         diff = self.mobius_add(-x, y)
         diff_norm = diff.norm(dim=-1, keepdim=True).clamp_min(1e-8)
         lambda_x = 2 / (1 - self.c * torch.sum(x * x, dim=-1, keepdim=True)).clamp_min(1e-8)
         sqrt_c = math.sqrt(self.c)
-        
         return (2 / (sqrt_c * lambda_x)) * torch.atanh(sqrt_c * diff_norm) * (diff / diff_norm)
         
     def dist(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        if self._ball is not None:
+            return self._ball.dist(x, y, self.c)
+        # Inline fallback
         diff = self.mobius_add(-x, y)
         norm = diff.norm(dim=-1, keepdim=True)
         sqrt_c = math.sqrt(self.c)
@@ -177,15 +184,18 @@ class RiemannianGeometry:
 
     def parallel_transport(self, x: torch.Tensor, y: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
         """Parallel transport vector v from TxM to TyM."""
-        # Gyrovector transport approximation -> Identity for zero curvature
-        # In Poincare ball, it's a scaling factor + rotation
-        # Simplified: Just scaling by conformal factor ratio
+        if self._ball is not None:
+            return self._ball.parallel_transport(x, y, v, self.c)
+        # Inline fallback (conformal factor scaling)
         lambda_x = 2 / (1 - self.c * torch.sum(x * x, dim=-1, keepdim=True))
         lambda_y = 2 / (1 - self.c * torch.sum(y * y, dim=-1, keepdim=True))
         return v * (lambda_x / lambda_y)
 
     def project(self, x: torch.Tensor) -> torch.Tensor:
         """Project back to ball if outside."""
+        if self._ball is not None:
+            return self._ball.project(x, self.c, eps=1e-5)
+        # Inline fallback
         norm = x.norm(dim=-1, keepdim=True)
         mask = norm >= self.max_norm
         if mask.any():

@@ -8,12 +8,12 @@ setup(
     package_dir={"": "src"},
     packages=find_packages(where="src"),
     install_requires=[
-        "torch>=2.0.0",
-        "transformers>=4.38.0",
-        "peft>=0.10.0",
-        "accelerate>=0.27.0",
-        "bitsandbytes>=0.40.0",
-        "numpy",
+        "torch>=2.6.0",
+        "transformers>=4.48.0",
+        "peft>=0.14.0",
+        "accelerate>=1.2.0",
+        "bitsandbytes>=0.45.0",
+        "numpy>=1.26.0",
     ],
     python_requires=">=3.8",
 )

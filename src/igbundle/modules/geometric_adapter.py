@@ -21,6 +21,15 @@ import torch.nn.functional as F
 from typing import Tuple, Optional, Dict, Any, Set
 from dataclasses import dataclass
 
+def check_nan(tensor, name):
+    if torch.isnan(tensor).any():
+        print(f"NAN DETECTED in {name} - Max: {tensor.max()} Min: {tensor.min()}")
+        return True
+    if torch.isinf(tensor).any():
+        print(f"INF DETECTED in {name} - Max: {tensor.max()} Min: {tensor.min()}")
+        return True
+    return False
+
 from ..geometry.riemannian import (
     RiemannianGeometry,
     FiberBundleLambdaCalculus,
@@ -34,7 +43,8 @@ from ..dynamics.hamiltonian import HamiltonianSystem, LeapfrogIntegrator
 from ..dynamics.potential import NeuralPotential
 from ..geometry.poincare import PoincareBall
 from ..geometry.kan_manifold import KanManifold
-from .attention import PoincareAttention
+from .riemannian_attention import RiemannianAttention
+from .hybrid_gating import EntropyGating
 from .vision import VisionProjector
 from .compiler import ManifoldDecompiler
 from .memory import GeometricPhaseMemory
@@ -42,13 +52,33 @@ from .consensus import SheafConsensus
 # Phase 2 Upgrade: Removed V1 prototype imports
 from ..fibers.latent_store import FiberLatentStore
 from ..fibers.executor import FiberExecutor
-from ..fibers.latent_store import FiberLatentStore
-from ..fibers.executor import FiberExecutor
 from ..fibers.closure import compute_closure
 from ..cognition.meta import MetaCognitiveLoop
 
+class SimplexNaturalGradient(torch.autograd.Function):
+    """
+    Geometrically rigorous Natural Gradient Descent (NGD) for Categorical probability
+    simplices parameterized by logits. Uses the exact rank-(K-1) Fisher-Rao Information
+    Metric pseudo-inverse G^+ v = v / theta - sum(v).
+    """
+    @staticmethod
+    def forward(ctx, logits):
+        theta = F.softmax(logits, dim=-1)
+        # Save theta for backward, clamped to prevent zero-division
+        ctx.save_for_backward(torch.clamp(theta, min=1e-8))
+        return logits
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        theta, = ctx.saved_tensors
+        sum_grad = grad_output.sum(dim=-1, keepdim=True)
+        # Apply Fisher Pseudo-Inverse G^+
+        natural_grad = (grad_output / theta) - sum_grad
+        return natural_grad
+
 @dataclass
 class GeometricState:
+
     """
     Enhanced state representation with proper geometric structure.
 
@@ -62,7 +92,6 @@ class GeometricState:
     mixture_state: MixtureState
     base_coordinates: torch.Tensor
     fiber_sections: torch.Tensor
-    lambda_terms: torch.Tensor
     lambda_terms: torch.Tensor
     metric: Optional[RiemannianMetric] = None
     op_logits: Optional[torch.Tensor] = None # Epic 3: Compiler Output
@@ -219,7 +248,10 @@ class GeometricIGBundleAdapter(nn.Module):
         # EPIC 2: Geodesic Attention
         self.use_geodesic_attn = getattr(config, 'use_geodesic_attn', False)
         if self.use_geodesic_attn:
-            self.geodesic_attn = PoincareAttention(self.D)
+            # Phase 7 Upgrade: Use Riemannian Attention + Gating
+            self.geodesic_attn = RiemannianAttention(config)
+            self.gating = EntropyGating(config)
+            self.euclidean_bypass = nn.Linear(self.D, self.D) # Fast path
 
         # EPIC 3: Task Compiler
         self.compiler = ManifoldDecompiler(self.D)
@@ -250,7 +282,6 @@ class GeometricIGBundleAdapter(nn.Module):
         # For now, we assume a simple linear chain or fully connected for testing, 
         # or we build it dynamically. Let's use an empty dict until we have a topology builder.
         self.fiber_adjacency = {} 
-
         self._vision_context = None
 
     def set_vision_context(self, context: torch.Tensor):
@@ -321,7 +352,9 @@ class GeometricIGBundleAdapter(nn.Module):
 
         # 2. Extract geometric coordinates
         base_coords = self.base_coord_proj(h_bot).view(B, T, self.P, self.D).float()
-        fiber_sections = self.fiber_section_proj(h_bot).view(B, T, self.P, self.K).float()
+        fiber_sections_raw = self.fiber_section_proj(h_bot).view(B, T, self.P, self.K).float()
+        # Apply strict information geometry Natural Gradient via autograd hook
+        fiber_sections = SimplexNaturalGradient.apply(fiber_sections_raw)
         lambda_terms = self.lambda_term_proj(h_bot).view(B, T, self.P, self.D + self.K).float()
 
         # 3. Compatibility: extract mixture parameters
@@ -329,22 +362,49 @@ class GeometricIGBundleAdapter(nn.Module):
         m = self.mixture_proj_m(h_bot).view(B, T, self.P, self.D).float()
         log_s = self.mixture_proj_s(h_bot).view(B, T, self.P, self.D).float()
         log_s = torch.clamp(log_s, min=-5, max=5)
-        # Stability: Clamp base_coords norm to avoid boundary singularity
-        base_coords = torch.clamp(base_coords, min=-10, max=10).float() # Euclidean clamp before exp map if any
+        
+        # Stability: Project base_coords to Poincare Ball (B^D) using tanh logic
+        # Map R^D -> B^D. We use factor 0.95 to stay away from boundary (precision safety).
+        base_coords_raw = self.base_coord_proj(h_bot).view(B, T, self.P, self.D).float()
+        base_coords = torch.tanh(base_coords_raw) * 0.95
+        
         u = self.mixture_proj_u(h_bot).view(B, T, self.P, self.K).float()
 
         mixture_state = MixtureState(w_logits, m, log_s, u)
 
+        # Stability: Clamp coords (already tanh'd so should be safe, but belt+suspenders)
+        base_coords = torch.clamp(base_coords, -0.95, 0.95)
+        m = torch.clamp(m, -10, 10)
+
         # 4. Compute Riemannian metric at base coordinates
         metric = self.riemannian_geometry.get_metric(base_coords)
+        if check_nan(metric.metric_tensor, "metric_g"):
+             print("NAN in Metric Tensor!")
 
         # 5. Apply geometric transformations
 
         # 5a. Lambda calculus operations on fiber bundle sections
+        # Stability: Clamp inputs to Lambda Calculus
+        lambda_terms = torch.clamp(lambda_terms, min=-5.0, max=5.0)
+        fiber_sections = torch.clamp(fiber_sections, min=-5.0, max=5.0)
+        
+        if check_nan(lambda_terms, "lambda_terms") or check_nan(fiber_sections, "fiber_sections_in"):
+             print("NaN detected before Lambda Calculus! Zeroing inputs.")
+             lambda_terms = torch.zeros_like(lambda_terms)
+             fiber_sections = torch.zeros_like(fiber_sections)
+
         transformed_sections = self._apply_lambda_operations(lambda_terms, fiber_sections)
+        if check_nan(transformed_sections, "transformed_sections"):
+             print(f"NAN in Transformed Sections! Max: {transformed_sections.max()}")
+             transformed_sections = torch.zeros_like(transformed_sections)
 
         # 5b. Parallel transport for geometric consistency
         transported_coords = self._parallel_transport_update(base_coords, metric)
+        if check_nan(transported_coords, "transported_coords"):
+             print("NAN in Parallel Transport!")
+             transported_coords = base_coords # Fallback
+
+        # 5c. Hamiltonian Sheaf Dynamics (Symplectic Integration)
 
         # 5c. Hamiltonian Sheaf Dynamics (Symplectic Integration)
         # Replaces simple Natural Gradient with Physics-based Flow
@@ -364,9 +424,21 @@ class GeometricIGBundleAdapter(nn.Module):
              self.fiber_executor.update_resonance(flat_indices)
 
              # Symplectic integration of the Hamiltonian system
-             updated_coords, updated_sections = self._symplectic_integrate(
-                 transported_coords, transformed_sections, metric, active_indices=active_indices
-             )
+             # CRITICAL FIX: Detach symplectic output from gradient flow.
+             # The LeapfrogIntegrator uses detach()+requires_grad_() internally
+             # which creates broken sub-graphs that produce NaN gradients.
+             # The dynamics still affect WHERE coords end up (exploration),
+             # but gradients flow through the residual path instead.
+             with torch.no_grad():
+                 updated_coords_dyn, updated_sections = self._symplectic_integrate(
+                     transported_coords, transformed_sections, metric, active_indices=active_indices
+                 )
+             # Re-attach to graph via residual: small step from transported_coords toward dynamics result
+             # This is differentiable w.r.t. transported_coords (and thus the adapter params)
+             dynamics_direction = (updated_coords_dyn - transported_coords).detach()
+             updated_coords = transported_coords + 0.1 * dynamics_direction
+             # Clamp to Poincare ball
+             updated_coords = torch.clamp(updated_coords, -0.95, 0.95)
              
              # Epic 36: Recursive Meta-Cognition (System 2)
              # If Meta-Loop is active, verify and refine the thought.
@@ -387,13 +459,56 @@ class GeometricIGBundleAdapter(nn.Module):
         # EPIC 1: Hamiltonian Evolution is now handled in 5c above.
         # Legacy placeholder removed.
 
-        # EPIC 2: Geodesic Attention
+        # EPIC 2: Geodesic Attention (Phase 7 Hybrid)
         # Apply attention mechanism based on hyperbolic distances
         if self.use_geodesic_attn:
             # Attend to geometrically similar concepts in the sequence
             # This enriches the representation with "similar" historical context
-            attn_out = self.geodesic_attn(updated_coords, updated_coords)
+            
+            # Reshape updated_coords: (B, T, P, D) -> (B, P, T, D)
+            # We treat Components P as Heads H? No, RiemannianAttention splits H internally.
+            # But here P=8, H=8? Need to match dimensions.
+            # RiemannianAttention expects (B, H, T, D).
+            # If P corresponds to Heads, let's treat P as H.
+            
+            z_perm = updated_coords.permute(0, 2, 1, 3) # (B, P, T, D)
+            
+            # Riemannian Path
+            # Note: RiemannianAttention expects (B, H, T, D).
+            # We assume P == H for this adapter config.
+            # Or we let module handle it.
+            geo_out = self.geodesic_attn(z_perm, z_perm, z_perm) # (B, P, T, D)
+            
+            # Euclidean Path (Bypass)
+            # Treated as vectors in T_0
+            euc_in = z_perm 
+            euc_out = self.euclidean_bypass(euc_in)
+            
+            # Gating Logic (Epic 37)
+            # Approximate Entropy S via variance across components
+            s_proxy = torch.var(z_perm, dim=1).mean(dim=-1) # (B, T)
+            # Approximate Curvature K via metric trace or placeholder
+            k_proxy = -1.0 * torch.ones_like(s_proxy) # Assumed Hyperbolic
+            
+            # Gate returns (B, T, 1)
+            # We assume updated_coords mean as hidden state proxy for gating input?
+            h_proxy = updated_coords.mean(dim=2) # (B, T, D)
+            lam = self.gating(h_proxy, s_proxy, k_proxy) # (B, T, 1)
+            lam = lam.unsqueeze(1).unsqueeze(-1) # (B, 1, T, 1) to broadcast to (B, P, T, D)?
+            # Wait, shape of z_perm is (B, P, T, D).
+            # lam should be (B, 1, T, 1) to match T.
+            
+            lam = lam.view(B, 1, T, 1) 
+            
+            z_mixed = lam * euc_out + (1.0 - lam) * geo_out
+            
+            # Permute back
+            attn_out = z_mixed.permute(0, 2, 1, 3) # (B, T, P, D)
+            
             updated_coords = updated_coords + attn_out # Residual connection on the manifold
+            
+            # Stability: clamp after attention residual
+            updated_coords = torch.clamp(updated_coords, -10, 10)
 
 
         # 6. Aggregate across components using Riemannian structure
@@ -431,9 +546,11 @@ class GeometricIGBundleAdapter(nn.Module):
         
         # Re-compute aggregated coords using consensual thoughts
         aggregated_coords_consensus = self._riemannian_weighted_mean(consensual_coords, weights, metric)
+        aggregated_coords_consensus = torch.clamp(aggregated_coords_consensus, -10, 10)
         
         # Add residual from memory to this consensus result
         aggregated_coords_consensus = aggregated_coords_consensus + phase_context
+        aggregated_coords_consensus = torch.clamp(aggregated_coords_consensus, -10, 10)
         
         # Update output generation to use consensual result
         # combined = torch.cat([aggregated_coords, aggregated_sections], dim=-1) 
@@ -455,13 +572,19 @@ class GeometricIGBundleAdapter(nn.Module):
 
         # 7. Project back to hidden space
         combined = torch.cat([aggregated_coords_consensus, aggregated_sections], dim=-1)  # (B, T, D+K)
+        combined = torch.clamp(combined, -10, 10)
+        
         output = self.output_proj(combined)  # (B, T, H)
+        output = torch.clamp(output, -100, 100)  # Prevent extreme values
 
         # EPIC 31: Fiber Latent Gating
         # Modulate the output using the fiber latents (s_i)
         # We compute this for ALL fibers P and weight by the router weights to ensure smooth gradients
         all_s = self.fiber_store.s # (P, D)
+        all_s = torch.clamp(all_s, -10, 10)
+
         all_gates = self.fiber_gate_proj(all_s) # (P, H)
+        # all_gates is already sigmoid'd (0-1), no clamp needed
         
         # Weighted Gate: sum(w_i * g_i)
         # weights: (B, T, P)
@@ -470,6 +593,7 @@ class GeometricIGBundleAdapter(nn.Module):
         
         # Modulate Adapter Output
         output = output * weighted_gate
+        output = torch.clamp(output, -100, 100)  # Final safety clamp
 
         output = self.dropout(output)
 
@@ -648,32 +772,6 @@ class GeometricIGBundleAdapter(nn.Module):
             current_mean = current_mean + 0.1 * weighted_log
 
         return current_mean
-
-    def _exp_map(self, coords: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
-        """Helper to invoke manifold exp_map with boundary check."""
-        # KanManifold and PoincareBall both support exp_map(x, v)
-        updated_coords = self.manifold.exp_map(coords, v)
-        
-        # Enforce boundary if needed
-        if hasattr(self.manifold, 'proj'):
-             updated_coords = self.manifold.proj(updated_coords)
-        elif hasattr(self.manifold, 'base_geo') and self.manifold.base_geo:
-             updated_coords = self.manifold.base_geo.proj(updated_coords)
-             
-        return updated_coords
-
-    def _exp_map(self, coords: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
-        """Helper to invoke manifold exp_map with boundary check."""
-        # KanManifold and PoincareBall both support exp_map(x, v)
-        updated_coords = self.manifold.exp_map(coords, v)
-        
-        # Enforce boundary if needed
-        if hasattr(self.manifold, 'proj'):
-             updated_coords = self.manifold.proj(updated_coords)
-        elif hasattr(self.manifold, 'base_geo') and self.manifold.base_geo:
-             updated_coords = self.manifold.base_geo.proj(updated_coords)
-             
-        return updated_coords
 
     def _exp_map(self, coords: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
         """Helper to invoke manifold exp_map with boundary check."""
@@ -960,9 +1058,12 @@ class GeometricIGBundleAdapter(nn.Module):
         sections = self._temp_potential_context['sections']
         metric = self._temp_potential_context['metric']
         
-        # Re-use existing potential logic
-        # Note: q matches shape of coords in context? Yes.
-        return self.compute_hamiltonian_potential(q, sections, metric)
+        # GENERIC Thermodynamics Constraint (M \nabla H = 0)
+        # In the GENERIC framework, Mechanical Energy H(q) must be strictly decoupled 
+        # from the dissipative (Entropy) dynamics of \theta (Categorical Sections).
+        # We enforce this by detaching sections during the symplectic Phase Space integration.
+        sections_detached = sections.detach()
+        return self.compute_hamiltonian_potential(q, sections_detached, metric)
 
 def create_geometric_adapter(config) -> GeometricIGBundleAdapter:
     """Factory function to create geometrically rigorous adapter."""

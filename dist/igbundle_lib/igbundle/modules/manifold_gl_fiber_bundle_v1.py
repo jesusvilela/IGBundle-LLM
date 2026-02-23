@@ -20,7 +20,15 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Set, Tuple, Optional, Union, Any
 import math
 import copy
+import copy
 import logging
+
+# Phase 2.5 Resonant Dynamics
+try:
+    from igbundle.dynamics.fhn import FHNIntegrator
+except ImportError:
+    # Fallback/Dummy if path not setup
+    FHNIntegrator = None
 
 # Configuration
 @dataclass
@@ -376,12 +384,30 @@ class ManifoldGLManager:
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.latent_dim = m_config.latent_dim
 
+        # Resonant Dynamics (Phase 2.5)
+        # Pre-allocate for fixed capacity or expand dynamically
+        self.max_fibers = 100 
+        self.fiber_id_map: Dict[FiberID, int] = {} # Map ID -> Resonator Index
+        self.next_idx = 0
+        
+        self.resonator = None
+        if FHNIntegrator:
+            self.resonator = FHNIntegrator(self.max_fibers)
+            self.resonator_state = (torch.zeros(self.max_fibers), torch.zeros(self.max_fibers)) # q, p
+        else:
+            print("WARNING: FHNIntegrator module missing. Resonant dynamics disabled.")
+
     def register_fiber(self, fid: FiberID):
         if fid not in self.fibers:
             self.fibers[fid] = FiberState(
                 z=torch.zeros(self.latent_dim, device=self.device),
                 p=torch.zeros(self.latent_dim, device=self.device)
             )
+            
+            # Map to resonator slot if capacity allows and not already mapped
+            if fid not in self.fiber_id_map and self.next_idx < self.max_fibers:
+                self.fiber_id_map[fid] = self.next_idx
+                self.next_idx += 1
             
     def compute_locus(self, input_signal: torch.Tensor) -> List[FiberID]:
         """Determine which fibers are 'active' (Locus) for this input."""
@@ -456,12 +482,38 @@ class ManifoldGLManager:
         allowed_targets = set(locus)
         logs = []
         
+        # --- PHASE 2.5: Resonant Activation ---
+        resonance_gates = {} # fid -> scalar
+        if self.resonator:
+            # Construct Input Drive
+            drive = torch.zeros(self.max_fibers)
+            for fid in locus:
+                idx = self.fiber_id_map.get(fid)
+                if idx is not None:
+                     drive[idx] = 1.0 # Simple pulse drive for active locus
+            
+            # Step Resonator
+            q_new, p_new = self.resonator.step(self.resonator_state, drive)
+            self.resonator_state = (q_new, p_new)
+            
+            # Extract Gating Values (Sigmoid(q))
+            for fid, idx in self.fiber_id_map.items():
+                gate = torch.sigmoid(q_new[idx]).item()
+                resonance_gates[fid] = gate
+        else:
+            # Pass-through if no resonator
+            for fid in self.fibers: resonance_gates[fid] = 1.0
+
         # 3. Local Updates & Propagation
         all_deltas = {}
         
         for fid in locus:
             delta, log = self.local_update(fid, input_signal)
             logs.append(log)
+            
+            # Apply Resonant Gating to Delta Magnitude
+            gate = resonance_gates.get(fid, 0.0)
+            delta.z_delta = delta.z_delta * gate # Modulation!
             
             p_deltas, new_allowed = self.propagate(fid, delta, allowed_targets)
             allowed_targets.update(new_allowed)

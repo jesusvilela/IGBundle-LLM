@@ -70,7 +70,7 @@ class AdaptiveCurvatureTargeting(nn.Module):
         self.curvature_momentum = 0.9
         self.adaptation_rate = 0.1
         self.min_curvature = -5.0
-        self.max_curvature = 2.0
+        self.max_curvature = -0.1
 
     def forward(self, positions: torch.Tensor, context: Optional[torch.Tensor] = None,
                 hierarchy_depth: Optional[torch.Tensor] = None) -> torch.Tensor:

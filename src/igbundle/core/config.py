@@ -24,6 +24,7 @@ class IGBundleConfig(PretrainedConfig):
         dropout: float = 0.1,
         eta_b: float = 0.01,
         eta_f: float = 0.01,
+        num_attention_heads: int = 4, # Phase 7 Requirement
         **kwargs,
     ):
         """
@@ -53,6 +54,7 @@ class IGBundleConfig(PretrainedConfig):
         self.dropout = dropout
         self.eta_b = eta_b
         self.eta_f = eta_f
+        self.num_attention_heads = num_attention_heads
         
         super().__init__(**kwargs)
 

@@ -61,3 +61,4 @@ unsloth_compiled_cache/
 # Training Outputs
 igbundle_full_scale_reasoning/
 
+data/*.jsonl
