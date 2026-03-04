@@ -60,5 +60,22 @@ unsloth_compiled_cache/
 
 # Training Outputs
 igbundle_full_scale_reasoning/
+igbundle_phase9_odyssey/
+
+# Node
+node_modules/
+
+# Export artifacts (model weights go to HuggingFace, not GitHub)
+export/
+salvos_results/
+
+# Windows artifacts
+NUL
+
+# Diagnostic one-offs
+diagnose_*.py
+validate_*.py
+validate_*.json
+last_error.log
 
 data/*.jsonl

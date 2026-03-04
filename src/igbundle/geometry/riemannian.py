@@ -65,8 +65,8 @@ class RiemannianGeometry(nn.Module):
 
         # Stability: Register hook to scale gradients of metric_chol
         # Because it is broadcast over B*T, gradients accumulate massively.
-        # We scale down by estimated factor of 0.001 to keep updates stable.
-        self.metric_chol.register_hook(lambda grad: grad * 0.001)
+        # FIX: Reduced from 0.001 to 0.1 — 0.001 was starving the metric of gradient signal.
+        self.metric_chol.register_hook(lambda grad: grad * 0.1)
         
         self.manifold_type = getattr(config, 'manifold_type', 'riemannian')
 
@@ -108,11 +108,11 @@ class RiemannianGeometry(nn.Module):
         # Broadcast to batch dimensions
         metric = metric.unsqueeze(0).unsqueeze(0).expand(B, T, -1, -1, -1)
 
-        # FIX: Make metric position-dependent (Conformal Factor) to enable Curvature (K != 0)
-        # lambda(x) = 1 + 0.1 * tanh(norm(x))
-        # This keeps it close to the learned constant metric but adds spatial variation.
+        # Position-dependent conformal factor for non-zero curvature.
+        # FIX: Increased from 0.1 to 0.5 — 0.1 capped curvature capacity at ~10%,
+        # making it nearly impossible for the metric to express hyperbolic geometry.
         norm_x = torch.norm(positions, dim=-1, keepdim=True) # (B, T, P, 1)
-        conformal_factor = 1.0 + 0.1 * torch.tanh(norm_x)
+        conformal_factor = 1.0 + 0.5 * torch.tanh(norm_x)
         conformal_factor = conformal_factor.unsqueeze(-1) # (B, T, P, 1, 1)
         
         metric = metric * conformal_factor
@@ -135,88 +135,67 @@ class RiemannianGeometry(nn.Module):
         
         return torch.zeros(B, T, P, D, D, D, device=positions.device)
 
-    def estimate_sectional_curvature_stochastic(self, positions: torch.Tensor, 
+    @staticmethod
+    def _safe_log_det(metric: torch.Tensor) -> torch.Tensor:
+        """Numerically stable log|det(g)| using slogdet.
+
+        torch.logdet backward overflows on large matrices (64x64 with det~1e10).
+        slogdet decomposes into sign + log|det|, avoiding the overflow.
+        We discard the sign since our metric is SPD (sign is always +1).
+        """
+        sign, logabsdet = torch.slogdet(metric)
+        # Clamp to prevent extreme values from poisoning finite differences
+        return logabsdet.clamp(-50.0, 50.0)
+
+    def estimate_sectional_curvature_stochastic(self, positions: torch.Tensor,
                                               num_samples: int = 1) -> torch.Tensor:
         """
-        Efficiently estimate sectional curvature using stochastic pairs of basis vectors.
-        Uses finite differences on the METRIC directly, avoiding O(D^3) Christoffel tensors.
-        
+        Estimate scalar curvature via stochastic Laplacian of log-determinant.
+
+        For a conformal metric g = lambda * g0:
+            R_scalar ~ -(D-1) * Laplacian(log lambda) / lambda
+
+        We compute this via finite differences along randomly sampled directions,
+        giving an O(num_samples) estimator that avoids O(D^3) Christoffel tensors.
+
         Args:
             positions: (B, T, P, D)
-            num_samples: number of random planes to sample
-            
+            num_samples: number of random directions to sample for Laplacian
+
         Returns:
-            avg_curvature: (B, T, P) - average estimated curvature
+            curvature: (B, T, P) - estimated scalar curvature (negative = hyperbolic)
         """
         B, T, P, D = positions.shape
-        total_k = 0.0
         eps = 1e-3
-        
-        # Get base metric
-        metric_base = self.get_metric(positions).metric_tensor # (B, T, P, D, D)
-        inv_metric = torch.inverse(metric_base) # (B, T, P, D, D)
-        
-        for _ in range(num_samples):
-            # Pick random indices k != l
-            k = torch.randint(0, D, (1,)).item()
-            l = torch.randint(0, D, (1,)).item()
-            while k == l and D > 1:
-                l = torch.randint(0, D, (1,)).item()
-            
-            # We need derivatives of g at x
-            # d_k g_{lm} approx (g(x + eps*e_k) - g(x - eps*e_k)) / 2eps
-            
-            # Helper to get metric at offset
-            def get_g_offset(dim_idx, factor):
-                pos_offset = positions.clone()
-                pos_offset[..., dim_idx] += factor * eps
-                return self.get_metric(pos_offset).metric_tensor
 
-            g_plus_k = get_g_offset(k, 1.0)
-            g_minus_k = get_g_offset(k, -1.0)
-            dg_dk = (g_plus_k - g_minus_k) / (2 * eps) # (B,T,P, D, D)
-            
-            g_plus_l = get_g_offset(l, 1.0)
-            g_minus_l = get_g_offset(l, -1.0)
-            dg_dl = (g_plus_l - g_minus_l) / (2 * eps) # (B,T,P, D, D)
-            
-            # Christoffel Identity: 2*Gamma^m_{ij} = g^ms (dg_is/dx^j + dg_js/dx^i - dg_ij/dx^s)
-            
-            # We need Riemann K(e_k, e_l) approx R_{kllk}
-            # R_{kllk} = d_l Gamma_{klk} - d_k Gamma_{kll} + ...
-            # This is complex to do fully stochastically without autodiff.
-            
-            # SIMPLIFIED STOCHASTIC PROXY:
-            # Gauge the non-commutativity of covariant derivatives?
-            # Or simply measure the second derivative of the metric determinant?
-            # K ~ -0.5 * Laplacian(log(det(g))) in 2D.
-            # In ND, we can look at the "force" dGamma.
-            
-            # Let's use the explicit R formula for the 2D plane spanned by e_k, e_l.
-            # R_{kllk} depends on d_l Gamma^1_{22} etc.
-            # Too expensive.
-            
-            # Fast Proxy: "Deviation from Euclidean"
-            # K ~ < (dg/dk), (dg/dl) >
-            # If metric is constant (Euclidean), dg=0 -> K=0.
-            
-            # Improved Heuristic: K ~ - Laplacian(log det g)
-            # In our conformal case g(x) = lambda(x) g0
-            # log det g = D * log lambda + log det g0
-            # Delta log det g = D * Delta log lambda
-            # lambda = 1 + 0.1 tanh(|x|). This is concave/convex depending on region.
-            # We just measure the variation of the metric directly.
-            
-            norm_dg_dk = torch.norm(dg_dk[..., k, l], dim=-1)
-            norm_dg_dl = torch.norm(dg_dl[..., l, k], dim=-1)
-            
-            # Inject a negative bias to simulate hyperbolic preference if gradients exist
-            # Scale up to be visible
-            k_proxy = -10.0 * (norm_dg_dk + norm_dg_dl)
-            
-            total_k = total_k + k_proxy
-            
-        return total_k / num_samples
+        # log|det g| at current position — using slogdet for numerical stability
+        metric_base = self.get_metric(positions).metric_tensor  # (B, T, P, D, D)
+        log_det_base = self._safe_log_det(metric_base)  # (B, T, P)
+
+        # Stochastic Laplacian: Lap(f) ~ (D / num_samples) * sum_i [f(x+eps*e_i) + f(x-eps*e_i) - 2f(x)] / eps^2
+        laplacian_sum = torch.zeros_like(log_det_base)
+
+        for _ in range(num_samples):
+            k = torch.randint(0, D, (1,)).item()
+
+            pos_plus = positions.clone()
+            pos_plus[..., k] += eps
+            log_det_plus = self._safe_log_det(self.get_metric(pos_plus).metric_tensor)
+
+            pos_minus = positions.clone()
+            pos_minus[..., k] -= eps
+            log_det_minus = self._safe_log_det(self.get_metric(pos_minus).metric_tensor)
+
+            # Second derivative: d^2(log|det g|)/dx_k^2
+            laplacian_sum = laplacian_sum + (log_det_plus + log_det_minus - 2.0 * log_det_base) / (eps * eps)
+
+        # Scale: Laplacian ~ (D / num_samples) * sum
+        # Curvature proxy: K ~ -0.5 * Laplacian(log|det g|) / D
+        # The -0.5/D normalizes to approximate sectional curvature
+        estimated_laplacian = laplacian_sum * (D / num_samples)
+        curvature = -0.5 * estimated_laplacian / max(D, 1)
+
+        return curvature
 
     def inner_product(self, u: torch.Tensor, v: torch.Tensor, metric: RiemannianMetric) -> torch.Tensor:
         """

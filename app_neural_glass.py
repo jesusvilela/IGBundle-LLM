@@ -3,6 +3,7 @@ os.environ["PYTHONWARNINGS"] = "ignore"
 import warnings
 warnings.filterwarnings("ignore")
 warnings.filterwarnings("ignore", message=".*HTTP_422_UNPROCESSABLE_ENTITY.*")
+warnings.filterwarnings("ignore", message=".*HTTP_422_UNPROCESSABLE_CONTENT.*")
 
 import os
 import sys
@@ -86,24 +87,9 @@ MODELS = {
 
 # --- MODEL LOADING ---
 def find_latest_adapter():
-    # 1. Look for Checkpoints in FULL SCALE DIR
-    if os.path.exists(CHECKPOINT_DIR):
-        checkpoints = [d for d in os.listdir(CHECKPOINT_DIR) if d.startswith("checkpoint-")]
-        if checkpoints:
-             latest = sorted(checkpoints, key=lambda x: int(x.split("-")[1]))[-1]
-             # Check for LoRA (safetensors)
-             lora_path = os.path.join(CHECKPOINT_DIR, latest)
-             if os.path.exists(os.path.join(lora_path, "adapter_model.safetensors")):
-                 return lora_path, "lora"
-             
-             # Check for Geometric PT
-             geo_path = os.path.join(CHECKPOINT_DIR, latest, "adapter_weights.pt")
-             if os.path.exists(geo_path):
-                 return geo_path, "geometric"
-
-    if os.path.exists("dist/adapter_refined.pt"): return "dist/adapter_refined.pt", "geometric"
-    if os.path.exists("adapter_weights.pt"): return "adapter_weights.pt", "geometric"
-    
+    target_ckpt = "h:/LLM-MANIFOLD/igbundle-llm/igbundle_phase9_odyssey/checkpoint-3000/adapter_weights.pt"
+    if os.path.exists(target_ckpt):
+        return target_ckpt, "geometric"
     return "DEBUG_MODE_NO_WEIGHTS", "none"
 
 def load_models():
@@ -116,8 +102,10 @@ def load_models():
     bnb_config = BitsAndBytesConfig(
         load_in_4bit=True, bnb_4bit_quant_type="nf4", bnb_4bit_compute_dtype=torch.float16
     )
+    # Epic: CPU Swapping - Restrict GPU memory to force layer offloading
+    max_memory = {0: "5GiB", "cpu": "30GiB"}
     llm = AutoModelForCausalLM.from_pretrained(
-        BASE_MODEL_ID, quantization_config=bnb_config, device_map="auto", trust_remote_code=True
+        BASE_MODEL_ID, quantization_config=bnb_config, device_map="auto", max_memory=max_memory, trust_remote_code=True
     )
     
     print("Loading SigLIP...")
@@ -230,10 +218,12 @@ def inject_adapter_hook(llm, adapter):
                  # Actually, let's calculate exact scalar sectional curvature for 1 pair of fibers
                  pass
             
-            # Since real curvature is expensive, we rely on "Manifold Entropy" 
-            # derived from fiber_sections (Softmax distribution)
-            probs = torch.softmax(geo_state.fiber_sections, dim=-1) # (B, T, P, K)
-            entropy_tensor = -torch.sum(probs * torch.log(probs + 1e-6), dim=-1).mean()
+            # Manifold Entropy from fiber_sections
+            # NOTE: geo_state.fiber_sections are ALREADY probabilities (post-softmax in adapter forward).
+            # Do NOT apply softmax again — double-softmax pushes distribution toward uniform,
+            # making S appear stuck at ln(K)=2.77 even when trained weights produce non-uniform sections.
+            probs = geo_state.fiber_sections.clamp(min=1e-8)  # Already probabilities
+            entropy_tensor = -torch.sum(probs * torch.log(probs), dim=-1).mean()
             entropy = float(entropy_tensor.item()) if entropy_tensor.numel() == 1 else float(entropy_tensor.mean().item())
             
             # Fiber Activation (Real Sparse Hamiltonian Indices)
@@ -304,6 +294,17 @@ def inject_adapter_hook(llm, adapter):
                  except: pass
 
             TELEMETRY_STATE["active_fiber"] = str(active_fiber)
+            
+            # --- EPIC 36: SYSTEM 2 REFINEMENT DETECTION ---
+            if hasattr(geo_state, 'meta_info') and geo_state.meta_info:
+                 meta = geo_state.meta_info
+                 if meta.get("refined", False):
+                      initial_e = meta.get("initial_energy", 0)
+                      final_e = meta.get("final_energy", 0)
+                      msg = f"🧠 SYSTEM 2 REFINEMENT: E {initial_e:.2f} -> {final_e:.2f}"
+                      if not TELEMETRY_STATE["thought_trace"] or TELEMETRY_STATE["thought_trace"][-1] != msg:
+                           TELEMETRY_STATE["thought_trace"].append(msg)
+
             TELEMETRY_STATE["history_k"].append(TELEMETRY_STATE["curvature"])
             TELEMETRY_STATE["history_s"].append(entropy)
             
@@ -395,6 +396,13 @@ def generate_stream(text, image_path, max_new_tokens):
                       last_msg['content'] = last_msg['content'][-5000:]
              
         tokenizer = MODELS["tokenizer"]
+        
+        # Inject default system prompt to ground the model
+        if sanitized_history and sanitized_history[0].get('role') != 'system':
+             sanitized_history.insert(0, {"role": "system", "content": "You are Neural Glass, an advanced neurosymbolic AI assistant. Think step-by-step and provide clear, precise answers."})
+        elif not sanitized_history:
+             sanitized_history.append({"role": "system", "content": "You are Neural Glass, an advanced neurosymbolic AI assistant. Think step-by-step and provide clear, precise answers."})
+
         prompt_text = tokenizer.apply_chat_template(sanitized_history, tokenize=False, add_generation_prompt=True)
         inputs = tokenizer(prompt_text, return_tensors="pt").to("cuda")
         print("DEBUG: Applied Chat Template to History.")
@@ -408,6 +416,7 @@ def generate_stream(text, image_path, max_new_tokens):
     
     # --- EPIC 33: CONSTRAINT EXTRACTION ---
     constraints = []
+    last_msg = "" # Ensure defined for memory thread
     if "constraint_extractor" in MODELS:
         # Extract from LAST user message only to avoid noise
         if 'sanitized_history' in locals() and sanitized_history:
@@ -432,6 +441,9 @@ def generate_stream(text, image_path, max_new_tokens):
                      mem_context = memory.get_context_string(last_msg)
                      if mem_context:
                           print(f"DEBUG: Manifold Resonance (Mem0) Retrieved:\n{mem_context}")
+                          # Add to UI Thought Trace for visibility
+                          TELEMETRY_STATE["thought_trace"].append(f"🧠 MEMORY RECALL: {mem_context[:100]}...")
+                          
                           # Interpret retrieved memory as semantic constraints
                           mem_constraints = MODELS["constraint_extractor"].extract(mem_context)
                           if mem_constraints:
@@ -452,6 +464,13 @@ def generate_stream(text, image_path, max_new_tokens):
                 TELEMETRY_STATE["thought_trace"].append(f"ATTRACTORS: {TELEMETRY_STATE['active_constraints']}")
         except Exception as e:
             print(f"Constraint/Memory Extraction Failed: {e}")
+    else:
+        # If no constraint extractor, we still need last_msg for memory
+        if isinstance(text, list) and len(text) > 0:
+            last_msg = text[-1]['content']
+        else:
+            last_msg = str(text) if not isinstance(text, list) else ""
+        if not isinstance(last_msg, str): last_msg = str(last_msg)
             
     # inputs is already set above
     model = MODELS["llm"] # Restore model definition for generate_thread
@@ -479,18 +498,18 @@ def generate_stream(text, image_path, max_new_tokens):
 
     streamer = TextIteratorStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
     
-    # Cap tokens to prevent extreme loops causing OOM
-    safe_max_tokens = min(max_new_tokens, 4096) if max_new_tokens else 2048
+    # Cap tokens to prevent OOM from KV cache allocation
+    safe_max_tokens = min(max_new_tokens, 2048) if max_new_tokens else 2048
 
     generation_kwargs = dict(
-        inputs, 
-        streamer=streamer, 
+        inputs,
+        streamer=streamer,
         max_new_tokens=safe_max_tokens,
-        do_sample=True, 
+        do_sample=True,
         temperature=dynamic_temp,
         top_p=0.85,
         top_k=40,
-        repetition_penalty=1.05, # Balanced to prevent loops but allow common words 
+        repetition_penalty=1.05,
         eos_token_id=tokenizer.eos_token_id,
         pad_token_id=tokenizer.pad_token_id
     )
@@ -498,10 +517,18 @@ def generate_stream(text, image_path, max_new_tokens):
     def generate_thread():
         try:
              model.generate(**generation_kwargs)
+        except torch.cuda.OutOfMemoryError as e:
+             print(f"CUDA OOM in Generate Thread: {e}")
+             with open("last_error.log", "w") as f:
+                 f.write(f"Generate Error: {e}")
+             # Surface error through streamer so user sees it
+             streamer.text_queue.put("[CUDA Out of Memory — try a shorter prompt or restart]")
+             torch.cuda.empty_cache()
         except Exception as e:
              print(f"ERROR in Generate Thread: {e}")
              with open("last_error.log", "w") as f:
                  f.write(f"Generate Error: {e}")
+             streamer.text_queue.put(f"[Generation Error: {e}]")
         finally:
              streamer.end()
              gc.collect()
@@ -513,12 +540,17 @@ def generate_stream(text, image_path, max_new_tokens):
     # --- EPIC 52: EVOLUTIONARY MEMORY MANIFOLD (Growth/Savings) ---
     def save_memory_thread():
          memory = MODELS.get("memory")
-         if memory is not None and 'last_msg' in locals():
+         if memory is not None and last_msg:
              try:
                  memory.add(last_msg)
                  print(f"DEBUG: Manifold evolved. Memory recorded.")
              except Exception as e:
                  print(f"Memory Save Error: {e}")
+             finally:
+                 # Aggressive Garbage Collection after Mem0 operations
+                 import gc
+                 gc.collect()
+                 torch.cuda.empty_cache()
                  
     mem_thread = threading.Thread(target=save_memory_thread)
     mem_thread.start()
@@ -539,16 +571,15 @@ def generate_stream(text, image_path, max_new_tokens):
             partial_text += new_text
             
             # --- EPIC 33: CONSTRAINT PRESSURE LOOP ---
-            if constraints and token_count % 30 == 0:
+            if constraints and token_count % 100 == 0:
                 scorer = MODELS["constraint_scorer"]
                 scores = scorer.score(partial_text, constraints)
                 avg_score = sum(scores.values()) / len(scores) if scores else 1.0
                 TELEMETRY_STATE["constraint_score"] = avg_score
-                
+
                 # Feedback: If failing to meet constraints, nudge gently (Free Will Mode)
                 # Only kick if deeply stuck in a loop or completely off-topic for long duration
-                if avg_score < 0.1 and token_count > 150 and random.random() < 0.3:
-                     # OR Trigger on OOD Detection (Epic 42)
+                if avg_score < 0.1 and token_count > 500 and random.random() < 0.3:                     # OR Trigger on OOD Detection (Epic 42)
                      lip_violation = TELEMETRY_STATE.get("lipschitz_ratio", 1.0) > 8.0
                      
                      if lip_violation:
@@ -559,7 +590,7 @@ def generate_stream(text, image_path, max_new_tokens):
                      if True: # Always log if trigger condition met
                          if not TELEMETRY_STATE["thought_trace"] or TELEMETRY_STATE["thought_trace"][-1] != msg:
                             TELEMETRY_STATE["thought_trace"].append(msg)
-                            if MODELS["adapter"] is not None:
+                            if False: # MODELS["adapter"] is not None: # JUMPS DISABLED
                                 # Fetch active indices to invert
                                 llm_ref = MODELS["llm"]
                                 # Use stored layer ref (robust to PEFT/LoRA wrapping)
@@ -590,9 +621,13 @@ def generate_stream(text, image_path, max_new_tokens):
                                     store.s[active_idx] = -s_active # Invert Logic
                                     
                                 TELEMETRY_STATE["active_fiber"] = "HYPERJUMP!!!"
-            # Chunk UI updates to prevent Gradio/WebSocket flooding (causes OOM/freeze)
-            if token_count % 3 == 0 or token_count == 1:
-                yield partial_text
+            # Chunk UI updates exponentially to prevent Gradio WebSocket payload (HTTP_422) flooding on massive 16k tokens
+            if token_count < 200:
+                if token_count % 3 == 0 or token_count == 1: yield partial_text
+            elif token_count < 1000:
+                if token_count % 15 == 0: yield partial_text
+            else:
+                if token_count % 50 == 0: yield partial_text
                 
             # Hard fallback stop
             if token_count > safe_max_tokens:
@@ -647,6 +682,27 @@ def poll_telemetry():
         beta = compute_gibbs_temperature(damping)
         TELEMETRY_STATE["gibbs_beta"] = beta
         
+        # --- METRICS HISTORY PLOT ---
+        history_fig = go.Figure()
+        k_hist = TELEMETRY_STATE.get("history_k", [])
+        s_hist = TELEMETRY_STATE.get("history_s", [])
+        x_hist = list(range(len(k_hist)))
+        
+        history_fig.add_trace(go.Scatter(x=x_hist, y=k_hist, name="Curvature (K)", line=dict(color="#00d4ff", width=2)))
+        history_fig.add_trace(go.Scatter(x=x_hist, y=s_hist, name="Entropy (S)", line=dict(color="#a855f7", width=2)))
+        
+        history_fig.update_layout(
+            template="plotly_dark",
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            margin=dict(l=10, r=10, t=10, b=10),
+            height=150,
+            showlegend=True,
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(size=8)),
+            xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+            yaxis=dict(showgrid=True, gridcolor="#222", zeroline=False, tickfont=dict(size=8))
+        )
+
         # Create ENHANCED Poincaré projection
         fig = go.Figure()
         theta = np.linspace(0, 2*np.pi, 100)
@@ -843,11 +899,12 @@ def poll_telemetry():
             f"{TELEMETRY_STATE['active_fiber']}",
             f"{TELEMETRY_STATE['constraint_score']:.2f}",
             "\n".join(TELEMETRY_STATE["thought_trace"][-8:]),
-            fig
+            fig,
+            history_fig
         )
     except Exception as e:
         print(f"Telemetry Poll Error: {e}")
-        return ("0.0", "0.0", "Error", "0.0", f"Error: {e}", go.Figure())
+        return ("0.0", "0.0", "Error", "0.0", f"Error: {e}", go.Figure(), go.Figure())
 
 # --- UI BUILD ---
 css_path = os.path.join(os.path.dirname(__file__), "theme_neural_glass.css")
@@ -881,6 +938,9 @@ with gr.Blocks(theme=gr.themes.Base(), css=css, title="NEURAL GLASS") as app:
                 
                 # EPIC 43: Holographic Plot
                 manifold_plot = gr.Plot(label="Poincaré Manifold")
+                
+                # Metrics History
+                metrics_plot = gr.Plot(label="Metrics History (K, S)")
 
 
         # MAIN STAGE
@@ -970,8 +1030,8 @@ with gr.Blocks(theme=gr.themes.Base(), css=css, title="NEURAL GLASS") as app:
         print(f"DEBUG: Calling generate_stream with {len(conversation_context)} msgs")
         try:
             found_yield = False
-            # Reduce max_new_tokens to 512 to prevent OOM on 8GB GPU
-            for partial in generate_stream(conversation_context, image, 512):
+            # Increased max_new_tokens to 2048
+            for partial in generate_stream(conversation_context, image, 2048):
                 found_yield = True
                 bot_message = partial
                 history[-1]["content"] = bot_message
@@ -997,7 +1057,7 @@ with gr.Blocks(theme=gr.themes.Base(), css=css, title="NEURAL GLASS") as app:
     
     # Telemetry Timer
     timer = gr.Timer(0.1)
-    timer.tick(poll_telemetry, None, [k_label, s_label, fiber_label, constraint_label, thought_log, manifold_plot])
+    timer.tick(poll_telemetry, None, [k_label, s_label, fiber_label, constraint_label, thought_log, manifold_plot, metrics_plot])
 
 if __name__ == "__main__":
     # Pre-load models for API consistency

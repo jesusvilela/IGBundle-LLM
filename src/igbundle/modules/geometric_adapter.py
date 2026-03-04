@@ -287,6 +287,21 @@ class GeometricIGBundleAdapter(nn.Module):
     def set_vision_context(self, context: torch.Tensor):
         self._vision_context = context
 
+    @staticmethod
+    def _project_to_ball(x: torch.Tensor, max_norm: float = 0.95) -> torch.Tensor:
+        """Project vectors to the Poincare ball: ||x|| < max_norm.
+
+        Per-component tanh/clamp is WRONG for the Poincare ball because
+        in D=64 dimensions, component-wise clamp to 0.95 allows ||x|| up to
+        sqrt(64)*0.95 = 7.6, wildly outside the unit ball.
+
+        This projects by scaling the vector norm: x_proj = x * min(1, max_norm / ||x||).
+        Differentiable and keeps direction intact.
+        """
+        norm = x.norm(dim=-1, keepdim=True).clamp(min=1e-6)
+        scale = torch.where(norm > max_norm, max_norm / norm, torch.ones_like(norm))
+        return x * scale
+
     def forward(self, x: torch.Tensor, context: Optional[torch.Tensor] = None, **kwargs) -> Tuple[torch.Tensor, GeometricState]:
         """
         Forward pass with geometrically rigorous operations.
@@ -351,7 +366,6 @@ class GeometricIGBundleAdapter(nn.Module):
         # Note: If pixel_values passed but vision disabled, we ignore it safely.
 
         # 2. Extract geometric coordinates
-        base_coords = self.base_coord_proj(h_bot).view(B, T, self.P, self.D).float()
         fiber_sections_raw = self.fiber_section_proj(h_bot).view(B, T, self.P, self.K).float()
         # Apply strict information geometry Natural Gradient via autograd hook
         fiber_sections = SimplexNaturalGradient.apply(fiber_sections_raw)
@@ -363,17 +377,15 @@ class GeometricIGBundleAdapter(nn.Module):
         log_s = self.mixture_proj_s(h_bot).view(B, T, self.P, self.D).float()
         log_s = torch.clamp(log_s, min=-5, max=5)
         
-        # Stability: Project base_coords to Poincare Ball (B^D) using tanh logic
-        # Map R^D -> B^D. We use factor 0.95 to stay away from boundary (precision safety).
+        # Project base_coords to Poincare Ball B^D(c=1) via norm-based projection.
+        # NOTE: Per-component tanh(x)*0.95 is WRONG — with D=64, ||x|| can reach sqrt(64)*0.95=7.6.
+        # The ball constraint is ||x|| < 1, so we project by vector norm instead.
         base_coords_raw = self.base_coord_proj(h_bot).view(B, T, self.P, self.D).float()
-        base_coords = torch.tanh(base_coords_raw) * 0.95
-        
+        base_coords = self._project_to_ball(base_coords_raw, max_norm=0.95)
+
         u = self.mixture_proj_u(h_bot).view(B, T, self.P, self.K).float()
 
         mixture_state = MixtureState(w_logits, m, log_s, u)
-
-        # Stability: Clamp coords (already tanh'd so should be safe, but belt+suspenders)
-        base_coords = torch.clamp(base_coords, -0.95, 0.95)
         m = torch.clamp(m, -10, 10)
 
         # 4. Compute Riemannian metric at base coordinates
@@ -405,48 +417,40 @@ class GeometricIGBundleAdapter(nn.Module):
              transported_coords = base_coords # Fallback
 
         # 5c. Hamiltonian Sheaf Dynamics (Symplectic Integration)
-
-        # 5c. Hamiltonian Sheaf Dynamics (Symplectic Integration)
-        # Replaces simple Natural Gradient with Physics-based Flow
-        # 5c. Hamiltonian Sheaf Dynamics (Symplectic Integration)
         active_indices = None
         if self.use_dynamics:
              # Determine Active Indices (Allowed Targets) based on router confidence
-             # Effect Discipline: Only top-k bundles are allowed to evolve
              k_active = 3
              router_confidence = torch.max(transformed_sections, dim=-1)[0].squeeze(1) # (B, P)
              _, active_indices = torch.topk(router_confidence, k=k_active, dim=-1) # (B, k)
-             
+
              # Phase 2.5: Update Resonant Dynamics
-             # We flatten the batch for the resonator or take the mode?
-             # For now, we union the active indices across batch
              flat_indices = active_indices.view(-1).unique().tolist()
              self.fiber_executor.update_resonance(flat_indices)
 
-             # Symplectic integration of the Hamiltonian system
-             # CRITICAL FIX: Detach symplectic output from gradient flow.
-             # The LeapfrogIntegrator uses detach()+requires_grad_() internally
-             # which creates broken sub-graphs that produce NaN gradients.
-             # The dynamics still affect WHERE coords end up (exploration),
-             # but gradients flow through the residual path instead.
+             # Coordinate dynamics: detached to prevent NaN from LeapfrogIntegrator sub-graphs.
+             # Gradient for coords flows through the residual connection instead.
              with torch.no_grad():
-                 updated_coords_dyn, updated_sections = self._symplectic_integrate(
+                 updated_coords_dyn, _ = self._symplectic_integrate(
                      transported_coords, transformed_sections, metric, active_indices=active_indices
                  )
-             # Re-attach to graph via residual: small step from transported_coords toward dynamics result
-             # This is differentiable w.r.t. transported_coords (and thus the adapter params)
              dynamics_direction = (updated_coords_dyn - transported_coords).detach()
              updated_coords = transported_coords + 0.1 * dynamics_direction
-             # Clamp to Poincare ball
-             updated_coords = torch.clamp(updated_coords, -0.95, 0.95)
-             
+             updated_coords = self._project_to_ball(updated_coords, max_norm=0.95)
+
+             # Phase A: Differentiable fiber section update with full gradient coupling.
+             # Removed .detach() from updated_coords so base manifold → fiber gradient flows.
+             # Added F.softmax() normalization so sections are valid probability distributions.
+             # Increased eta_f (0.01→0.1) via config to make fiber_update_net outputs meaningful.
+             joint_repr = torch.cat([updated_coords, transformed_sections], dim=-1)
+             fiber_update = self.fiber_update_net(joint_repr)  # (B, T, P, K)
+             updated_sections = F.softmax(
+                 transformed_sections + self.cfg.eta_f * fiber_update, dim=-1
+             )
+
              # Epic 36: Recursive Meta-Cognition (System 2)
-             # If Meta-Loop is active, verify and refine the thought.
-             # Note: We can expose a 'force_refine' flag in forward args if needed.
              if self.meta_loop is not None and getattr(self.cfg, 'enable_meta_cognition', False):
-                 # Refine the coordinates
                  updated_coords, meta_info = self.meta_loop(updated_coords)
-                 # We could log meta_info['final_energy'] or 'refined' status here
         else:
              # Static manifold projection (no dynamics)
              updated_coords = transported_coords
@@ -506,9 +510,9 @@ class GeometricIGBundleAdapter(nn.Module):
             attn_out = z_mixed.permute(0, 2, 1, 3) # (B, T, P, D)
             
             updated_coords = updated_coords + attn_out # Residual connection on the manifold
-            
-            # Stability: clamp after attention residual
-            updated_coords = torch.clamp(updated_coords, -10, 10)
+
+            # Re-project to Poincare ball after attention residual
+            updated_coords = self._project_to_ball(updated_coords, max_norm=0.95)
 
 
         # 6. Aggregate across components using Riemannian structure
@@ -844,12 +848,47 @@ class GeometricIGBundleAdapter(nn.Module):
              entropy = -torch.sum(probs * torch.log(probs + 1e-8), dim=-1).mean()
              losses['compiler_entropy'] = entropy * 0.1
              
+        # FIBER ENTROPY REGULARIZATION — Phase A entropy unfreeze (2026-03-03)
+        # ROOT CAUSE: ∂S/∂θ_i = 0 at uniform distribution (entropy maximum is a critical point).
+        # Gradient through softmax vanishes at p_i = 1/K regardless of loss weight or Gumbel noise.
+        # The Gumbel trick only perturbed the forward pass — gradient was still zero.
+        #
+        # FIX: Logit-space losses that bypass softmax entirely.
+        #   (a) Logit diversity: -std(z) has nonzero gradient even when all z_i are equal
+        #       ∂std/∂z_i = (z_i - mean) / (K * std + eps) — breaks uniform symmetry
+        #   (b) Logit entropy via Gumbel-Softmax (straight-through): reparameterized gradient
+        #       flows through temperature-scaled logits, not through argmax
+        if state.fiber_sections is not None:
+            ln_K = torch.log(torch.tensor(float(self.K), device=state.fiber_sections.device))
+            S_target = 0.5 * ln_K  # ~1.39 for K=16
+
+            # NOTE: state.fiber_sections are PROBABILITIES (post-softmax on both paths).
+            # Convert back to logits for diversity loss and Gumbel-Softmax.
+            # log(softmax(z)) = log_softmax(z) — PyTorch autodiff handles this cleanly.
+            fiber_logits = torch.log(state.fiber_sections.clamp(min=1e-8))
+
+            # (a) PRIMARY: Logit diversity loss — strong gradient at uniform
+            # At uniform: all logits = -ln(K), std = 0.
+            # Gradient ∂std/∂z_i = (z_i - mean)/(K·std) is large for any deviation from uniform
+            # (numerically ~1/ε, amplifying small asymmetries rather than suppressing them).
+            logit_std = fiber_logits.std(dim=-1).mean()
+            losses['fiber_diversity'] = F.relu(1.0 - logit_std) * 2.0
+
+            # (b) SECONDARY: Direct entropy loss on actual probabilities.
+            # Near uniform, gradient dH/dz = 0, but once fiber_diversity breaks symmetry
+            # (moving logits apart), this loss provides directional pull toward S_target.
+            # Uses (H - S_target)^2 for two-sided pull: penalizes both too-high AND too-low entropy.
+            fiber_entropy = -torch.sum(
+                state.fiber_sections * torch.log(state.fiber_sections.clamp(min=1e-8)), dim=-1
+            ).mean()
+            losses['fiber_entropy'] = (fiber_entropy - S_target).pow(2) * 1.0
+
         # EPIC 7: Sheaf Consensus Loss
         if state.consensus_loss is not None:
              losses['consensus_agreement'] = state.consensus_loss * 0.01 # Scale down from ~140 to ~1.4
-             
+
         # EPIC 6: Phase Memory coherence? (Optional)
-             
+
         return losses
 
     def _compute_sheaf_consistency_loss(self, state: GeometricState) -> torch.Tensor:

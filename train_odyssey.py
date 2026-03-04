@@ -39,7 +39,7 @@ logger = logging.getLogger("OdysseyTrainer")
 # Configuration
 MODEL_ID = "h:/LLM-MANIFOLD/igbundle_qwen7b_cp600" 
 OUTPUT_DIR = "igbundle_phase9_odyssey"
-MAX_STEPS = 2101 # Scale expansion: Additional 500 steps on full logic dataset
+MAX_STEPS = 3001 # Phase B: Retrain to checkpoint-3000 with entropy gradient unfrozen
 BATCH_SIZE = 1 
 GRAD_ACCUM = 16 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -234,9 +234,9 @@ class OdysseyTrainer:
         self.optimizer = SymplecticSPIDER(
             [
                 {'params': base_params, 'is_base': True, 'base_lr': 1e-4, 'base_momentum': 0.0},
-                {'params': fiber_params, 'is_base': False, 'fiber_lr': 1e-3, 'fiber_momentum': 0.9} 
+                {'params': fiber_params, 'is_base': False, 'fiber_lr': 5e-3, 'fiber_momentum': 0.9}
             ],
-            c=1.0, 
+            c=5.0,
             period=100
         )
         
@@ -275,8 +275,20 @@ class OdysseyTrainer:
             
             if self._current_geo_state and hasattr(self.adapter, 'compute_geometric_losses'):
                 geo_losses = self.adapter.compute_geometric_losses(self._current_geo_state)
-                loss_geo = sum(geo_losses.values())
-            
+
+                # Phase B sub-homotopy: ramp Phase A entropy losses over 200 steps after resume
+                # to avoid gradient shock on weights trained without entropy gradient flow.
+                # Steps 2000-2200: entropy_ramp goes 0.0 → 1.0
+                resume_step = getattr(self, 'start_step', 0)
+                entropy_ramp = min(1.0, max(0.0, (step - resume_step) / 200.0)) if resume_step > 0 else 1.0
+
+                loss_geo = 0.0
+                for k, v in geo_losses.items():
+                    if k in ('fiber_diversity', 'fiber_entropy'):
+                        loss_geo += v * entropy_ramp
+                    else:
+                        loss_geo += v
+
             # Homotopy Schedule: Soft constraints early, harder constraints later
             # lambda_t scales from 0.0 to 0.1 over the first 500 steps to prevent Phase II collapse.
             lambda_t = 0.1 * min(1.0, step / 500.0)
@@ -286,8 +298,13 @@ class OdysseyTrainer:
             total_loss.backward()
             
             if (step + 1) % GRAD_ACCUM == 0:
-                # GRADIENT CLINIC v2: Surgical NaN removal (not skipping!)
-                grad_norm = torch.nn.utils.clip_grad_norm_(self.adapter.parameters(), 1.0)
+                # No external clip_grad_norm_ — SymplecticSPIDER has built-in relativistic
+                # velocity limiter (Lorentz gamma = sqrt(1 + ||m||^2/c^2) caps at c).
+                # External clipping was killing fiber_section_proj gradients:
+                # base_coord_proj curvature grad (~6M) dominated group norm, reducing
+                # fiber grads to ~0.07 effective → S frozen at ln(16).
+                grad_norm = sum(p.grad.norm().item()**2 for p in self.adapter.parameters()
+                                if p.grad is not None) ** 0.5
                 
                 # Surgically zero ONLY the NaN/Inf entries, keep valid gradients
                 nan_param_count = 0
@@ -303,15 +320,39 @@ class OdysseyTrainer:
                 # ALWAYS step (the whole point - don't skip valid gradients)
                 optimizer.step()
                 optimizer.zero_grad()
+
+                # Phase B: Clear CUDA cache to prevent OOM accumulation on long runs
+                if step % 64 == 0:
+                    torch.cuda.empty_cache()
                 
-                # Report 
+                # Report
                 status = ""
                 if nan_param_count > 0:
                     status = f" | NaN-zeroed: {nan_param_count} params ({int(total_nan_entries)} entries)"
-                logger.info(f"Step {step} | Loss: {loss_llm.item():.4f} | Geo: {loss_geo:.2f}{status}")
+
+                # Phase B telemetry: per-loss breakdown + actual entropy value
+                geo_detail = ""
+                if self._current_geo_state and geo_losses:
+                    parts = []
+                    for k, v in sorted(geo_losses.items()):
+                        val = v.item() if hasattr(v, 'item') else float(v)
+                        parts.append(f"{k}={val:.3f}")
+                    geo_detail = f" | [{', '.join(parts)}]"
+
+                    # Actual manifold entropy S (not loss, the raw value)
+                    if self._current_geo_state.fiber_sections is not None:
+                        with torch.no_grad():
+                            p = self._current_geo_state.fiber_sections.clamp(min=1e-8)
+                            S_actual = -(p * p.log()).sum(dim=-1).mean().item()
+                            geo_detail += f" | S={S_actual:.4f}"
+
+                    if resume_step > 0:
+                        geo_detail += f" | e_ramp={entropy_ramp:.2f}"
+
+                logger.info(f"Step {step} | Loss: {loss_llm.item():.4f} | Geo: {loss_geo:.2f}{geo_detail}{status}")
 
             step += 1
-            if step % 500 == 0 or step == MAX_STEPS: # Checkpoint at end too
+            if step % 200 == 0 or step == MAX_STEPS: # Phase B: checkpoint every 200 steps
                  # Checkpoint
                  ckpt_dir = os.path.join(OUTPUT_DIR, f"checkpoint-{step}")
                  os.makedirs(ckpt_dir, exist_ok=True)
@@ -326,4 +367,14 @@ if __name__ == "__main__":
         logger.info("Odyssey Training Complete.")
     except Exception as e:
         logger.error(f"Training Failed: {e}")
+        # Emergency checkpoint save on crash
+        if trainer.adapter is not None:
+            try:
+                step = getattr(trainer, 'start_step', 0)
+                ckpt_dir = os.path.join(OUTPUT_DIR, f"checkpoint-emergency-{int(time.time())}")
+                os.makedirs(ckpt_dir, exist_ok=True)
+                torch.save(trainer.adapter.state_dict(), os.path.join(ckpt_dir, "adapter_weights.pt"))
+                logger.info(f"Emergency checkpoint saved to {ckpt_dir}")
+            except Exception:
+                pass
         raise

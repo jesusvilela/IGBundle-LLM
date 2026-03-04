@@ -23,7 +23,7 @@ class IGBundleConfig(PretrainedConfig):
         adapter_scale: float = 1.0,
         dropout: float = 0.1,
         eta_b: float = 0.01,
-        eta_f: float = 0.01,
+        eta_f: float = 0.1,
         num_attention_heads: int = 4, # Phase 7 Requirement
         **kwargs,
     ):

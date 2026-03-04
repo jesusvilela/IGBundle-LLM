@@ -14,6 +14,7 @@ warnings.simplefilter("ignore")
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 # Filter Starlette deprecation warnings
 warnings.filterwarnings("ignore", message=".*HTTP_422_UNPROCESSABLE_ENTITY.*")
+warnings.filterwarnings("ignore", message=".*HTTP_422_UNPROCESSABLE_CONTENT.*")
 warnings.filterwarnings("ignore", message=".*values in the future.*") # Torch/Numpy spam
 import argparse
 import matplotlib
@@ -514,15 +515,34 @@ class RiemannianCompactor:
     """
     Manages context window by preserving 'high-curvature' (information dense) turns
     and pruning 'flat' (redundant) turns, utilizing Riemannian geometry principles.
+
+    Uses token-aware compaction: triggers at TOKEN_LIMIT tokens (not message count),
+    and summarizes pruned messages into a "Previously discussed:" system message
+    to preserve semantic content without full context overhead.
     """
-    def __init__(self, memory_client):
+    TOKEN_LIMIT = 4096  # Half of 8192 context window — trigger compaction here
+
+    def __init__(self, memory_client, tokenizer=None):
         self.memory = memory_client
-        
+        self.tokenizer = tokenizer  # Set after model load via set_tokenizer()
+
+    def set_tokenizer(self, tokenizer):
+        self.tokenizer = tokenizer
+
+    def _estimate_tokens(self, history):
+        """Estimate token count of the full history."""
+        full_text = " ".join(str(msg.get("content", "")) for msg in history)
+        if self.tokenizer is not None:
+            try:
+                return len(self.tokenizer.encode(full_text))
+            except Exception:
+                pass
+        # Fallback: ~4 chars per token for English
+        return len(full_text) // 4
+
     def _get_embeddings(self, texts):
         """Retrieve embeddings using the Mem0 internal embedder."""
-        # Using the embedder from Mem0 client if available, else Mock
         if hasattr(self.memory, "embedder") and self.memory.embedder:
-             # Assuming mem0 embedder has .embed method
              return [self.memory.embedder.embed(t) for t in texts]
         return None
 
@@ -532,83 +552,137 @@ class RiemannianCompactor:
         High curvature = Sharp conceptual turn (Important).
         Low curvature = Collinear/Repetitive (Prunable).
         """
-        import numpy as np
         from numpy.linalg import norm
-        
-        curvatures = [1.0] # First item is always a 'start' point
-        
+
+        curvatures = [1.0]
         for i in range(1, len(embeddings)):
             v1 = np.array(embeddings[i-1])
             v2 = np.array(embeddings[i])
-            
-            # Cosine similarity
             sim = np.dot(v1, v2) / (norm(v1) * norm(v2) + 1e-9)
-            
-            # Curvature ~ Dissimilarity (Angle)
-            # 0.0 = Identical (Flat), 1.0 = Orthogonal (Curved) 
-            kappa = 1.0 - sim 
-            curvatures.append(kappa)
-            
+            curvatures.append(1.0 - sim)
         return curvatures
+
+    def _summarize_messages(self, messages):
+        """Summarize pruned messages into a single system-level recap.
+        Uses the loaded model if available, otherwise falls back to extractive summary."""
+        texts = [f"{m.get('role','?')}: {str(m.get('content',''))[:200]}" for m in messages]
+        combined = "\n".join(texts)
+
+        # Try model-based summarization (cheap: short prompt, max 200 tokens)
+        global MODEL, TOKENIZER
+        if MODEL is not None and TOKENIZER is not None:
+            try:
+                prompt = f"<|im_start|>system\nSummarize this conversation in 2-3 sentences:\n{combined[:1500]}<|im_end|>\n<|im_start|>assistant\n"
+                inputs = TOKENIZER(prompt, return_tensors="pt").to(MODEL.device)
+                with torch.no_grad():
+                    out = MODEL.generate(**inputs, max_new_tokens=200, do_sample=False,
+                                         pad_token_id=TOKENIZER.eos_token_id)
+                summary = TOKENIZER.decode(out[0][inputs.input_ids.shape[-1]:], skip_special_tokens=True).strip()
+                del out, inputs
+                torch.cuda.empty_cache()
+                if len(summary) > 20:
+                    return summary
+            except Exception as e:
+                print(f"Summarization fallback (model error): {e}")
+
+        # Extractive fallback: first sentence of each message, capped
+        snippets = []
+        for m in messages:
+            text = str(m.get("content", ""))
+            first_sentence = text.split(".")[0][:120]
+            if first_sentence:
+                snippets.append(first_sentence)
+        return "; ".join(snippets[:6])
+
+    def needs_compaction(self, history):
+        """Check if history exceeds token budget."""
+        return self._estimate_tokens(history) > self.TOKEN_LIMIT
 
     def compact(self, history, limit=10, keep_recent=4):
         """
-        Compact history to 'limit' items, keeping system prompt, recent items, 
-        and high-curvature intermediate items.
+        Compact history, keeping system prompt, recent items,
+        and high-curvature intermediate items. Pruned messages are
+        summarized into a 'Previously discussed:' system message.
         """
         if not history or len(history) <= limit:
             return history
-            
-        print(f"📉 Compacting Context: {len(history)} -> {limit} messages...")
-        
+
+        # Also check token budget — skip compaction if under limit
+        if not self.needs_compaction(history) and len(history) <= limit:
+            return history
+
+        est_tokens = self._estimate_tokens(history)
+        print(f"Compacting Context: {len(history)} msgs (~{est_tokens} tokens) -> {limit} messages...")
+
         # 1. Identify Segments
         system_msgs = [msg for msg in history if msg.get('role') == 'system']
         chat_msgs = [msg for msg in history if msg.get('role') != 'system']
-        
-        # If chat is small enough after removing system, return
+
         if len(chat_msgs) <= limit:
              return history
 
-        # 2. Embed content to find curvature
+        # 2. Score content for importance
         texts = [str(msg.get('content', '')) for msg in chat_msgs]
         try:
-            # Attempt to get embeddings (might fail if model not loaded or API issue)
-            # Use 'embed' from MEMORY if possible, otherwise simple length heuristic
             embeddings = self._get_embeddings(texts)
-            
             if embeddings and len(embeddings) == len(chat_msgs):
                 scores = self.calculate_discrete_curvature(embeddings)
             else:
-                # Fallback: Length-based 'density'
-                scores = [len(t) for t in texts]
-                
+                # Fallback: token count per message as density proxy
+                scores = self._token_density_scores(texts)
         except Exception as e:
-            print(f"⚠️ Compaction Embedding Error: {e}. Using fallback.")
-            scores = [len(t) for t in texts]
+            print(f"Compaction Embedding Error: {e}. Using token-density fallback.")
+            scores = self._token_density_scores(texts)
 
         # 3. Selection Strategy
-        # Always keep recent 'keep_recent' messages (Short-term memory)
         recent_idx = list(range(len(chat_msgs) - keep_recent, len(chat_msgs)))
         available_limit = limit - len(recent_idx)
-        
+
         if available_limit <= 0:
-            return system_msgs + chat_msgs[-limit:]
+            # Summarize everything we're dropping
+            dropped = chat_msgs[:-limit]
+            summary = self._summarize_messages(dropped)
+            summary_msg = {"role": "system", "content": f"Previously discussed: {summary}"}
+            return system_msgs + [summary_msg] + chat_msgs[-limit:]
 
         # Select top-k from the 'past' based on score
         past_indices = list(range(len(chat_msgs) - keep_recent))
         past_scores = [(i, scores[i]) for i in past_indices]
-        
-        # Sort by score descending (Highest curvature first)
         past_scores.sort(key=lambda x: x[1], reverse=True)
-        top_k_indices = [x[0] for x in past_scores[:available_limit]]
-        
+        top_k_indices = set(x[0] for x in past_scores[:available_limit])
+
+        # Identify dropped messages for summarization
+        dropped_indices = [i for i in past_indices if i not in top_k_indices]
+        dropped_msgs = [chat_msgs[i] for i in dropped_indices]
+
+        # Build summary of dropped messages
+        summary_msg = None
+        if dropped_msgs:
+            summary = self._summarize_messages(dropped_msgs)
+            if summary:
+                summary_msg = {"role": "system", "content": f"Previously discussed: {summary}"}
+
         # Merge and Sort indices to maintain chronological order
-        final_indices = sorted(top_k_indices + recent_idx)
-        
+        final_indices = sorted(list(top_k_indices) + recent_idx)
         compacted_chat = [chat_msgs[i] for i in final_indices]
-        
-        print(f"✅ Compaction Complete. Preserved {len(compacted_chat)} messages.")
-        return system_msgs + compacted_chat
+
+        result = system_msgs[:]
+        if summary_msg:
+            result.append(summary_msg)
+        result.extend(compacted_chat)
+
+        print(f"Compaction Complete. Preserved {len(compacted_chat)} messages + summary.")
+        return result
+
+    def _token_density_scores(self, texts):
+        """Token-count-based density proxy when embedder is unavailable."""
+        if self.tokenizer is not None:
+            try:
+                return [len(self.tokenizer.encode(t)) for t in texts]
+            except Exception:
+                pass
+        # Char-length fallback (~4 chars/token)
+        return [len(t) // 4 for t in texts]
 
 # Initialize Compactor
 COMPACTOR = RiemannianCompactor(MEMORY)
@@ -1043,7 +1117,7 @@ def generate_response(message, history):
         outputs = MODEL.generate(
             inputs,
             attention_mask=attention_mask,
-            max_new_tokens=512,
+            max_new_tokens=2048,
             do_sample=True,
             temperature=0.7,
             top_p=0.9,
@@ -1053,9 +1127,12 @@ def generate_response(message, history):
 
     # Decode only the new tokens
     generated = TOKENIZER.decode(outputs[0][len(inputs[0]):], skip_special_tokens=True)
-    
-    # Store Interaction in Memory (Async-like to avoid blocking flow?)
-    # ideally should be threaded, but for now sink it.
+
+    # Release KV cache and intermediate tensors
+    del outputs, inputs, attention_mask
+    torch.cuda.empty_cache()
+
+    # Store Interaction in Memory
     try:
         MEMORY.add(str(message), user_id="user")
         MEMORY.add(generated, user_id="assistant")
@@ -1065,16 +1142,11 @@ def generate_response(message, history):
     return generated
 
 def generate_with_viz(message, history):
-    # Auto-Compact History if it gets too long using Riemannian Strategy
-    # We set a soft limit of 20 turns for the active context window
-    if len(history) > 10:
+    # Token-aware compaction: trigger when context exceeds half the 8192 window
+    if COMPACTOR.needs_compaction(history) or len(history) > 10:
         history = COMPACTOR.compact(history, limit=10, keep_recent=6)
 
-    # 1. Generate Text Response & Telemetry
-    response = generate_response(message, history)
-    # Truncation removed to support long context (8192 tokens). Use /compact to clear.
-    
-    if MODEL is None:
+    if MODEL is None and CURRENT_MODEL_TYPE != "gguf":
         return "⚠️ Model not loaded.", None, None, None, ""
 
     VIZ_STATE["curvature"] = []
@@ -1248,6 +1320,7 @@ def switch_model(model_choice, gguf_path):
 def launch_app(config_path, checkpoint_path):
     global MODEL, TOKENIZER, HOOKS
     MODEL, TOKENIZER = load_model(config_path, checkpoint_path)
+    COMPACTOR.set_tokenizer(TOKENIZER)
 
     HOOKS = HookManager(MODEL)
     HOOKS.attach()
@@ -1511,6 +1584,7 @@ def launch_app(config_path, checkpoint_path):
                     return "Current: (no checkpoint selected)"
                 ckpt_path = os.path.join(root_dir, ckpt_name)
                 MODEL, TOKENIZER = load_model(config_path, ckpt_path)
+                COMPACTOR.set_tokenizer(TOKENIZER)
                 if HOOKS:
                     HOOKS.detach()
                 HOOKS = HookManager(MODEL)
@@ -1733,7 +1807,7 @@ def launch_app(config_path, checkpoint_path):
                 refresh_stats_btn.click(load_topo_stats, outputs=[stats_table])
 
         with gr.Tab("📖 Documentation"):
-            gr.Markdown("""
+            gr.Markdown(r"""
             # ManifoldGL: Information-Geometric Bundle Adapters
             
             ## 🔗 Quick Links

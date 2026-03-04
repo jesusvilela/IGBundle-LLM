@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IACS // Observability</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <h1><span>IACS</span> // Inter-Agent Communication System</h1>
+    <div id="conn-status">
+      <span class="status-dot err" id="status-dot"></span>
+      <span id="status-text">Connecting...</span>
+    </div>
+  </div>
+
+  <!-- Dashboard Grid -->
+  <div class="grid">
+
+    <!-- Agents Panel -->
+    <div class="panel">
+      <h2>Agents</h2>
+      <div class="agent-grid" id="agents-container">
+        <div class="agent-card">
+          <div class="name" style="color:var(--text-dim)">Waiting for agents...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Panel -->
+    <div class="panel">
+      <h2>Message Stats</h2>
+      <div class="stat-grid">
+        <div class="stat-box">
+          <div class="val" id="stat-total">0</div>
+          <div class="label">Total</div>
+        </div>
+        <div class="stat-box">
+          <div class="val" id="stat-per-min">0</div>
+          <div class="label">/ Min</div>
+        </div>
+        <div class="stat-box">
+          <div class="val" id="stat-agents">0</div>
+          <div class="label">Agents</div>
+        </div>
+        <div class="stat-box">
+          <div class="val" id="stat-dead">0</div>
+          <div class="label">Dead Letters</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Message Type Distribution -->
+    <div class="panel">
+      <h2>Message Types</h2>
+      <div class="bar-chart" id="type-chart"></div>
+    </div>
+
+    <!-- Uptime / Agent Traffic -->
+    <div class="panel">
+      <h2>Agent Traffic</h2>
+      <div class="bar-chart" id="agent-chart"></div>
+    </div>
+
+    <!-- Message Log -->
+    <div class="panel log-panel">
+      <h2>Message Log</h2>
+      <div class="log-controls">
+        <select id="type-filter">
+          <option value="">All Types</option>
+          <option value="task_assignment">task_assignment</option>
+          <option value="finding">finding</option>
+          <option value="question">question</option>
+          <option value="answer">answer</option>
+          <option value="status_update">status_update</option>
+          <option value="file_lock">file_lock</option>
+          <option value="capability_query">capability_query</option>
+          <option value="system">system</option>
+        </select>
+        <label><input type="checkbox" id="auto-scroll" checked> Auto-scroll</label>
+      </div>
+      <div class="log-scroll" id="log-scroll">
+        <table class="log-table">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Sender</th>
+              <th>Recipient</th>
+              <th>Type</th>
+              <th>Priority</th>
+              <th>Payload</th>
+            </tr>
+          </thead>
+          <tbody id="log-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

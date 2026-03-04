@@ -1,0 +1,126 @@
+# IACS Protocol Specification v1.0.0
+# Inter-Agent Communication System for igbundle-llm
+#
+# BOTH Claude Code AND Gemini should read this file to discover the protocol.
+# Location: igbundle-llm/iacs/protocol_spec.yaml
+
+protocol:
+  name: "iacs"
+  version: "1.0.0"
+  description: "Inter-Agent Communication System for igbundle-llm"
+  server:
+    host: "localhost"
+    rest_port: 9100
+    ws_path: "/ws/{agent_id}"
+    base_url: "http://localhost:9100"
+
+negotiation:
+  endpoint: "/api/v1/negotiate"
+  required_fields:
+    - agent_id
+    - agent_type
+    - protocol_version
+    - capabilities
+  response_fields:
+    - session_id
+    - accepted_version
+    - server_capabilities
+    - heartbeat_interval_ms
+
+message_types:
+  - task_assignment
+  - finding
+  - question
+  - answer
+  - status_update
+  - file_lock
+  - capability_query
+  - heartbeat
+  - system
+
+priority_levels:
+  critical: 0
+  high: 1
+  normal: 2
+  low: 3
+
+message_schema:
+  id: "uuid v4"
+  timestamp: "ISO 8601"
+  sender: "agent_id string"
+  recipient: "agent_id string or '__broadcast__' for all"
+  type: "one of message_types"
+  priority: "0-3, default 2"
+  ttl_seconds: "integer, 0 = no expiry, default 300"
+  correlation_id: "uuid v4, optional, for request/reply threading"
+  payload: "arbitrary JSON object"
+  version: "protocol version string"
+
+endpoints:
+  rest:
+    - method: POST
+      path: "/api/v1/negotiate"
+      description: "Register agent and negotiate protocol"
+    - method: POST
+      path: "/api/v1/messages"
+      description: "Send a message"
+    - method: GET
+      path: "/api/v1/messages"
+      description: "Retrieve messages (filters: recipient, type, since, limit)"
+    - method: GET
+      path: "/api/v1/messages/{message_id}"
+      description: "Get specific message"
+    - method: POST
+      path: "/api/v1/messages/{message_id}/ack"
+      description: "Acknowledge message receipt"
+    - method: GET
+      path: "/api/v1/agents"
+      description: "List connected agents and their status"
+    - method: GET
+      path: "/api/v1/health"
+      description: "Server health check"
+    - method: GET
+      path: "/api/v1/stats"
+      description: "Message statistics for dashboard"
+    - method: GET
+      path: "/api/v1/dead-letters"
+      description: "View dead letter queue"
+    - method: POST
+      path: "/api/v1/dead-letters/{message_id}/retry"
+      description: "Retry a dead letter"
+  websocket:
+    path: "/ws/{agent_id}"
+    description: "Real-time bidirectional channel"
+    frames:
+      - type: "message"
+        description: "New message for this agent"
+      - type: "ack"
+        description: "Delivery acknowledgment"
+      - type: "heartbeat"
+        description: "Keep-alive ping/pong"
+      - type: "agent_event"
+        description: "Agent connected/disconnected/status_change"
+
+schema_evolution:
+  strategy: "additive"
+  rules:
+    - "New fields MUST have defaults"
+    - "Existing fields MUST NOT change type"
+    - "Deprecated fields remain for 2 minor versions"
+    - "Major version bump allows breaking changes"
+  version_negotiation:
+    - "Client sends supported version range"
+    - "Server selects highest mutually supported version"
+    - "Fallback to v1.0.0 if no match"
+
+self_healing:
+  heartbeat_interval_ms: 10000
+  heartbeat_timeout_ms: 30000
+  reconnect_strategy: "exponential_backoff"
+  reconnect_base_ms: 1000
+  reconnect_max_ms: 30000
+  stale_connection_cleanup_s: 60
+  message_retry_max: 3
+  message_retry_delay_ms: 5000
+  dead_letter_after_retries: true
+  ttl_sweep_interval_s: 30

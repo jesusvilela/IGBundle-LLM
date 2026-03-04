@@ -1,0 +1,14 @@
+{
+  "name": "iacs-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "IACS Observability Dashboard for igbundle-llm inter-agent communication",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "socket.io": "^4.8.0",
+    "ws": "^8.18.0"
+  }
+}

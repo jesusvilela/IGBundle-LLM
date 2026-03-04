@@ -88,13 +88,14 @@ class PoincareBall:
         denom = alpha * beta
         
         arg = 1.0 + num / denom
-        
-        # Arcosh(z) = log(z + sqrt(z^2 - 1))
-        # Clamp arg >= 1
-        # Use very small eps for d(x,x) ~ 0 check
-        arg = arg.clamp_min(1.0 + 1e-15)
-        dist = torch.log(arg + torch.sqrt(arg.pow(2) - 1.0))
-        
+
+        # Numerically stable arcosh.
+        # arcosh(z) = log(z + sqrt(z^2 - 1)) has NaN gradient when z~1
+        # because sqrt(0) has infinite backward (1/(2*sqrt(0))).
+        # Fix: clamp (z-1) away from 0 before sqrt, giving a safe minimum distance.
+        arg = arg.clamp_min(1.0 + 1e-6)
+        dist = torch.acosh(arg)
+
         return dist / sqrt_c
 
     @staticmethod
