@@ -21,6 +21,8 @@ import torch.nn.functional as F
 from typing import Tuple, Optional, Dict, Any, Set
 from dataclasses import dataclass
 
+from .delta_fiber import DeltaFiberUpdate, DeltaNetAttention
+
 def check_nan(tensor, name):
     if torch.isnan(tensor).any():
         print(f"NAN DETECTED in {name} - Max: {tensor.max()} Min: {tensor.min()}")
@@ -204,6 +206,17 @@ class GeometricIGBundleAdapter(nn.Module):
             nn.Linear(64, self.K)
         )
 
+        # Epic 17b: Delta-net fiber dynamics (optional upgrade)
+        self.use_delta_fiber = getattr(config, 'use_delta_fiber', False)
+        if self.use_delta_fiber:
+            print("GeometricIGBundle: Initializing Delta-Net Fiber Dynamics (Epic 17b)")
+            self.delta_fiber_update = DeltaFiberUpdate(
+                coord_dim=self.D,
+                section_dim=self.K,
+                mem_dim=getattr(config, 'delta_mem_dim', 64),
+                num_heads=getattr(config, 'delta_num_heads', 4),
+            )
+
         # Sheaf consistency parameters
         self.num_patches = getattr(config, 'num_sheaf_patches', 4)
         self.patch_centers = nn.Parameter(
@@ -224,19 +237,28 @@ class GeometricIGBundleAdapter(nn.Module):
         # ------------------------------------------------------------------
         if "vision" in getattr(config, "supported_modalities", []):
             print("GeometricIGBundle: Initializing Vision Projector (Epic 5)")
-            vision_dim = getattr(config, "vision_dim", 1152) 
+            vision_dim = getattr(config, "vision_dim", 1152)
             self.vision_projector = VisionProjector(
-                vision_dim=vision_dim, 
+                vision_dim=vision_dim,
                 bottleneck_dim=self.D_bot,
                 dropout=config.dropout
             )
             # Cross-Attention: Text (Query) attends to Vision (Key/Value)
-            self.vision_attn = nn.MultiheadAttention(
-                embed_dim=self.D_bot,
-                num_heads=4, 
-                dropout=config.dropout,
-                batch_first=True
-            )
+            if self.use_delta_fiber:
+                # Epic 17b: O(T) delta-net linear attention for vision fusion
+                print("GeometricIGBundle: Using DeltaNetAttention for vision (O(T) linear)")
+                self.vision_attn = DeltaNetAttention(
+                    embed_dim=self.D_bot,
+                    num_heads=4,
+                    dropout=config.dropout,
+                )
+            else:
+                self.vision_attn = nn.MultiheadAttention(
+                    embed_dim=self.D_bot,
+                    num_heads=4,
+                    dropout=config.dropout,
+                    batch_first=True
+                )
             self.vision_norm = nn.LayerNorm(self.D_bot)
         else:
             self.vision_projector = None
@@ -443,7 +465,29 @@ class GeometricIGBundleAdapter(nn.Module):
              # Added F.softmax() normalization so sections are valid probability distributions.
              # Increased eta_f (0.01→0.1) via config to make fiber_update_net outputs meaningful.
              joint_repr = torch.cat([updated_coords, transformed_sections], dim=-1)
-             fiber_update = self.fiber_update_net(joint_repr)  # (B, T, P, K)
+             # Epic 17b: use delta-net fiber update if enabled
+             if self.use_delta_fiber:
+                 # Curvature from metric (available at this point)
+                 _K_scalar = None
+                 try:
+                     _K_est = self.riemannian_geometry.estimate_sectional_curvature_stochastic(
+                         updated_coords[:, :, 0, :], num_samples=1
+                     )
+                     _K_scalar = _K_est.mean()
+                 except Exception:
+                     pass
+                 # Entropy from current fiber sections
+                 _S_scalar = None
+                 try:
+                     _p = F.softmax(transformed_sections, dim=-1).clamp(min=1e-8)
+                     _S_scalar = -(_p * _p.log()).sum(dim=-1).mean()
+                 except Exception:
+                     pass
+                 fiber_update = self.delta_fiber_update(
+                     joint_repr, curvature=_K_scalar, entropy=_S_scalar
+                 )  # (B, T, P, K)
+             else:
+                 fiber_update = self.fiber_update_net(joint_repr)  # (B, T, P, K)
              updated_sections = F.softmax(
                  transformed_sections + self.cfg.eta_f * fiber_update, dim=-1
              )

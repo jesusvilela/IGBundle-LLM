@@ -18,6 +18,7 @@ class MessageType(str, Enum):
     CAPABILITY_QUERY = "capability_query"
     HEARTBEAT = "heartbeat"
     SYSTEM = "system"
+    TELEMETRY = "telemetry"
 
 
 class Priority(int, Enum):

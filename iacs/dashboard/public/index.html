@@ -65,6 +65,22 @@
       <div class="bar-chart" id="agent-chart"></div>
     </div>
 
+    <!-- Telemetry Graph -->
+    <div class="panel log-panel" id="telemetry-panel">
+      <h2>Geometric Telemetry <span id="telem-status" style="font-size:10px;color:var(--text-dim)">waiting...</span></h2>
+      <div style="display:flex;gap:12px;">
+        <canvas id="chart-sk" width="580" height="200" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;flex:1;"></canvas>
+        <canvas id="chart-loss" width="580" height="200" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;flex:1;"></canvas>
+      </div>
+      <div style="display:flex;gap:20px;margin-top:8px;font-size:11px;color:var(--text-dim);">
+        <span><span style="color:#3fb950">&#9632;</span> S (entropy)</span>
+        <span><span style="color:#f85149">&#9632;</span> K (curvature)</span>
+        <span><span style="color:#58a6ff">&#9632;</span> loss_llm</span>
+        <span><span style="color:#bc8cff">&#9632;</span> loss_geo</span>
+        <span><span style="color:#d29922">&#9632;</span> fiber_diversity</span>
+      </div>
+    </div>
+
     <!-- Message Log -->
     <div class="panel log-panel">
       <h2>Message Log</h2>
@@ -79,6 +95,7 @@
           <option value="file_lock">file_lock</option>
           <option value="capability_query">capability_query</option>
           <option value="system">system</option>
+          <option value="telemetry">telemetry</option>
         </select>
         <label><input type="checkbox" id="auto-scroll" checked> Auto-scroll</label>
       </div>

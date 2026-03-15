@@ -4,6 +4,7 @@ FastAPI REST + WebSocket message bus on localhost:9100
 """
 
 import asyncio
+import collections
 import logging
 import time
 import uuid
@@ -75,6 +76,7 @@ async def lifespan(app: FastAPI):
     app.state.ws_mgr = ConnectionManager()
     app.state.health = HealthMonitor()
     app.state.start_time = time.time()
+    app.state.telemetry_ring = collections.deque(maxlen=1000)
     logger.info("IACS server starting on http://localhost:9100")
 
     sweep = asyncio.create_task(ttl_sweep_loop(app))
@@ -218,6 +220,35 @@ async def get_stats():
         messages_by_type=db_stats["messages_by_type"],
         messages_by_agent=db_stats["messages_by_agent"],
     )
+
+
+# ── REST: Telemetry ────────────────────────────────────────────────
+
+@app.post("/api/v1/telemetry")
+async def post_telemetry(data: dict):
+    """Ingest a telemetry snapshot. Expected keys: agent_id, metrics (dict of floats), step (int)."""
+    agent_id = data.get("agent_id", "unknown")
+    metrics = data.get("metrics", {})
+    step = data.get("step")
+    ts = time.time()
+
+    entry = {"t": ts, "step": step, "agent": agent_id, **metrics}
+    app.state.telemetry_ring.append(entry)
+
+    # Broadcast to dashboard via WS
+    await app.state.ws_mgr.broadcast({
+        "type": "telemetry",
+        "data": entry,
+    })
+    return {"status": "ok", "buffered": len(app.state.telemetry_ring)}
+
+
+@app.get("/api/v1/telemetry")
+async def get_telemetry(last: int = Query(200)):
+    """Return the last N telemetry entries."""
+    ring = app.state.telemetry_ring
+    entries = list(ring)[-last:]
+    return entries
 
 
 # ── REST: Dead Letters ──────────────────────────────────────────────

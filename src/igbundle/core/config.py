@@ -25,6 +25,9 @@ class IGBundleConfig(PretrainedConfig):
         eta_b: float = 0.01,
         eta_f: float = 0.1,
         num_attention_heads: int = 4, # Phase 7 Requirement
+        use_delta_fiber: bool = False,  # Epic 17b: delta-net fiber dynamics
+        delta_mem_dim: int = 64,        # memory key/value dim for delta rule
+        delta_num_heads: int = 4,       # multi-head delta for capacity
         **kwargs,
     ):
         """
@@ -55,6 +58,9 @@ class IGBundleConfig(PretrainedConfig):
         self.eta_b = eta_b
         self.eta_f = eta_f
         self.num_attention_heads = num_attention_heads
+        self.use_delta_fiber = use_delta_fiber
+        self.delta_mem_dim = delta_mem_dim
+        self.delta_num_heads = delta_num_heads
         
         super().__init__(**kwargs)
 

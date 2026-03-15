@@ -37,6 +37,25 @@ message_types:
   - capability_query
   - heartbeat
   - system
+  - telemetry
+
+telemetry:
+  description: "Real-time geometric metrics pushed by either agent"
+  endpoint: "/api/v1/telemetry"
+  methods: [POST, GET]
+  post_schema:
+    agent_id: "string — who is sending"
+    step: "int — training step or inference step counter"
+    metrics:
+      S: "float — manifold entropy"
+      K: "float — sectional curvature"
+      loss_llm: "float — language model loss"
+      loss_geo: "float — total geometric loss"
+      fiber_diversity: "float — logit std symmetry-breaking loss"
+      constraint_score: "float — constraint satisfaction (0-1)"
+      nan_count: "int — NaN entries this step"
+  ring_buffer_size: 1000
+  broadcast: true
 
 priority_levels:
   critical: 0
