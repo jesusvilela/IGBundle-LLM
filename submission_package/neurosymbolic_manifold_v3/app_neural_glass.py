@@ -16,8 +16,9 @@ from transformers import (
     TextIteratorStreamer
 )
 import warnings
-import warnings
 warnings.filterwarnings("ignore")
+warnings.filterwarnings("ignore", message=".*HTTP_422_UNPROCESSABLE_ENTITY.*")
+warnings.filterwarnings("ignore", message=".*HTTP_422_UNPROCESSABLE_CONTENT.*")
 
 # --- OPTIMIZATION FLAGS ---
 torch.backends.cuda.matmul.allow_tf32 = True
@@ -100,9 +101,9 @@ def load_models():
     )
     
     print("Loading SigLIP...")
-    processor = SiglipImageProcessor.from_pretrained("google/siglip-so400m-patch14-384")
+    processor = SiglipImageProcessor.from_pretrained("google/siglip2-so400m-patch14-384")
     vision_model = SiglipVisionModel.from_pretrained(
-        "google/siglip-so400m-patch14-384", device_map="cuda", torch_dtype=torch.float16
+        "google/siglip2-so400m-patch14-384", device_map="cuda", torch_dtype=torch.float16
     )
     
     print("Loading Quantum Gibbs Sampler...")
@@ -184,10 +185,12 @@ def inject_adapter_hook(llm, adapter):
                  # Actually, let's calculate exact scalar sectional curvature for 1 pair of fibers
                  pass
             
-            # Since real curvature is expensive, we rely on "Manifold Entropy" 
-            # derived from fiber_sections (Softmax distribution)
-            probs = torch.softmax(geo_state.fiber_sections, dim=-1) # (B, T, P, K)
-            entropy_tensor = -torch.sum(probs * torch.log(probs + 1e-6), dim=-1).mean()
+            # Manifold Entropy from fiber_sections
+            # NOTE: geo_state.fiber_sections are ALREADY probabilities (post-softmax in adapter forward).
+            # Do NOT apply softmax again — double-softmax pushes distribution toward uniform,
+            # making S appear stuck at ln(K)=2.77 even when trained weights produce non-uniform sections.
+            probs = geo_state.fiber_sections.clamp(min=1e-8)  # Already probabilities
+            entropy_tensor = -torch.sum(probs * torch.log(probs), dim=-1).mean()
             entropy = float(entropy_tensor.item()) if entropy_tensor.numel() == 1 else float(entropy_tensor.mean().item())
             
             # Fiber Activation (Real Sparse Hamiltonian Indices)
@@ -325,7 +328,8 @@ def generate_stream(full_prompt, latest_input, image_path, max_new_tokens):
         streamer=streamer, 
         max_new_tokens=max_new_tokens, 
         do_sample=True, 
-        temperature=0.7
+        temperature=0.7,
+        repetition_penalty=1.05
     )
     
     def generate_thread():
@@ -447,45 +451,23 @@ def generate_stream(full_prompt, latest_input, image_path, max_new_tokens):
                     print(f"Refinement Warning: {e}")
             
             # --- EPIC 33: CONSTRAINT PRESSURE LOOP ---
-            if constraints and token_count % 30 == 0:
+            if constraints and token_count % 100 == 0:
                 scorer = MODELS["constraint_scorer"]
                 scores = scorer.score(partial_text, constraints)
                 avg_score = sum(scores.values()) / len(scores) if scores else 1.0
                 min_score = min(scores.values()) if scores else 1.0
                 TELEMETRY_STATE["constraint_score"] = avg_score
                 
-                # Feedback: If any single constraint is violated (Score < 0.4), KICK the system
-                if min_score < 0.4 and token_count > 45: # Strict enforcement
-                     msg = f"CRITICAL VIOLATION ({avg_score:.2f}) -> INITIATING NEUROSYMBOLIC JUMP!"
+                # Feedback: GATED/DISABLED JUMPS for Phase C
+                if min_score < 0.4 and token_count > 45: 
+                     msg = f"CRITICAL VIOLATION ({avg_score:.2f}) -> [JUMPS DISABLED]"
                      if not TELEMETRY_STATE["thought_trace"] or TELEMETRY_STATE["thought_trace"][-1] != msg:
                         TELEMETRY_STATE["thought_trace"].append(msg)
+                        # Jump logic commented out per instruction
+                        """
                         if MODELS["adapter"] is not None and hasattr(MODELS["adapter"], "fiber_executor"):
-                            # Fetch active indices to invert
-                            llm_ref = MODELS["llm"]
-                            state = getattr(llm_ref.model.layers[12], '_current_geo_state', None)
-                            active_idx_list = None
-                            
-                            if state and state.active_indices is not None:
-                                # active_indices shape (B, K). For demo B=1. 
-                                active_idx_list = state.active_indices[0].tolist()
-                            
-                            # Execute Standardized Hyper-Jump
-                            MODELS["adapter"].fiber_executor.hyper_jump(
-                                active_indices=active_idx_list, 
-                                intensity=2.0
-                            )
-                            
-                            TELEMETRY_STATE["active_fiber"] = "HYPERJUMP!!!"
-                            
-                            
-                            # EXPANSION: Don't stop. Bridge to new manifold.
-                            # Inject a strong diversion prompt into the stream
-                            expansion_text = "\n\n[NEUROSYMBOLIC EXPANSION] 🌌\n\n(Geometric Pivot Triggered)\n"
-                            partial_text += expansion_text
-                            yield partial_text
-                            
-                            # SOFT STOP: Allow organic expansion
-                            print("DEBUG: Triggering Soft Expansion.") 
+                            # ... jump logic ...
+                        """
 
             
             yield partial_text

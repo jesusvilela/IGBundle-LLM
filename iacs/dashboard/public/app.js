@@ -49,8 +49,11 @@ socket.on("iacs_event", (event) => {
   if (event.type === "message" && event.data) {
     addLogRow(event.data);
   }
-  if (event.type === "agent_event") {
-    // Will refresh on next stats_update poll
+  if (event.type === "telemetry" && event.data) {
+    if (typeof ingestTelemetryPoint === "function") {
+      ingestTelemetryPoint(event.data);
+      drawTelemCharts();
+    }
   }
 });
 
@@ -157,36 +160,46 @@ const telemData = { S: [], K: [], loss_llm: [], loss_geo: [], fiber_diversity: [
 const telemSteps = [];
 const telemStatus = document.getElementById("telem-status");
 
-socket.on("telemetry", (event) => {
-  const d = event.data || event;
+function ingestTelemetryPoint(d) {
   const step = d.step ?? telemSteps.length;
+  // Deduplicate by step
+  if (telemSteps.length > 0 && telemSteps[telemSteps.length - 1] === step) return;
   telemSteps.push(step);
   if (telemSteps.length > TELEM_MAX) telemSteps.shift();
 
+  // Extract metrics — handle both flat and nested .metrics format
+  const m = d.metrics || d;
   for (const key of Object.keys(telemData)) {
-    telemData[key].push(d[key] ?? null);
+    telemData[key].push(m[key] ?? null);
     if (telemData[key].length > TELEM_MAX) telemData[key].shift();
   }
   telemStatus.textContent = `step ${step} | ${telemData.S.length} pts`;
+}
+
+// Live telemetry via WebSocket
+socket.on("telemetry", (event) => {
+  const d = event.data || event;
+  ingestTelemetryPoint(d);
   drawTelemCharts();
 });
 
-// Also handle telemetry arriving as iacs_event
-socket.on("iacs_event", (event) => {
-  if (event.type === "telemetry" && event.data) {
-    socket.emit("telemetry", event);  // Re-dispatch
-    const d = event.data;
-    const step = d.step ?? telemSteps.length;
-    telemSteps.push(step);
-    if (telemSteps.length > TELEM_MAX) telemSteps.shift();
-    for (const key of Object.keys(telemData)) {
-      telemData[key].push(d[key] ?? null);
-      if (telemData[key].length > TELEM_MAX) telemData[key].shift();
+// Fetch historical telemetry on load
+fetch("http://localhost:9100/api/v1/telemetry")
+  .then((r) => r.json())
+  .then((history) => {
+    if (Array.isArray(history)) {
+      // Sort by step, take last TELEM_MAX
+      const sorted = history
+        .filter((d) => d.step != null)
+        .sort((a, b) => a.step - b.step)
+        .slice(-TELEM_MAX);
+      for (const d of sorted) {
+        ingestTelemetryPoint(d);
+      }
+      drawTelemCharts();
     }
-    telemStatus.textContent = `step ${step} | ${telemData.S.length} pts`;
-    drawTelemCharts();
-  }
-});
+  })
+  .catch(() => {});
 
 function drawTelemCharts() {
   drawLineChart("chart-sk", [

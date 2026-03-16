@@ -1,7 +1,7 @@
 
 import torch
 from PIL import Image
-from transformers import AutoProcessor, AutoModel
+from transformers import AutoImageProcessor, AutoModel
 import requests
 
 # Mock imports for now until merged model is ready
@@ -14,8 +14,8 @@ def verify_vision_e2e():
     Requires ~24GB VRAM (or offloading).
     """
     print("Loading SigLIP Vision Encoder...")
-    model_id = "google/siglip-so400m-patch14-384"
-    processor = AutoProcessor.from_pretrained(model_id)
+    model_id = "google/siglip2-so400m-patch14-384"
+    processor = AutoImageProcessor.from_pretrained(model_id)
     vision_model = AutoModel.from_pretrained(model_id).to("cuda:0", dtype=torch.float16)
     
     # Load Image

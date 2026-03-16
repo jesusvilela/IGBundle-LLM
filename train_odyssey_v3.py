@@ -88,6 +88,7 @@ class StageConfig:
     grad_accum: int
     max_seq_len: int
     checkpoint_every: int
+    entropy_loss_scale: float = 1.0  # multiplier for fiber_diversity + fiber_entropy losses
 
 
 STAGE_CONFIGS = {
@@ -122,6 +123,7 @@ STAGE_CONFIGS = {
         grad_accum=16,
         max_seq_len=768,
         checkpoint_every=200,
+        entropy_loss_scale=3.0,  # 3x boost to prevent S collapse seen in Stage 1
     ),
     "domain": StageConfig(
         name="domain",
@@ -298,7 +300,18 @@ class OdysseyV3Trainer:
     # --- Adapter hook -----------------------------------------------------
     def _inject_adapter_hook(self):
         target_layer_idx = 12
-        target_layer = self.llm.model.layers[target_layer_idx]
+        # Navigate PEFT wrapper if QLoRA is active
+        model = self.llm
+        if hasattr(model, "base_model"):
+            # PeftModel -> base_model -> model -> model -> layers
+            model = model.base_model
+        if hasattr(model, "model") and hasattr(model.model, "layers"):
+            layers = model.model.layers
+        elif hasattr(model, "model") and hasattr(model.model, "model"):
+            layers = model.model.model.layers
+        else:
+            layers = model.model.layers
+        target_layer = layers[target_layer_idx]
         original_forward = target_layer.forward
         self._current_geo_state = None
 
@@ -328,6 +341,21 @@ class OdysseyV3Trainer:
             return
 
         import re
+
+        # If a specific checkpoint name is given via --resume-from, use it
+        resume_from = getattr(self.args, "resume_from", None)
+        if resume_from:
+            ckpt_path = os.path.join(ckpt_dir, resume_from, "adapter_weights.pt")
+            if os.path.exists(ckpt_path):
+                logger.info(f"Resuming from explicit checkpoint: {ckpt_path}")
+                state = torch.load(ckpt_path, map_location=DEVICE)
+                self.adapter.load_state_dict(state, strict=False)
+                # For cross-stage resume, start_step resets to 0
+                self.start_step = 0
+                return
+            else:
+                logger.warning(f"Checkpoint {ckpt_path} not found, falling back to latest")
+
         # Match both checkpoint-STEP and checkpoint-STAGE-STEP patterns
         dirs = [d for d in os.listdir(ckpt_dir)
                 if re.match(r"^checkpoint-(\w+-)?(\d+)$", d)]
@@ -754,9 +782,11 @@ class OdysseyV3Trainer:
                     else 1.0
                 )
 
+                ent_scale = sc.entropy_loss_scale
+
                 for k, v in geo_losses.items():
                     if k in ("fiber_diversity", "fiber_entropy"):
-                        loss_geo = loss_geo + v * entropy_ramp
+                        loss_geo = loss_geo + v * entropy_ramp * ent_scale
                     else:
                         loss_geo = loss_geo + v
 
@@ -815,6 +845,14 @@ class OdysseyV3Trainer:
                     }
                     if S_actual is not None:
                         metrics["S"] = S_actual
+                    # Extract K and fiber_diversity for dashboard
+                    if geo_losses:
+                        if "curvature" in geo_losses:
+                            v = geo_losses["curvature"]
+                            metrics["K"] = v.item() if hasattr(v, "item") else float(v)
+                        if "fiber_diversity" in geo_losses:
+                            v = geo_losses["fiber_diversity"]
+                            metrics["fiber_diversity"] = v.item() if hasattr(v, "item") else float(v)
                     self._report_telemetry(step, metrics)
 
             # --- Checkpoint ---
@@ -863,6 +901,11 @@ def parse_args():
         "--checkpoint-dir",
         default=None,
         help="Directory to resume from (scans for latest checkpoint-*)",
+    )
+    parser.add_argument(
+        "--resume-from",
+        default=None,
+        help="Specific checkpoint folder name within checkpoint-dir (e.g. checkpoint-alignment-1200)",
     )
     parser.add_argument(
         "--enable-vision",

@@ -297,9 +297,9 @@ class UnifiedManifoldTrainer:
         
         # 2b. Load SigLip Vision Tower (for Epic 5)
         logger.info("Loading SigLIP Vision Model...")
-        self.vision_processor = SiglipImageProcessor.from_pretrained("google/siglip-so400m-patch14-384")
+        self.vision_processor = SiglipImageProcessor.from_pretrained("google/siglip2-so400m-patch14-384")
         self.vision_model = SiglipVisionModel.from_pretrained(
-            "google/siglip-so400m-patch14-384",
+            "google/siglip2-so400m-patch14-384",
             device_map=DEVICE,
             torch_dtype=torch.float16
         )

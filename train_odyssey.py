@@ -39,7 +39,7 @@ logger = logging.getLogger("OdysseyTrainer")
 # Configuration
 MODEL_ID = "h:/LLM-MANIFOLD/igbundle_qwen7b_cp600" 
 OUTPUT_DIR = "igbundle_phase9_odyssey"
-MAX_STEPS = 3001 # Phase B: Retrain to checkpoint-3000 with entropy gradient unfrozen
+MAX_STEPS = 4001 # Phase C: Continue from cp-3001 for 1000 more steps
 BATCH_SIZE = 1 
 GRAD_ACCUM = 16 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -200,7 +200,8 @@ class OdysseyTrainer:
         self.start_step = 0
         try:
              if os.path.exists(CHECKPOINT_SOURCE):
-                 dirs = [d for d in os.listdir(CHECKPOINT_SOURCE) if d.startswith("checkpoint-")]
+                 import re
+                 dirs = [d for d in os.listdir(CHECKPOINT_SOURCE) if re.match(r'^checkpoint-\d+$', d)]
                  if dirs:
                      latest = sorted(dirs, key=lambda x: int(x.split("-")[1]))[-1]
                      self.start_step = int(latest.split("-")[1])

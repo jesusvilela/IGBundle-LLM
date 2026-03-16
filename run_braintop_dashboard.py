@@ -201,29 +201,44 @@ def update_graph(n_intervals, n_clicks, manual_thought, store):
         lat = state.get('latency', 0)
         dom = state.get('domain', 'N/A')
         
-        # Parse or Simulate Telemetry based on Embedding Activity
+        # Read geometric telemetry from state file (written by Neural Glass hooks)
+        # Fall back to embedding-derived estimates only if keys are absent.
         if embedding is not None:
-             # Simulate Curvature from Embedding variance/norm
-             # High variance ~ high curvature?
-             # Just for visualization until 'curvature' key is in JSON
-             raw_k = state.get('curvature', np.std(embedding) * 1000)
-             k_val = f"{raw_k:.2f}"
-             
-             # Entropy
-             raw_s = state.get('entropy', np.abs(np.mean(embedding)) * 100)
-             s_val = f"{raw_s:.2f}"
-             
-             # Fiber
-             # Hash of prompt or embedding dominant feature?
-             feat_idx = np.argmax(np.abs(embedding))
-             fiber_val = f"Fiber {feat_idx}"
-             
-             # Physics
-             h_val = f"{state.get('hamiltonian_energy', 0.0):.2f}"
-             retro_val = f"{state.get('retrospection_loss', 0.0):.3f}"
-             active_fiber_name = state.get('active_fiber', "Idle")
-             if active_fiber_name != "Idle":
-                 fiber_val = active_fiber_name
+            # --- Sectional Curvature K ---
+            # Prefer value from Neural Glass; otherwise estimate from
+            # embedding norm variance (rough proxy, not geometric truth)
+            if 'curvature' in state:
+                raw_k = float(state['curvature'])
+            else:
+                # Rough estimate: more spread-out embedding -> more curved
+                norms = np.abs(embedding)
+                raw_k = -float(np.var(norms) * 50)  # negative by convention
+            k_val = f"{raw_k:.2f}"
+
+            # --- Manifold Entropy S ---
+            # Prefer value from Neural Glass theta distribution.
+            # Fallback: Shannon entropy of softmax(embedding[:16])
+            if 'entropy' in state:
+                raw_s = float(state['entropy'])
+            else:
+                logits = embedding[:16].astype(float)
+                probs = np.exp(logits - logits.max())
+                probs /= probs.sum() + 1e-8
+                raw_s = float(-np.sum(probs * np.log(probs + 1e-8)))
+            s_val = f"{raw_s:.4f}"
+
+            # --- Active Fiber ---
+            active_fiber_name = state.get('active_fiber', None)
+            if active_fiber_name:
+                fiber_val = active_fiber_name
+            else:
+                # Most activated fiber index
+                feat_idx = int(np.argmax(np.abs(embedding)))
+                fiber_val = f"Fiber {feat_idx}"
+
+            # --- Physics ---
+            h_val = f"{state.get('hamiltonian_energy', 0.0):.2f}"
+            retro_val = f"{state.get('retrospection_loss', 0.0):.3f}"
         
         msg = html.Div([
             html.Strong(f"[{state.get('status', 'IDLE').upper()}] PROBE {state.get('id', '?')}", style={'color': status_color}),

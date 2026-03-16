@@ -42,6 +42,7 @@ if os.path.exists("./igbundle_phase9_odyssey/checkpoint-3000"):
 try:
     from igbundle.integrations.hf_patch import wrap_hf_candidate
     from igbundle.core.config import IGBundleConfig
+    from igbundle.modules.geometric_adapter import GeometricIGBundleAdapter
 
     # Try to load the trained geometric adapter if available
     adapter_paths = [
@@ -59,15 +60,21 @@ try:
                 "latent_dim": 64,
                 "num_categories": 16,
                 "use_dynamics": True,
-                "use_geodesic_attn": True
+                "use_geodesic_attn": True,
+                "supported_modalities": ["vision", "text"],
+                "enable_meta_cognition": True,
+                "alpha": 1.0,
+                "beta": 1.0,
+                "dropout": 0.0,
+                "adapter_scale": 1.0
             }
-            class DictConfig:
-                def __init__(self, d):
-                    for k,v in d.items(): setattr(self, k, v)
-
-            model = wrap_hf_candidate(model, DictConfig(cfg))
+            
+            model = wrap_hf_candidate(model, IGBundleConfig(**cfg), adapter_class=GeometricIGBundleAdapter)
             model.load_state_dict(torch.load(path, map_location=model.device), strict=False)
-            print("Adapter Loaded Successfully.")
+            for name, module in model.named_modules():
+                if 'adapter' in name.lower() or 'wrapper' in name.lower():
+                    module.to(torch.float16)
+            print("Adapter Loaded Successfully and forced to float16.")
             break
 except Exception as e:
     import traceback

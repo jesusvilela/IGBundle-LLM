@@ -18,45 +18,52 @@ class LipschitzPenalty(nn.Module):
     """
     Penalizes deviations from Lipschitz continuity:
     L_lip = max(0, ||d_M(phi(x), phi(y)) / d_E(x, y) - K||^2)
-    
-    Or Gradient Penalty: ||grad_x phi(x)|| <= K.
+
+    Uses perturbation-based estimation: perturb input x by small epsilon,
+    map both x and x+eps through phi_module, compare manifold vs euclidean
+    distance ratio against target K.
     """
-    def __init__(self, config):
+    def __init__(self, config, phi_module: nn.Module = None):
         super().__init__()
         self.max_lipschitz = getattr(config, 'max_lipschitz_constant', 1.0)
         self.penalty_weight = getattr(config, 'lipschitz_penalty_weight', 0.1)
         self.c = getattr(config, 'manifold_curvature', 1.0)
-        
+        self.phi_module = phi_module
+
+    def set_phi_module(self, phi_module: nn.Module):
+        """Set the projection module for perturbation-based Lipschitz estimation."""
+        self.phi_module = phi_module
+
     def forward(self, x: torch.Tensor, phi_x: torch.Tensor) -> torch.Tensor:
         """
-        Compute Gradient Penalty approximation of Lipschitz constant.
-        
+        Compute perturbation-based Lipschitz penalty.
+
+        If phi_module is set, uses perturbation method (accurate).
+        Otherwise falls back to batch-pair distance ratio estimation.
+
         Args:
-            x: Input (B, T, D) - require_grad must be True during training
+            x: Input (B, T, D)
             phi_x: Output on Manifold (B, T, D)
-            
+
         Returns:
-            loss: scalar
+            loss: scalar penalty
         """
-        # We need gradients of phi_x w.r.t x.
-        # This is expensive (double backprop).
-        # Alternative: Sample perturbations?
-        # d_M(phi(x), phi(x+eps)) / eps <= K.
-        
-        # Taking random neighboring points in the batch?
-        # Let's use the 'perturbation' method for efficiency.
-        
-        B, T, D = x.shape
-        eps = 1e-4
-        perturbation = torch.randn_like(x) * eps
-        x_perturbed = x + perturbation
-        
-        # We assume we can access the 'model' or 'projection' to compute phi(x_perturbed).
-        # But here we only have the module. 
-        # The training loop usually handles this.
-        
-        # Let's implement a wrapper that takes the model.
-        # Or simply compute the ratio for given pairs if provided.
+        if self.phi_module is not None:
+            return self.compute_penalty(
+                self.phi_module, x, c=self.c, k=self.max_lipschitz
+            )
+
+        # Fallback: batch-pair distance ratio estimation
+        # Use adjacent pairs in the batch/sequence dimension
+        if x.dim() == 3 and x.shape[1] > 1:
+            # Euclidean input distance between adjacent tokens
+            d_in = torch.norm(x[:, 1:] - x[:, :-1], dim=-1)  # (B, T-1)
+            # Manifold output distance between adjacent tokens
+            d_out = PoincareBall.dist(phi_x[:, 1:], phi_x[:, :-1], self.c)
+            ratio = d_out / (d_in + 1e-9)
+            penalty = F.relu(ratio - self.max_lipschitz).pow(2)
+            return penalty.mean()
+
         return torch.tensor(0.0, device=x.device)
         
     @staticmethod

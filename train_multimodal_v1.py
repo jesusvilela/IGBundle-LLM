@@ -64,7 +64,7 @@ class MultimodalIGBundle(torch.nn.Module):
 
 def train():
     MODEL_ID = "Qwen/Qwen2.5-0.5B" # Fast iteration
-    VISION_ID = "google/siglip-so400m-patch14-384"
+    VISION_ID = "google/siglip2-so400m-patch14-384"
     DATA_PATH = "data/physics_dynamics.jsonl"
     OUTPUT_DIR = "trained_physics_adapter"
     

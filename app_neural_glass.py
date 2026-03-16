@@ -100,7 +100,7 @@ class _StopOnNewTurn(StoppingCriteria):
 # --- CONSTANTS ---
 BASE_MODEL_ID = "h:/LLM-MANIFOLD/igbundle_qwen7b_cp600"
 ADAPTER_PATH = "" # Autodetect
-CHECKPOINT_DIR = "h:/LLM-MANIFOLD/igbundle-llm/igbundle_phase9_odyssey" # Phase 9 Odyssey checkpoints
+CHECKPOINT_DIR = "h:/LLM-MANIFOLD/igbundle-llm/igbundle_odyssey_v3" # Epic 15: OdysseyV3 checkpoints
 
 
 # --- GLOBAL STATE ---
@@ -255,7 +255,8 @@ def load_models():
     config = IGBundleConfig(
         hidden_size=3584, num_components=8, latent_dim=64, num_categories=16,
         use_dynamics=True, use_geodesic_attn=True, supported_modalities=["vision", "text"],
-        enable_meta_cognition=True
+        enable_meta_cognition=True,
+        use_delta_fiber=True, delta_mem_dim=64, delta_num_heads=4,  # Epic 17b
     )
     adapter = create_geometric_adapter(config).to("cuda")
 

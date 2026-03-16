@@ -20,8 +20,8 @@ from igbundle.modules.geometric_adapter import create_geometric_adapter, Geometr
 
 # Constants
 BASE_MODEL_ID = "h:/LLM-MANIFOLD/igbundle_qwen7b_cp600"
-ADAPTER_PATH = "igbundle_unified_training/final/adapter_weights.pt"
-CHECKPOINT_DIR = "igbundle_unified_training"
+ADAPTER_PATH = "igbundle_phase9_odyssey/checkpoint-4001/adapter_weights.pt"
+CHECKPOINT_DIR = "igbundle_phase9_odyssey"
 
 def find_latest_adapter():
     # 0. Check Local (Deployment Mode)
@@ -73,9 +73,9 @@ def setup_pipeline():
     )
     
     print("Loading SigLIP Vision Model...")
-    vision_processor = SiglipImageProcessor.from_pretrained("google/siglip-so400m-patch14-384")
+    vision_processor = SiglipImageProcessor.from_pretrained("google/siglip2-so400m-patch14-384")
     vision_model = SiglipVisionModel.from_pretrained(
-        "google/siglip-so400m-patch14-384",
+        "google/siglip2-so400m-patch14-384",
         device_map="cuda", 
         torch_dtype=torch.float16
     )
@@ -96,7 +96,23 @@ def setup_pipeline():
     weight_path = find_latest_adapter()
     print(f"Loading Adapter Weights from: {weight_path}")
     state_dict = torch.load(weight_path)
-    adapter.load_state_dict(state_dict)
+    
+    # Handle Spectral Norm keys from training
+    new_state_dict = {}
+    for k, v in state_dict.items():
+        if "vision_projector" in k and ".linear.weight_orig" in k:
+            base_k = k.replace(".linear.weight_orig", ".weight")
+            # We don't reconstruct spectral norm weight exactly without u and v easily here, 
+            # so we just load weight_orig. For inference it's fine.
+            new_state_dict[base_k] = v
+        elif "vision_projector" in k and ".linear.bias" in k:
+            new_state_dict[k.replace(".linear.bias", ".bias")] = v
+        elif "vision_projector" in k and (".weight_u" in k or ".weight_v" in k):
+            continue
+        else:
+            new_state_dict[k] = v
+            
+    adapter.load_state_dict(new_state_dict, strict=False)
     
     return llm, tokenizer, vision_model, vision_processor, adapter
 

@@ -73,9 +73,9 @@ def setup_pipeline():
     )
     
     print("Loading SigLIP Vision Model...")
-    vision_processor = SiglipImageProcessor.from_pretrained("google/siglip-so400m-patch14-384")
+    vision_processor = SiglipImageProcessor.from_pretrained("google/siglip2-so400m-patch14-384")
     vision_model = SiglipVisionModel.from_pretrained(
-        "google/siglip-so400m-patch14-384",
+        "google/siglip2-so400m-patch14-384",
         device_map="cuda", 
         torch_dtype=torch.float16
     )

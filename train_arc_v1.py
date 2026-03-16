@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 # Config
 MODEL_ID = "H:/LLM-MANIFOLD/igbundle_qwen7b_cp600"
-VISION_MODEL_ID = "google/siglip-so400m-patch14-384"
+VISION_MODEL_ID = "google/siglip2-so400m-patch14-384"
 OUTPUT_DIR = "trained_arc_adapter"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
