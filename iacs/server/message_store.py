@@ -76,7 +76,8 @@ class MessageStore:
         recipient: Optional[str] = None,
         type_filter: Optional[str] = None,
         since: Optional[str] = None,
-        limit: int = 50
+        limit: int = 50,
+        unacked_only: bool = False
     ) -> List[Dict[str, Any]]:
         query = "SELECT * FROM messages WHERE 1=1"
         params: list = []
@@ -89,6 +90,8 @@ class MessageStore:
         if since:
             query += " AND timestamp > ?"
             params.append(since)
+        if unacked_only:
+            query += " AND acked = 0"
         query += " ORDER BY created_at DESC LIMIT ?"
         params.append(limit)
         rows = self.conn.execute(query, params).fetchall()

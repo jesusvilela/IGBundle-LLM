@@ -213,6 +213,7 @@ class AgentClient:
         since: Optional[str] = None,
         type_filter: Optional[str] = None,
         limit: int = 50,
+        unacked_only: bool = False,
     ) -> List[Dict]:
         if not self._session:
             await self.connect()
@@ -221,6 +222,8 @@ class AgentClient:
             params["since"] = since
         if type_filter:
             params["type"] = type_filter
+        if unacked_only:
+            params["unacked_only"] = "true"
         try:
             async with self._session.get(
                 f"{self.server_url}/api/v1/messages", params=params

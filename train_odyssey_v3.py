@@ -326,6 +326,10 @@ class OdysseyV3Trainer:
             adapted_out, geo_state = self.adapter(h_in, pixel_values=pv)
             self._current_geo_state = geo_state
 
+            # Store base and adapted hidden states for EOS loss computation
+            self._hook_h_base = h.detach()
+            self._hook_h_adapted = adapted_out  # keep grad path
+
             adapted = adapted_out.to(orig_dtype)
             if isinstance(out, tuple):
                 return (adapted,) + out[1:]
@@ -683,6 +687,7 @@ class OdysseyV3Trainer:
             model_id,
             quantization_config=bnb_config,
             device_map="auto",
+            max_memory={0: "5GiB", "cpu": "30GiB"},
             trust_remote_code=True,
         )
         self.llm.requires_grad_(False)
@@ -721,6 +726,74 @@ class OdysseyV3Trainer:
         self._prepare_datasets()
 
         logger.info("Setup complete")
+
+    # --- Evaluation loop --------------------------------------------------
+    def evaluate(self, step):
+        logger.info(f"Running evaluation at step {step}...")
+        self.llm.eval()
+        self.adapter.eval()
+        
+        has_gsp = False
+        try:
+            from igbundle.steering.gsp import GeometricSteeringProbe
+            gsp = GeometricSteeringProbe(self.llm, self.adapter)
+            gsp.attach()
+            has_gsp = True
+            logger.info("GSP successfully attached for evaluation.")
+        except Exception as e:
+            logger.warning(f"Could not attach GSP for evaluation: {e}")
+
+        natural_eos_count = 0
+        total_eval_samples = 50
+        
+        eval_loader = iter(DataLoader(self.train_ds, batch_size=1, collate_fn=multimodal_collate))
+        
+        im_end_id = self.tokenizer.convert_tokens_to_ids("<|im_end|>")
+        eos_ids = [self.tokenizer.eos_token_id]
+        if im_end_id is not None and im_end_id != self.tokenizer.eos_token_id:
+            eos_ids.append(im_end_id)
+            
+        for i in range(total_eval_samples):
+            try:
+                batch = next(eval_loader)
+            except StopIteration:
+                break
+                
+            input_ids = batch["input_ids"].to(DEVICE)
+            attention_mask = batch["attention_mask"].to(DEVICE)
+            
+            with torch.no_grad():
+                # We extract the last valid sequence up to max length
+                outputs = self.llm.generate(
+                    input_ids=input_ids,
+                    attention_mask=attention_mask,
+                    max_new_tokens=100, 
+                    pad_token_id=self.tokenizer.pad_token_id,
+                    eos_token_id=eos_ids,
+                    do_sample=True,
+                    temperature=0.7,
+                    use_cache=True
+                )
+            
+            # Check if it stopped due to hitting an EOS token
+            last_token = outputs[0, -1].item()
+            if last_token in eos_ids:
+                natural_eos_count += 1
+                
+        if has_gsp:
+            gsp.remove()
+            
+        # Return back to train mode
+        if self.stage_cfg.use_qlora:
+            self.llm.train()
+        self.adapter.train()
+        
+        eos_ratio = natural_eos_count / total_eval_samples
+        logger.info(f"Evaluation step {step}: Natural EOS ratio = {eos_ratio:.2f} ({natural_eos_count}/{total_eval_samples})")
+        
+        # Telemetry
+        self._report_telemetry(step, {"eos_validation_ratio": eos_ratio})
+        return eos_ratio
 
     # --- Training loop ----------------------------------------------------
     def train(self):
@@ -794,6 +867,85 @@ class OdysseyV3Trainer:
             lambda_t = sc.geo_lambda_max * min(1.0, step / max(1, sc.geo_ramp_steps))
             total_loss = loss_llm + lambda_t * loss_geo
 
+            # --- EOS Preservation Auxiliary Losses ---
+            # The geometric adapter suppresses <|im_end|> probability. These losses
+            # keep EOS logits close to the base model's distribution.
+            loss_eos_total = torch.tensor(0.0, device=DEVICE)
+            eos_detail = {}
+            h_base = getattr(self, "_hook_h_base", None)
+            h_adapted = getattr(self, "_hook_h_adapted", None)
+
+            if h_base is not None and h_adapted is not None and step % 4 == 0:
+                # EOS loss every 4 steps (full-vocab logits are expensive on 8GB)
+                eos_ramp = min(1.0, max(0.0, (step - self.start_step) / 200.0))
+
+                eos_ids = [self.tokenizer.eos_token_id]
+                im_end_id = self.tokenizer.convert_tokens_to_ids("<|im_end|>")
+                if im_end_id is not None and im_end_id != self.tokenizer.eos_token_id:
+                    eos_ids.append(im_end_id)
+
+                try:
+                    lm_head = self.llm.lm_head if hasattr(self.llm, "lm_head") else None
+                    if lm_head is None and hasattr(self.llm, "base_model"):
+                        lm_head = self.llm.base_model.model.lm_head
+
+                    if lm_head is not None and len(eos_ids) > 0:
+                        # VRAM-safe: last 4 positions only (~150MB vs 1.2GB for 32)
+                        n_pos = min(4, h_base.shape[1])
+                        _lm_dtype = next(lm_head.parameters()).dtype
+                        h_b = h_base[:, -n_pos:, :].to(_lm_dtype)
+                        h_a = h_adapted[:, -n_pos:, :].to(_lm_dtype)
+
+                        with torch.no_grad():
+                            base_logits = lm_head(h_b).float()
+                        adapted_logits = lm_head(h_a).float()
+
+                        valid_eos = [e for e in eos_ids if e is not None and 0 <= e < adapted_logits.shape[-1]]
+                        if valid_eos:
+                            base_probs = F.softmax(base_logits, dim=-1)[:, :, valid_eos]
+                            adapted_log_probs = F.log_softmax(adapted_logits, dim=-1)[:, :, valid_eos]
+
+                            kl_eos = F.kl_div(adapted_log_probs, base_probs, reduction="batchmean")
+                            loss_eos_kl = 0.1 * kl_eos * eos_ramp
+                            loss_eos_total = loss_eos_total + loss_eos_kl
+                            eos_detail["eos_kl"] = kl_eos.item()
+
+                            tau_eos = 0.01
+                            adapted_probs = F.softmax(adapted_logits, dim=-1)[:, :, valid_eos]
+                            floor_deficit = F.relu(tau_eos - adapted_probs)
+                            loss_eos_floor = 1.0 * (floor_deficit ** 2).mean() * eos_ramp
+                            loss_eos_total = loss_eos_total + loss_eos_floor
+                            eos_detail["eos_floor"] = loss_eos_floor.item()
+                            eos_detail["P_eos_base"] = base_probs.mean().item()
+                            eos_detail["P_eos_adapted"] = adapted_probs.mean().item()
+
+                        # Free full-vocab logits before norm computation
+                        del base_logits, adapted_logits
+                        torch.cuda.empty_cache()
+
+                        # L_norm: cheap (no vocab-size tensors)
+                        delta = (h_a - h_b).float()
+                        norm_ratio = (delta.norm() ** 2) / (h_b.float().norm() ** 2).clamp(min=1e-8)
+                        loss_eos_norm = 0.01 * norm_ratio * eos_ramp
+                        loss_eos_total = loss_eos_total + loss_eos_norm
+                        eos_detail["pert_norm"] = norm_ratio.item()
+
+                except Exception as e:
+                    if step < 5:
+                        logger.warning(f"EOS loss computation failed: {e}")
+
+                # Clean up hook state
+                self._hook_h_base = None
+                self._hook_h_adapted = None
+
+            # Always clean up hook state (even when EOS loss skipped)
+            if getattr(self, "_hook_h_base", None) is not None:
+                self._hook_h_base = None
+            if getattr(self, "_hook_h_adapted", None) is not None:
+                self._hook_h_adapted = None
+
+            total_loss = total_loss + loss_eos_total
+
             # --- Backward ---
             total_loss.backward()
 
@@ -831,9 +983,14 @@ class OdysseyV3Trainer:
                             geo_detail += f" S={S_actual:.4f}"
 
                     nan_info = f" NaN={nan_count}" if nan_count > 0 else ""
+                    eos_info = ""
+                    if eos_detail:
+                        eos_parts = [f"{k}={v:.4f}" for k, v in sorted(eos_detail.items())]
+                        eos_info = f" EOS[{', '.join(eos_parts)}]"
                     logger.info(
                         f"[{sc.name}] step={step} loss={loss_llm.item():.4f} "
-                        f"geo={loss_geo.item():.3f} lam={lambda_t:.4f}{geo_detail}{nan_info}"
+                        f"geo={loss_geo.item():.3f} eos={loss_eos_total.item():.4f} "
+                        f"lam={lambda_t:.4f}{geo_detail}{eos_info}{nan_info}"
                     )
 
                     # IACS telemetry
@@ -853,11 +1010,16 @@ class OdysseyV3Trainer:
                         if "fiber_diversity" in geo_losses:
                             v = geo_losses["fiber_diversity"]
                             metrics["fiber_diversity"] = v.item() if hasattr(v, "item") else float(v)
+                    if eos_detail:
+                        metrics["loss_eos"] = loss_eos_total.item()
+                        metrics.update({f"eos_{k}": v for k, v in eos_detail.items()})
                     self._report_telemetry(step, metrics)
 
             # --- Checkpoint ---
             step += 1
             if step % sc.checkpoint_every == 0 or step == sc.max_steps:
+                self.evaluate(step)
+                
                 ckpt_dir = os.path.join(
                     self.args.output_dir, f"checkpoint-{sc.name}-{step}"
                 )

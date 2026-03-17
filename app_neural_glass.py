@@ -28,7 +28,9 @@ from transformers import (
     SiglipImageProcessor,
     TextIteratorStreamer,
     StoppingCriteria,
-    StoppingCriteriaList
+    StoppingCriteriaList,
+    LogitsProcessor,
+    LogitsProcessorList
 )
 from peft import PeftModel
 import numpy as np
@@ -40,6 +42,18 @@ torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
 torch.backends.cudnn.benchmark = True
 
+import re as _re_module
+
+# --- PRE-COMPILED REGEXES (Fix: avoid recompilation in hot loops) ---
+_ROLE_SEP_RE = _re_module.compile(
+    r'(?:^|\n)\s*(?:[^\s\n]{0,20}(?:user|assistant)\s*:?|[AQU]\s*:)\s*(?:\n|$)',
+    _re_module.IGNORECASE
+)
+_DIGIT_STRIP_RE = _re_module.compile(r'\d+')
+
+# --- GENERATION STATE (for telemetry throttling) ---
+_GENERATION_ACTIVE = threading.Event()  # Set while model.generate() is running
+
 
 # --- PATHS & IMPORTS ---
 sys.path.append(os.path.abspath("src"))
@@ -50,6 +64,7 @@ from igbundle.geometry.hyperbolic import PoincareBall
 from igbundle.fibers.constraint import ConstraintExtractor, ConstraintScorer
 from imd_memory import IMDMemory
 from model_state import ModelState
+from igbundle.steering.gsp import create_gsp_for_qwen7b
 
 # --- GENERATION STOP EVENT ---
 # Thread-safe mechanism to halt model.generate() when corruption is detected.
@@ -96,6 +111,29 @@ class _StopOnNewTurn(StoppingCriteria):
         if self._saw_im_end_at > 0 and gen_len > self._saw_im_end_at + 1:
             return True
         return False
+
+class _EOSBoostProcessor(LogitsProcessor):
+    """Counteract adapter's EOS suppression by boosting <|im_end|> logit.
+
+    The geometric adapter at layer 12 perturbs hidden states, shifting the logit
+    for <|im_end|> downward. This processor adds a linearly increasing boost to
+    the EOS token logits after min_tokens, creating soft-stop pressure that grows
+    with response length. Math: logit[eos] += boost_per_token * (gen_len - min_tokens).
+    """
+    def __init__(self, eos_ids: list, prompt_len: int, min_tokens: int = 128, boost_per_token: float = 0.015):
+        self.eos_ids = eos_ids
+        self.prompt_len = prompt_len
+        self.min_tokens = min_tokens
+        self.boost_per_token = boost_per_token
+
+    def __call__(self, input_ids, scores):
+        gen_len = input_ids.shape[-1] - self.prompt_len
+        if gen_len > self.min_tokens:
+            boost = self.boost_per_token * (gen_len - self.min_tokens)
+            for eid in self.eos_ids:
+                if eid is not None and 0 <= eid < scores.shape[-1]:
+                    scores[:, eid] += boost
+        return scores
 
 # --- CONSTANTS ---
 BASE_MODEL_ID = "h:/LLM-MANIFOLD/igbundle_qwen7b_cp600"
@@ -283,6 +321,20 @@ def load_models():
     # Inject Hook
     inject_adapter_hook(llm, adapter)
 
+    # GSP: Geometric Steering Probe — inference-time homeostatic controller
+    # Attaches as forward hooks to layers 8-20, reads TELEMETRY_STATE live,
+    # applies GENERIC-compliant deicing perturbations when Bundle lock detected.
+    try:
+        gsp, gsp_bridge = create_gsp_for_qwen7b(telemetry_dict=TELEMETRY_STATE)
+        gsp.attach(llm, range(8, 21))
+        MODELS["gsp"] = gsp
+        MODELS["gsp_bridge"] = gsp_bridge
+        print("[GSP] Geometric Steering Probe initialized and attached.")
+    except Exception as e:
+        print(f"[GSP] WARNING: Failed to initialize GSP: {e}")
+        MODELS["gsp"] = None
+        MODELS["gsp_bridge"] = None
+
     # Restore telemetry from previous session
     saved_telem = MODEL_STATE.restore_telemetry()
     if saved_telem:
@@ -449,7 +501,7 @@ def inject_adapter_hook(llm, adapter):
         delta = adapted - h_base  # Adapter's contribution
         base_norm = h_base.norm(dim=-1, keepdim=True).clamp(min=1e-6)
         delta_norm = delta.norm(dim=-1, keepdim=True).clamp(min=1e-6)
-        max_ratio = 0.25  # Adapter can perturb at most 25% of base signal
+        max_ratio = 0.10  # Reduced from 0.25: alignment-1200 weights too strong → Q&A hallucination
         scale_factor = torch.where(
             delta_norm > max_ratio * base_norm,
             max_ratio * base_norm / delta_norm,
@@ -476,7 +528,7 @@ def inject_adapter_hook(llm, adapter):
 
 # --- ROLLING CONTEXT MANAGEMENT ---
 MAX_ROLLING_MESSAGES = 30   # System + last 30 non-system msgs (15 user/assistant turns)
-MAX_GENERATION_TOKENS = 4096  # 8GiB GPU, ~3GiB free after NF4 model = ~54K tokens capacity
+MAX_GENERATION_TOKENS = 1024  # Reduced: adapter suppresses EOS → model fills full budget; 1024 ≈ 2min on RTX3060Ti
 
 def _make_rolling_context(history: list, max_messages: int = MAX_ROLLING_MESSAGES) -> list:
     """
@@ -755,18 +807,36 @@ def generate_stream(text, image_path, max_new_tokens):
             else:
                 return tokenizer.apply_chat_template(history, tokenize=False, add_generation_prompt=True)
 
-        # 7. Precise token-based trimming
+        # 7. VRAM-aware proactive trimming
+        # First, compute the ACTUAL VRAM budget for KV cache instead of using a fixed token budget.
+        # KV per token: 28 layers × 2(K/V) × 4 heads × 128 dim × 2 bytes = 56 KB
+        # Also reserve ~200 MB for adapter forward pass activations + generation headroom.
+        _KV_BYTES_PER_TOKEN = 56 * 1024  # 56 KB
+        _ACTIVATION_RESERVE_MB = 200
+        try:
+            _r = torch.cuda.memory_reserved(0) / (1024 ** 2)
+            _a = torch.cuda.memory_allocated(0) / (1024 ** 2)
+            _of = torch.cuda.mem_get_info()[0] / (1024 ** 2)
+            _vram_for_kv = (_r - _a) + _of - _ACTIVATION_RESERVE_MB
+            _vram_token_limit = max(512, int((_vram_for_kv * 1024 * 1024) / _KV_BYTES_PER_TOKEN))
+            _effective_budget = min(INPUT_TOKEN_BUDGET, _vram_token_limit)
+            if _effective_budget < INPUT_TOKEN_BUDGET:
+                print(f"DEBUG: VRAM proactive trim: {_vram_for_kv:.0f}MB avail -> {_vram_token_limit} token limit (budget was {INPUT_TOKEN_BUDGET})")
+        except Exception:
+            _effective_budget = INPUT_TOKEN_BUDGET
+
+        # Tokenize once, then trim by dropping messages (avoids O(n²) re-tokenization)
         prompt_text = _apply_template(sanitized_history)
         input_tokens = len(tokenizer.encode(prompt_text))
 
-        while input_tokens > INPUT_TOKEN_BUDGET and len(sanitized_history) > 2:
+        while input_tokens > _effective_budget and len(sanitized_history) > 2:
             sanitized_history.pop(1)
             prompt_text = _apply_template(sanitized_history)
             input_tokens = len(tokenizer.encode(prompt_text))
             print(f"DEBUG: Trimmed to {len(sanitized_history)} msgs ({input_tokens} tokens)")
 
         inputs = tokenizer(prompt_text, return_tensors="pt").to("cuda")
-        print(f"DEBUG: Context: {inputs.input_ids.shape[-1]} tokens, {len(sanitized_history)} messages")
+        print(f"DEBUG: Context: {inputs.input_ids.shape[-1]} tokens, {len(sanitized_history)} messages (budget={_effective_budget})")
     else:
         if not isinstance(text, str): text = str(text)
         if len(text) > 4000: text = text[-4000:]
@@ -854,7 +924,7 @@ def generate_stream(text, image_path, max_new_tokens):
         dynamic_temp = max(0.15, min(dynamic_temp, 0.45))
         print(f"DEBUG: Thermodynamic Sampling | K={curv} -> factor={curv_factor:.2f} -> T={dynamic_temp:.2f}")
 
-    streamer = TextIteratorStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True, timeout=60)
+    streamer = TextIteratorStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True, timeout=15)
 
     # Adaptive generation budget — fit within remaining KV cache headroom
     _input_len = inputs.input_ids.shape[-1] if hasattr(inputs, 'input_ids') else 1000
@@ -895,6 +965,28 @@ def generate_stream(text, image_path, max_new_tokens):
     else:
         print(f"WARNING: NewTurn guard DISABLED — im_start={_im_start_id}, im_end={_im_end_id}")
 
+    # EOS boost: counteract adapter's suppression of <|im_end|> logit
+    _eos_boost = _EOSBoostProcessor(
+        eos_ids=_eos_ids, prompt_len=_prompt_len,
+        min_tokens=128, boost_per_token=0.015  # At 512 tokens: boost=5.76, at 1024: boost=13.44
+    )
+
+    # GSP: poll telemetry → update geometric state → compute PID gain for this step
+    _gsp_bridge = MODELS.get("gsp_bridge")
+    if _gsp_bridge is not None:
+        try:
+            _gsp_bridge.poll_and_update()
+            _gsp = MODELS.get("gsp")
+            if _gsp and _gsp._active:
+                _gsp_status = (f"[GSP] step={_gsp._step_id} λ={_gsp._cached_lambda:.4f} "
+                               f"S={_gsp.S_current:.3f} Bundle={_gsp.Bundle_current}")
+                print(f"DEBUG: {_gsp_status}")
+                if _gsp._cached_lambda > 1e-6:
+                    TELEMETRY_STATE["thought_trace"].append(
+                        f"GSP DEICING: λ={_gsp._cached_lambda:.4f}, S_target={_gsp.genome.S_target:.2f}")
+        except Exception as e:
+            print(f"[GSP] bridge error: {e}")
+
     generation_kwargs = dict(
         inputs,
         streamer=streamer,
@@ -907,10 +999,12 @@ def generate_stream(text, image_path, max_new_tokens):
         min_new_tokens=8,  # Reduced from 32: high values force hallucination at natural stops
         eos_token_id=_eos_ids,
         pad_token_id=tokenizer.pad_token_id,
-        stopping_criteria=StoppingCriteriaList(_stop_criteria)
+        stopping_criteria=StoppingCriteriaList(_stop_criteria),
+        logits_processor=LogitsProcessorList([_eos_boost])
     )
 
     def generate_thread():
+        _GENERATION_ACTIVE.set()
         try:
              model.generate(**generation_kwargs)
         except torch.cuda.OutOfMemoryError as e:
@@ -935,6 +1029,7 @@ def generate_stream(text, image_path, max_new_tokens):
              print(f"ERROR in Generate Thread: {e}")
              streamer.text_queue.put(f"[Generation Error: {e}]")
         finally:
+             _GENERATION_ACTIVE.clear()
              streamer.end()
              gc.collect()
              _safe_empty_cache()
@@ -1116,8 +1211,7 @@ def generate_stream(text, image_path, max_new_tokens):
         # Degeneration detector: incrementing counter patterns
         # Catches: "userType(1)=18 userType(2)=6 userType(3)=18..."
         # Method: strip digits, then check if the last 60 chars appear earlier
-        import re
-        stripped = re.sub(r'\d+', '#', full_text)
+        stripped = _DIGIT_STRIP_RE.sub('#', full_text)
         if len(stripped) >= 120:
             stripped_tail = stripped[-60:]
             stripped_earlier = stripped[:-60]
@@ -1132,15 +1226,7 @@ def generate_stream(text, image_path, max_new_tokens):
 
         # Hallucinated conversation detector: model generating fake multi-turn dialogue
         # REGEX-based: catches ANY garbled role separator (present + future variants)
-        # Matches: standalone line that is a single fused token ending with "user" or "assistant"
-        # This catches: atismuser, inquiringuser, yttuser, äßuser, etc.
-        # Won't match "The user asked" — only fused junk tokens without internal spaces
-        import re
-        _role_sep_re = re.compile(
-            r'(?:^|\n)\s*(?:[^\s\n]{0,20}(?:user|assistant)\s*:?|[AQU]\s*:)\s*(?:\n|$)',
-            re.IGNORECASE
-        )
-        if _role_sep_re.search(full_text):
+        if _ROLE_SEP_RE.search(full_text):
             return True
 
         # Also check explicit markers for single-occurrence detection
@@ -1179,14 +1265,7 @@ def generate_stream(text, image_path, max_new_tokens):
         "\nInstruction:", "\nPrompt:",         # Hallucinated instruction block
     ]
 
-    # Regex: garbled role separator on its own line (catches ALL future variants)
-    # Must be a STANDALONE line of <30 chars that's just garbage+user/assistant
-    # Won't match "The user asked" (has space before "user") — only fused junk like "atismuser"
-    import re as _re_mod
-    _ROLE_SEP_STRIP_RE = _re_mod.compile(
-        r'(?:^|\n)\s*(?:[^\s\n]{0,20}(?:user|assistant)\s*:?|[AQU]\s*:)\s*(?:\n|$)',
-        _re_mod.IGNORECASE
-    )
+    # Use module-level precompiled _ROLE_SEP_RE for garbled role separator detection
 
     def _strip_prompt_leakage(text_out: str) -> str:
         # 0. Strip greeting prefix (handles "Hello! I'm Neural Glass..." at position 0)
@@ -1194,8 +1273,8 @@ def generate_stream(text, image_path, max_new_tokens):
         if not text_out:
             return ""
 
-        # 1. Regex: truncate at first garbled role separator line
-        role_match = _ROLE_SEP_STRIP_RE.search(text_out)
+        # 1. Regex: truncate at first garbled role separator line (module-level precompiled)
+        role_match = _ROLE_SEP_RE.search(text_out)
         if role_match:
             cut_pos = role_match.start()
             if cut_pos > 0:
@@ -1240,7 +1319,7 @@ def generate_stream(text, image_path, max_new_tokens):
         token_count = 0
         _corruption_type = None  # Track what kind of corruption was detected
         _last_token_time = time.time()
-        _TOKEN_TIMEOUT = 60  # seconds — if no token arrives in 60s, generation is stuck
+        _TOKEN_TIMEOUT = 15  # seconds — reduced from 60s to detect VRAM stalls faster
         _last_unique_text = ""  # Track last unique token for consecutive-repeat detection
         _consecutive_repeat_count = 0
 
@@ -1287,20 +1366,15 @@ def generate_stream(text, image_path, max_new_tokens):
                         _last_clean_len = first_occurrence + 80
 
                     # Classify the corruption type for healing
-                    import re as _re
                     recent = partial_text[-200:]
                     full = partial_text
 
-                    # Hallucinated conversation: regex-based role separator detection
-                    _role_sep_re = _re.compile(
-                        r'(?:^|\n)\s*(?:[^\s\n]{0,20}(?:user|assistant)\s*:?|[AQU]\s*:)\s*(?:\n|$)',
-                        _re.IGNORECASE
-                    )
+                    # Hallucinated conversation: regex-based role separator detection (precompiled)
                     _convo_markers = ["\u00e4\u00dfuser", "\u00dfassistant", "inquiringuser",
                                       "inquiringassistant", "yttuser", "yttassistant",
                                       "atismuser", "atism",
                                       "<|im_start|>", "<|im_end|>"]
-                    has_role_sep = bool(_role_sep_re.search(full))
+                    has_role_sep = bool(_ROLE_SEP_RE.search(full))
                     has_explicit_marker = any(m in full for m in _convo_markers)
 
                     # Echo detection: model copying input back as output
@@ -1433,8 +1507,19 @@ def get_zone_name(d):
     else:
         return "BOUNDARY"
 
+_last_telem_time = 0.0  # Throttle state for telemetry during generation
+
 def poll_telemetry():
+    global _last_telem_time
     try:
+        # Throttle during generation: skip if generating AND last poll was < 1s ago
+        # This reduces telemetry from 10Hz to ~1Hz during active generation,
+        # preventing 600+ Plotly rebuilds during a 60s stall.
+        now = time.time()
+        if _GENERATION_ACTIVE.is_set() and (now - _last_telem_time) < 1.0:
+            return (gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update())
+        _last_telem_time = now
+
         damping = TELEMETRY_STATE.get("damping", 0.01)
         beta = compute_gibbs_temperature(damping)
         TELEMETRY_STATE["gibbs_beta"] = beta

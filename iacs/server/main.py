@@ -160,8 +160,9 @@ async def get_messages(
     type: Optional[str] = Query(None),
     since: Optional[str] = Query(None),
     limit: int = Query(50),
+    unacked_only: bool = Query(False),
 ):
-    return app.state.store.get_messages(recipient, type, since, limit)
+    return app.state.store.get_messages(recipient, type, since, limit, unacked_only)
 
 
 @app.get("/api/v1/messages/{message_id}")
