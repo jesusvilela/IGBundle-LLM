@@ -34,8 +34,10 @@ import random
 import json
 import time
 import argparse
+import zlib
 from typing import Dict, List, Optional, Tuple, Iterator
 from dataclasses import dataclass
+from collections import deque
 import numpy as np
 
 sys.path.append(os.path.abspath("src"))
@@ -69,6 +71,78 @@ VISION_MODEL_ID = "google/siglip2-so400m-patch14-384"
 VISION_DIM = 1152
 VISION_PATCHES = 729  # 27x27
 
+BASELINE_EOS_RATIO = 0.64
+PROMOTION_EOS_THRESHOLD = 0.64
+PROMOTION_EVAL_S_THRESHOLD = 0.60
+PROMOTION_LEAKAGE_THRESHOLD = 0.0
+PROMOTION_DEGEN_THRESHOLD = 0.02
+PROMOTION_BENCHMARK_FLOOR = 0.80
+ENTROPY_TARGET_BAND = (0.80, 1.40)
+ENTROPY_MARGINAL_BAND = (0.60, 0.80)
+ENTROPY_COLLAPSE_THRESHOLD = 0.30
+TRAINING_S_WINDOW = 50
+EVAL_SAMPLE_COUNT = 50
+BENCHMARK_PROMPTS = [
+    {
+        "prompt": "Maria has 3x as many apples as Joao. After Joao buys 12 more and Maria gives away a third of hers, they have the same amount. How many did Maria start with?",
+        "check_words": ["36"],
+        "anti_words": ["48", "24", "72"],
+        "weight": 1.5,
+    },
+    {
+        "prompt": "If all Bloops are Razzles, and all Razzles are Lazzles, but no Lazzles are Wazzles, what can we conclude about Bloops and Wazzles?",
+        "check_words": ["no", "bloops", "wazzles"],
+        "anti_words": [],
+        "weight": 1.0,
+    },
+    {
+        "prompt": "The element with atomic number 79 is gold. It shares a group with the element used in most electrical wiring. What are both elements?",
+        "check_words": ["gold", "copper"],
+        "anti_words": ["silver"],
+        "weight": 1.0,
+    },
+    {
+        "prompt": "What is the difference between a tensor, a vector, and a scalar in differential geometry? Give one concrete example of each.",
+        "check_words": ["tensor", "vector", "scalar", "transform"],
+        "anti_words": [],
+        "weight": 1.0,
+    },
+    {
+        "prompt": "What is the second law of thermodynamics, and how does it relate to the arrow of time?",
+        "check_words": ["entropy", "increase", "disorder"],
+        "anti_words": [],
+        "weight": 1.0,
+    },
+    {
+        "prompt": "A train travels from A to B at 80 km/h and returns at 120 km/h. What is the average speed for the round trip?",
+        "check_words": ["96"],
+        "anti_words": ["100"],
+        "weight": 1.5,
+    },
+    {
+        "prompt": "The philosopher who wrote the Critique of Pure Reason was born in the same city where he died. That city is now in which country?",
+        "check_words": ["russia", "kaliningrad", "kant"],
+        "anti_words": [],
+        "weight": 1.0,
+    },
+    {
+        "prompt": "Write a step-by-step proof that there are infinitely many primes.",
+        "check_words": ["assume", "contradiction", "finite", "product"],
+        "anti_words": [],
+        "weight": 1.2,
+    },
+]
+EVAL_SYSTEM_PROMPT = "Answer directly with step-by-step reasoning. Be concise."
+LEAKAGE_FRAGMENTS = [
+    "answer directly with step-by-step",
+    "<|im_start|>",
+    "<|im_end|>",
+    "<|im_start|>system",
+    "<|im_start|>assistant",
+    "user:",
+    "assistant:",
+]
+
 # ---------------------------------------------------------------------------
 # Stage config
 # ---------------------------------------------------------------------------
@@ -89,6 +163,10 @@ class StageConfig:
     max_seq_len: int
     checkpoint_every: int
     entropy_loss_scale: float = 1.0  # multiplier for fiber_diversity + fiber_entropy losses
+    eos_ce_weight: float = 2.0
+    eos_margin_weight: float = 1.0
+    eos_stop_kl_weight: float = 0.25
+    eos_norm_weight: float = 0.05
 
 
 STAGE_CONFIGS = {
@@ -140,6 +218,23 @@ STAGE_CONFIGS = {
         grad_accum=16,
         max_seq_len=512,
         checkpoint_every=200,
+    ),
+    "alignment-eos": StageConfig(
+        name="alignment-eos",
+        max_steps=2000,
+        geo_lambda_max=0.05,
+        geo_ramp_steps=200,
+        use_qlora=False,           # adapter-only — keep base frozen
+        qlora_rank=0,
+        qlora_alpha=0,
+        base_lr=5e-5,              # slightly lower: fine-tuning, not cold start
+        fiber_lr=3e-3,
+        text_weight=0.5,
+        multimodal_weight=0.5,
+        grad_accum=16,
+        max_seq_len=512,
+        checkpoint_every=200,
+        entropy_loss_scale=5.0,    # strong: S collapsed to 0.006 with 2.0
     ),
 }
 
@@ -239,6 +334,275 @@ class OdysseyV3Trainer:
         self.vision_processor = None
         self._current_geo_state = None
         self.start_step = 0
+        self.best_eval = {
+            "eos_ratio": float("-inf"),
+            "eval_S_mean": float("-inf"),
+            "degeneration_rate": float("inf"),
+            "step": None,
+            "checkpoint_dir": None,
+        }
+        self.checkpoint_eval_history = {}
+        self.train_entropy_history = deque(maxlen=TRAINING_S_WINDOW)
+        self.promoted_checkpoint = None
+        self.promotion_benchmark_floor = PROMOTION_BENCHMARK_FLOOR
+
+    def _apply_runtime_overrides(self):
+        overrides = {
+            "max_steps": getattr(self.args, "max_steps", None),
+            "checkpoint_every": getattr(self.args, "checkpoint_every", None),
+            "entropy_loss_scale": getattr(self.args, "entropy_loss_scale", None),
+            "base_lr": getattr(self.args, "base_lr", None),
+            "fiber_lr": getattr(self.args, "fiber_lr", None),
+            "geo_lambda_max": getattr(self.args, "geo_lambda_max", None),
+            "geo_ramp_steps": getattr(self.args, "geo_ramp_steps", None),
+            "eos_ce_weight": getattr(self.args, "eos_ce_weight", None),
+            "eos_margin_weight": getattr(self.args, "eos_margin_weight", None),
+            "eos_stop_kl_weight": getattr(self.args, "eos_stop_kl_weight", None),
+            "eos_norm_weight": getattr(self.args, "eos_norm_weight", None),
+        }
+        for field_name, value in overrides.items():
+            if value is None:
+                continue
+            setattr(self.stage_cfg, field_name, value)
+            logger.info(f"Runtime override: {field_name}={value}")
+
+    def _resolve_special_token_id(
+        self, token_text: str, fallback_id: Optional[int] = None
+    ) -> Optional[int]:
+        """Resolve chat-template tokens even when tokenizer lookup falls back to UNK."""
+        token_id = self.tokenizer.convert_tokens_to_ids(token_text)
+        unk_token_id = getattr(self.tokenizer, "unk_token_id", None)
+        if token_id is None or token_id == unk_token_id:
+            return fallback_id
+        return token_id
+
+    def _stop_token_ids(self) -> List[int]:
+        eos_ids = []
+        eos_token_id = self.tokenizer.eos_token_id
+        if eos_token_id is not None:
+            eos_ids.append(eos_token_id)
+        im_end_id = self._resolve_special_token_id("<|im_end|>", fallback_id=151645)
+        if im_end_id is not None and im_end_id not in eos_ids:
+            eos_ids.append(im_end_id)
+        return eos_ids
+
+    def _compute_entropy_from_geo_state(self) -> Optional[float]:
+        if (
+            self._current_geo_state is None
+            or self._current_geo_state.fiber_sections is None
+        ):
+            return None
+        with torch.no_grad():
+            p = self._current_geo_state.fiber_sections.clamp(min=1e-8)
+            return float((-(p * p.log()).sum(dim=-1).mean()).item())
+
+    def _apply_eval_chat_template(self, prompt: str) -> str:
+        messages = [
+            {"role": "system", "content": EVAL_SYSTEM_PROMPT},
+            {"role": "user", "content": prompt},
+        ]
+        if hasattr(self.tokenizer, "apply_chat_template"):
+            return self.tokenizer.apply_chat_template(
+                messages, tokenize=False, add_generation_prompt=True
+            )
+        return (
+            f"<|im_start|>system\n{EVAL_SYSTEM_PROMPT}<|im_end|>\n"
+            f"<|im_start|>user\n{prompt}<|im_end|>\n"
+            "<|im_start|>assistant\n"
+        )
+
+    def _detect_leakage(self, text: str) -> bool:
+        lower = text.lower()
+        return any(fragment in lower for fragment in LEAKAGE_FRAGMENTS)
+
+    def _detect_degeneration(self, text: str) -> bool:
+        stripped = text.strip()
+        if not stripped:
+            return False
+
+        lowered = stripped.lower()
+        if len(lowered) > 50:
+            compressed = len(zlib.compress(lowered.encode("utf-8")))
+            ratio = compressed / max(1, len(lowered.encode("utf-8")))
+            if ratio > 0.95:
+                return True
+
+        tokens = lowered.split()
+        for ngram_size in (2, 3, 4):
+            if len(tokens) < ngram_size * 4:
+                continue
+            last_ngram = tokens[-ngram_size:]
+            reps = 1
+            idx = len(tokens) - ngram_size * 2
+            while idx >= 0 and tokens[idx:idx + ngram_size] == last_ngram:
+                reps += 1
+                idx -= ngram_size
+            if reps >= 4:
+                return True
+
+        sentences = [s.strip() for s in lowered.split(".") if s.strip()]
+        if len(sentences) >= 4:
+            tail = sentences[-1]
+            if tail and sum(1 for s in sentences if s == tail) >= 4:
+                return True
+
+        return False
+
+    def _score_benchmark_response(self, response: str, prompt_info: dict) -> float:
+        lower = response.lower()
+        score = 0.0
+
+        for word in prompt_info.get("check_words", []):
+            if word.lower() in lower:
+                score += 1.0 / max(1, len(prompt_info["check_words"]))
+        for word in prompt_info.get("anti_words", []):
+            if word.lower() in lower:
+                score -= 0.3
+
+        word_count = len(response.split())
+        if word_count < 15:
+            score -= 0.3
+        elif word_count > 400:
+            score -= 0.1
+
+        if self._detect_degeneration(response):
+            score -= 0.5
+        if self._detect_leakage(response):
+            score -= 0.3
+
+        return max(0.0, min(1.0, score))
+
+    def _write_json(self, path: str, payload: dict):
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(payload, f, indent=2)
+
+    def _load_existing_promoted_checkpoint(self) -> Optional[dict]:
+        path = os.path.join(self.args.output_dir, "promoted_checkpoint.json")
+        if not os.path.exists(path):
+            return None
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            logger.warning(f"Could not read promoted checkpoint metadata: {path}")
+            return None
+
+    def _initialize_promotion_state(self):
+        os.makedirs(self.args.output_dir, exist_ok=True)
+
+        existing = self._load_existing_promoted_checkpoint()
+        if existing is not None:
+            self.promoted_checkpoint = existing
+            baseline_score = existing.get("benchmark_score")
+            if isinstance(baseline_score, (int, float)):
+                self.promotion_benchmark_floor = max(
+                    PROMOTION_BENCHMARK_FLOOR, 0.8 * float(baseline_score)
+                )
+            return
+
+        promoted = {
+            "checkpoint_name": "checkpoint-alignment-eos-1400",
+            "checkpoint_dir": os.path.join(
+                self.args.checkpoint_dir or "", "checkpoint-alignment-eos-1400"
+            ),
+            "step": 1400,
+            "eos_ratio": BASELINE_EOS_RATIO,
+            "promotion_status": True,
+            "source": "baseline_reference",
+            "baseline_benchmark_floor": PROMOTION_BENCHMARK_FLOOR,
+        }
+        self.promoted_checkpoint = promoted
+        self._write_json(
+            os.path.join(self.args.output_dir, "promoted_checkpoint.json"),
+            promoted,
+        )
+
+    def _is_better_best_checkpoint(self, metrics: dict) -> bool:
+        if metrics["eos_ratio"] > self.best_eval["eos_ratio"]:
+            return True
+        if metrics["eos_ratio"] < self.best_eval["eos_ratio"]:
+            return False
+        if metrics["eval_S_mean"] > self.best_eval["eval_S_mean"]:
+            return True
+        if metrics["eval_S_mean"] < self.best_eval["eval_S_mean"]:
+            return False
+        return metrics["degeneration_rate"] < self.best_eval["degeneration_rate"]
+
+    def _checkpoint_is_promotable(self, metrics: dict) -> bool:
+        return (
+            metrics["eos_ratio"] > PROMOTION_EOS_THRESHOLD
+            and metrics["eval_S_mean"] >= PROMOTION_EVAL_S_THRESHOLD
+            and metrics["leakage_rate"] <= PROMOTION_LEAKAGE_THRESHOLD
+            and metrics["degeneration_rate"] < PROMOTION_DEGEN_THRESHOLD
+            and metrics["benchmark_score"] >= self.promotion_benchmark_floor
+        )
+
+    def _save_adapter_checkpoint(self, ckpt_dir: str):
+        os.makedirs(ckpt_dir, exist_ok=True)
+        torch.save(
+            self.adapter.state_dict(),
+            os.path.join(ckpt_dir, "adapter_weights.pt"),
+        )
+        if self.stage_cfg.use_qlora and hasattr(self.llm, "save_pretrained"):
+            qlora_dir = os.path.join(ckpt_dir, "qlora")
+            self.llm.save_pretrained(qlora_dir)
+
+    def _save_emergency_collapse_checkpoint(self, step: int, rolling_s: float):
+        ckpt_dir = os.path.join(
+            self.args.output_dir,
+            f"checkpoint-emergency-collapse-{step}",
+        )
+        self._save_adapter_checkpoint(ckpt_dir)
+        self._write_json(
+            os.path.join(ckpt_dir, "collapse_metrics.json"),
+            {
+                "stage": self.stage_cfg.name,
+                "step": step,
+                "rolling_train_S_50": rolling_s,
+                "collapse_threshold": ENTROPY_COLLAPSE_THRESHOLD,
+            },
+        )
+        logger.error(
+            f"Entropy collapse detected at step {step}: rolling_train_S_50={rolling_s:.4f}. "
+            f"Emergency checkpoint saved to {ckpt_dir}"
+        )
+
+    def _should_abort_run_after_checkpoint(self, metrics: dict) -> bool:
+        if metrics["leakage_rate"] > 0.0:
+            logger.warning(
+                f"Aborting run after checkpoint {metrics['step']}: leakage_rate={metrics['leakage_rate']:.4f}"
+            )
+            return True
+        if metrics["degeneration_rate"] >= PROMOTION_DEGEN_THRESHOLD:
+            logger.warning(
+                f"Aborting run after checkpoint {metrics['step']}: degeneration_rate={metrics['degeneration_rate']:.4f}"
+            )
+            return True
+        if self.stage_cfg.name != "alignment-eos":
+            return False
+        step = metrics["step"]
+        if step == 50 and metrics["eval_S_mean"] < PROMOTION_EVAL_S_THRESHOLD:
+            logger.warning(
+                f"Stopping after checkpoint 50: eval_S_mean={metrics['eval_S_mean']:.4f} < {PROMOTION_EVAL_S_THRESHOLD:.2f}"
+            )
+            return True
+        if step == 100 and (
+            metrics["eos_ratio"] < 0.50 or metrics["eval_S_mean"] < PROMOTION_EVAL_S_THRESHOLD
+        ):
+            logger.warning(
+                f"Stopping after checkpoint 100: eos_ratio={metrics['eos_ratio']:.4f}, "
+                f"eval_S_mean={metrics['eval_S_mean']:.4f}"
+            )
+            return True
+        if step == 150:
+            checkpoint_100 = self.checkpoint_eval_history.get(100)
+            if checkpoint_100 is not None and metrics["eos_ratio"] < checkpoint_100["eos_ratio"] - 0.05:
+                logger.warning(
+                    f"Stopping after checkpoint 150: eos_ratio regressed from "
+                    f"{checkpoint_100['eos_ratio']:.4f} to {metrics['eos_ratio']:.4f}"
+                )
+                return True
+        return False
 
     # --- Vision encoder ---------------------------------------------------
     def _load_vision_encoder(self):
@@ -300,17 +664,25 @@ class OdysseyV3Trainer:
     # --- Adapter hook -----------------------------------------------------
     def _inject_adapter_hook(self):
         target_layer_idx = 12
-        # Navigate PEFT wrapper if QLoRA is active
+        # Navigate PEFT wrapper / Qwen2 hierarchy to find transformer layers
         model = self.llm
-        if hasattr(model, "base_model"):
-            # PeftModel -> base_model -> model -> model -> layers
-            model = model.base_model
-        if hasattr(model, "model") and hasattr(model.model, "layers"):
-            layers = model.model.layers
-        elif hasattr(model, "model") and hasattr(model.model, "model"):
-            layers = model.model.model.layers
-        else:
-            layers = model.model.layers
+        layers = None
+        # Try all known paths: vanilla Qwen2, PeftModel, double-wrapped
+        for path_fn in [
+            lambda m: m.model.layers,                       # Qwen2ForCausalLM
+            lambda m: m.model.model.layers,                 # PeftModel(Qwen2ForCausalLM)
+            lambda m: m.base_model.model.model.layers,      # double-wrapped
+            lambda m: m.layers,                              # already at Qwen2Model
+        ]:
+            try:
+                candidate = path_fn(model)
+                if candidate is not None and len(candidate) > 0:
+                    layers = candidate
+                    break
+            except (AttributeError, IndexError):
+                continue
+        if layers is None:
+            raise RuntimeError(f"Cannot find transformer layers on {type(model).__name__}")
         target_layer = layers[target_layer_idx]
         original_forward = target_layer.forward
         self._current_geo_state = None
@@ -670,6 +1042,8 @@ class OdysseyV3Trainer:
     # --- Setup ------------------------------------------------------------
     def setup(self):
         logger.info(f"=== OdysseyV3 Stage: {self.stage_cfg.name} ===")
+        self._initialize_promotion_state()
+        self._apply_runtime_overrides()
 
         # Tokenizer & LLM
         model_id = self.args.model_id
@@ -727,6 +1101,50 @@ class OdysseyV3Trainer:
 
         logger.info("Setup complete")
 
+    def _generate_eval_output(
+        self,
+        input_ids: torch.Tensor,
+        attention_mask: torch.Tensor,
+        eos_ids: List[int],
+        max_new_tokens: int = 100,
+    ) -> Tuple[torch.Tensor, str, Optional[float]]:
+        with torch.no_grad():
+            outputs = self.llm.generate(
+                input_ids=input_ids,
+                attention_mask=attention_mask,
+                max_new_tokens=max_new_tokens,
+                pad_token_id=self.tokenizer.pad_token_id,
+                eos_token_id=eos_ids,
+                do_sample=True,
+                temperature=0.7,
+                top_p=0.95,
+                use_cache=True,
+            )
+        input_len = input_ids.shape[-1]
+        generated = outputs[0, input_len:]
+        decoded = self.tokenizer.decode(generated, skip_special_tokens=True).strip()
+        eval_s = self._compute_entropy_from_geo_state()
+        return outputs, decoded, eval_s
+
+    def _run_benchmark_prompt_eval(self, eos_ids: List[int]) -> float:
+        scores = []
+        for prompt_info in BENCHMARK_PROMPTS:
+            prompt_text = self._apply_eval_chat_template(prompt_info["prompt"])
+            enc = self.tokenizer(prompt_text, return_tensors="pt").to(DEVICE)
+            try:
+                _outputs, decoded, _eval_s = self._generate_eval_output(
+                    enc.input_ids, enc.attention_mask, eos_ids, max_new_tokens=160
+                )
+                score = self._score_benchmark_response(decoded, prompt_info)
+            except Exception as e:
+                logger.warning(f"Benchmark prompt evaluation failed: {e}")
+                score = 0.0
+            scores.append(score * prompt_info.get("weight", 1.0))
+        if not scores:
+            return 0.0
+        total_weight = sum(p.get("weight", 1.0) for p in BENCHMARK_PROMPTS)
+        return float(sum(scores) / max(1e-8, total_weight))
+
     # --- Evaluation loop --------------------------------------------------
     def evaluate(self, step):
         logger.info(f"Running evaluation at step {step}...")
@@ -735,65 +1153,95 @@ class OdysseyV3Trainer:
         
         has_gsp = False
         try:
-            from igbundle.steering.gsp import GeometricSteeringProbe
-            gsp = GeometricSteeringProbe(self.llm, self.adapter)
-            gsp.attach()
+            from igbundle.steering.gsp import create_gsp_for_qwen7b
+            gsp, _bridge = create_gsp_for_qwen7b(telemetry_dict={
+                "curvature": -1.0, "entropy": 0.0,
+                "active_fiber": "Bundle-6", "constraint_score": 1.0,
+            })
+            gsp.attach(self.llm, range(8, 21))
             has_gsp = True
-            logger.info("GSP successfully attached for evaluation.")
+            logger.info("GSP attached for evaluation (layers 8-20).")
         except Exception as e:
             logger.warning(f"Could not attach GSP for evaluation: {e}")
 
         natural_eos_count = 0
-        total_eval_samples = 50
-        
+        leakage_count = 0
+        degeneration_count = 0
+        eval_s_values = []
+        sample_count = 0
+        total_eval_samples = EVAL_SAMPLE_COUNT
+
         eval_loader = iter(DataLoader(self.train_ds, batch_size=1, collate_fn=multimodal_collate))
-        
-        im_end_id = self.tokenizer.convert_tokens_to_ids("<|im_end|>")
-        eos_ids = [self.tokenizer.eos_token_id]
-        if im_end_id is not None and im_end_id != self.tokenizer.eos_token_id:
-            eos_ids.append(im_end_id)
-            
-        for i in range(total_eval_samples):
+        eos_ids = self._stop_token_ids()
+
+        for _ in range(total_eval_samples):
             try:
                 batch = next(eval_loader)
             except StopIteration:
                 break
-                
+
             input_ids = batch["input_ids"].to(DEVICE)
             attention_mask = batch["attention_mask"].to(DEVICE)
-            
-            with torch.no_grad():
-                # We extract the last valid sequence up to max length
-                outputs = self.llm.generate(
-                    input_ids=input_ids,
-                    attention_mask=attention_mask,
-                    max_new_tokens=100, 
-                    pad_token_id=self.tokenizer.pad_token_id,
-                    eos_token_id=eos_ids,
-                    do_sample=True,
-                    temperature=0.7,
-                    use_cache=True
-                )
-            
-            # Check if it stopped due to hitting an EOS token
+            sample_count += 1
+
+            outputs, decoded, eval_s = self._generate_eval_output(
+                input_ids, attention_mask, eos_ids, max_new_tokens=100
+            )
             last_token = outputs[0, -1].item()
             if last_token in eos_ids:
                 natural_eos_count += 1
-                
+            if eval_s is not None:
+                eval_s_values.append(eval_s)
+            if self._detect_leakage(decoded):
+                leakage_count += 1
+            if self._detect_degeneration(decoded):
+                degeneration_count += 1
+
+        benchmark_score = self._run_benchmark_prompt_eval(eos_ids)
+
         if has_gsp:
-            gsp.remove()
-            
+            gsp.detach()
+
         # Return back to train mode
         if self.stage_cfg.use_qlora:
             self.llm.train()
         self.adapter.train()
-        
-        eos_ratio = natural_eos_count / total_eval_samples
-        logger.info(f"Evaluation step {step}: Natural EOS ratio = {eos_ratio:.2f} ({natural_eos_count}/{total_eval_samples})")
-        
-        # Telemetry
-        self._report_telemetry(step, {"eos_validation_ratio": eos_ratio})
-        return eos_ratio
+
+        sample_count = max(1, sample_count)
+        eos_ratio = natural_eos_count / sample_count
+        eval_s_mean = float(sum(eval_s_values) / len(eval_s_values)) if eval_s_values else 0.0
+        leakage_rate = leakage_count / sample_count
+        degeneration_rate = degeneration_count / sample_count
+        metrics = {
+            "step": step,
+            "eos_ratio": eos_ratio,
+            "eval_S_mean": eval_s_mean,
+            "entropy_mean": eval_s_mean,
+            "leakage_rate": leakage_rate,
+            "degeneration_rate": degeneration_rate,
+            "benchmark_score": benchmark_score,
+        }
+        metrics["promotion_status"] = self._checkpoint_is_promotable(metrics)
+
+        logger.info(
+            f"Evaluation step {step}: eos_ratio={eos_ratio:.2f} ({natural_eos_count}/{sample_count}) "
+            f"S_mean={eval_s_mean:.2f} leak={leakage_rate:.2%} "
+            f"deg={degeneration_rate:.2%} benchmark={benchmark_score:.2f} "
+            f"promote={metrics['promotion_status']}"
+        )
+
+        self._report_telemetry(
+            step,
+            {
+                "eos_validation_ratio": eos_ratio,
+                "eval_S_mean": eval_s_mean,
+                "leakage_rate": leakage_rate,
+                "degeneration_rate": degeneration_rate,
+                "benchmark_score": benchmark_score,
+                "promotion_status": float(metrics["promotion_status"]),
+            },
+        )
+        return metrics
 
     # --- Training loop ----------------------------------------------------
     def train(self):
@@ -843,6 +1291,8 @@ class OdysseyV3Trainer:
             loss_llm = outputs.loss
             loss_geo = torch.tensor(0.0, device=DEVICE)
             geo_losses = {}
+            geo_weighted_terms = {}
+            geo_effective_terms = {}
 
             if self._current_geo_state and hasattr(self.adapter, "compute_geometric_losses"):
                 geo_losses = self.adapter.compute_geometric_losses(self._current_geo_state)
@@ -858,80 +1308,103 @@ class OdysseyV3Trainer:
                 ent_scale = sc.entropy_loss_scale
 
                 for k, v in geo_losses.items():
+                    term = v * entropy_ramp * ent_scale if k in ("fiber_diversity", "fiber_entropy") else v
+                    geo_weighted_terms[k] = term.item() if hasattr(term, "item") else float(term)
                     if k in ("fiber_diversity", "fiber_entropy"):
-                        loss_geo = loss_geo + v * entropy_ramp * ent_scale
+                        loss_geo = loss_geo + term
                     else:
-                        loss_geo = loss_geo + v
+                        loss_geo = loss_geo + term
 
             # Homotopy schedule
             lambda_t = sc.geo_lambda_max * min(1.0, step / max(1, sc.geo_ramp_steps))
+            for k, weighted_value in geo_weighted_terms.items():
+                geo_effective_terms[k] = weighted_value * lambda_t
             total_loss = loss_llm + lambda_t * loss_geo
 
             # --- EOS Preservation Auxiliary Losses ---
-            # The geometric adapter suppresses <|im_end|> probability. These losses
-            # keep EOS logits close to the base model's distribution.
+            # Keep stop behavior only where the dataset explicitly supervises EOS.
             loss_eos_total = torch.tensor(0.0, device=DEVICE)
             eos_detail = {}
             h_base = getattr(self, "_hook_h_base", None)
             h_adapted = getattr(self, "_hook_h_adapted", None)
 
-            if h_base is not None and h_adapted is not None and step % 4 == 0:
-                # EOS loss every 4 steps (full-vocab logits are expensive on 8GB)
+            if h_base is not None and h_adapted is not None:
                 eos_ramp = min(1.0, max(0.0, (step - self.start_step) / 200.0))
-
-                eos_ids = [self.tokenizer.eos_token_id]
-                im_end_id = self.tokenizer.convert_tokens_to_ids("<|im_end|>")
-                if im_end_id is not None and im_end_id != self.tokenizer.eos_token_id:
-                    eos_ids.append(im_end_id)
 
                 try:
                     lm_head = self.llm.lm_head if hasattr(self.llm, "lm_head") else None
                     if lm_head is None and hasattr(self.llm, "base_model"):
                         lm_head = self.llm.base_model.model.lm_head
 
-                    if lm_head is not None and len(eos_ids) > 0:
-                        # VRAM-safe: last 4 positions only (~150MB vs 1.2GB for 32)
-                        n_pos = min(4, h_base.shape[1])
-                        _lm_dtype = next(lm_head.parameters()).dtype
-                        h_b = h_base[:, -n_pos:, :].to(_lm_dtype)
-                        h_a = h_adapted[:, -n_pos:, :].to(_lm_dtype)
+                    if lm_head is not None:
+                        lm_dtype = next(lm_head.parameters()).dtype
+                        h_b_shift = h_base[:, :-1, :].to(lm_dtype)
+                        h_a_shift = h_adapted[:, :-1, :].to(lm_dtype)
+                        shift_labels = labels[:, 1:]
 
-                        with torch.no_grad():
-                            base_logits = lm_head(h_b).float()
-                        adapted_logits = lm_head(h_a).float()
-
-                        valid_eos = [e for e in eos_ids if e is not None and 0 <= e < adapted_logits.shape[-1]]
-                        if valid_eos:
-                            base_probs = F.softmax(base_logits, dim=-1)[:, :, valid_eos]
-                            adapted_log_probs = F.log_softmax(adapted_logits, dim=-1)[:, :, valid_eos]
-
-                            kl_eos = F.kl_div(adapted_log_probs, base_probs, reduction="batchmean")
-                            loss_eos_kl = 0.1 * kl_eos * eos_ramp
-                            loss_eos_total = loss_eos_total + loss_eos_kl
-                            eos_detail["eos_kl"] = kl_eos.item()
-
-                            tau_eos = 0.01
-                            adapted_probs = F.softmax(adapted_logits, dim=-1)[:, :, valid_eos]
-                            floor_deficit = F.relu(tau_eos - adapted_probs)
-                            loss_eos_floor = 1.0 * (floor_deficit ** 2).mean() * eos_ramp
-                            loss_eos_total = loss_eos_total + loss_eos_floor
-                            eos_detail["eos_floor"] = loss_eos_floor.item()
-                            eos_detail["P_eos_base"] = base_probs.mean().item()
-                            eos_detail["P_eos_adapted"] = adapted_probs.mean().item()
-
-                        # Free full-vocab logits before norm computation
-                        del base_logits, adapted_logits
-                        torch.cuda.empty_cache()
-
-                        # L_norm: cheap (no vocab-size tensors)
-                        delta = (h_a - h_b).float()
-                        norm_ratio = (delta.norm() ** 2) / (h_b.float().norm() ** 2).clamp(min=1e-8)
-                        loss_eos_norm = 0.01 * norm_ratio * eos_ramp
+                        delta = (h_a_shift - h_b_shift).float()
+                        norm_ratio = (delta.norm() ** 2) / (h_b_shift.float().norm() ** 2).clamp(min=1e-8)
+                        loss_eos_norm = sc.eos_norm_weight * norm_ratio * eos_ramp
                         loss_eos_total = loss_eos_total + loss_eos_norm
-                        eos_detail["pert_norm"] = norm_ratio.item()
+                        eos_detail["eos_norm"] = norm_ratio.item()
+
+                        eos_ids = self._stop_token_ids()
+                        eos_mask = torch.zeros_like(shift_labels, dtype=torch.bool)
+                        for eos_id in eos_ids:
+                            eos_mask = eos_mask | (shift_labels == eos_id)
+                        eos_mask = eos_mask & (shift_labels != -100)
+                        eos_supervised_count = int(eos_mask.sum().item())
+                        eos_detail["eos_supervised_count"] = float(eos_supervised_count)
+
+                        if eos_supervised_count > 0:
+                            h_b_sel = h_b_shift[eos_mask]
+                            h_a_sel = h_a_shift[eos_mask]
+                            target_labels = shift_labels[eos_mask]
+
+                            with torch.no_grad():
+                                base_logits = lm_head(h_b_sel).float()
+                            adapted_logits = lm_head(h_a_sel).float()
+
+                            eos_ce = F.cross_entropy(adapted_logits, target_labels)
+                            loss_eos_total = loss_eos_total + sc.eos_ce_weight * eos_ce * eos_ramp
+                            eos_detail["eos_ce"] = eos_ce.item()
+
+                            base_target_logits = base_logits.gather(1, target_labels.unsqueeze(1)).squeeze(1)
+                            adapted_target_logits = adapted_logits.gather(1, target_labels.unsqueeze(1)).squeeze(1)
+                            eos_margin = F.relu((base_target_logits - 0.5) - adapted_target_logits).mean()
+                            loss_eos_total = loss_eos_total + sc.eos_margin_weight * eos_margin * eos_ramp
+                            eos_detail["eos_margin"] = eos_margin.item()
+
+                            valid_stop_ids = [
+                                eos_id
+                                for eos_id in eos_ids
+                                if eos_id is not None and 0 <= eos_id < adapted_logits.shape[-1]
+                            ]
+                            if len(valid_stop_ids) >= 2:
+                                base_stop_logits = base_logits[:, valid_stop_ids]
+                                adapted_stop_logits = adapted_logits[:, valid_stop_ids]
+                                base_stop_probs = F.softmax(base_stop_logits, dim=-1)
+                                adapted_stop_log_probs = F.log_softmax(adapted_stop_logits, dim=-1)
+                                eos_stop_kl = F.kl_div(
+                                    adapted_stop_log_probs,
+                                    base_stop_probs,
+                                    reduction="batchmean",
+                                )
+                                loss_eos_total = loss_eos_total + sc.eos_stop_kl_weight * eos_stop_kl * eos_ramp
+                                eos_detail["eos_stop_kl"] = eos_stop_kl.item()
+
+                            with torch.no_grad():
+                                base_target_probs = F.softmax(base_logits, dim=-1).gather(
+                                    1, target_labels.unsqueeze(1)
+                                ).squeeze(1)
+                                adapted_target_probs = F.softmax(adapted_logits, dim=-1).gather(
+                                    1, target_labels.unsqueeze(1)
+                                ).squeeze(1)
+                            eos_detail["P_eos_base_supervised"] = base_target_probs.mean().item()
+                            eos_detail["P_eos_adapted_supervised"] = adapted_target_probs.mean().item()
 
                 except Exception as e:
-                    if step < 5:
+                    if step < 5 or step % 100 == 0:
                         logger.warning(f"EOS loss computation failed: {e}")
 
                 # Clean up hook state
@@ -945,6 +1418,29 @@ class OdysseyV3Trainer:
                 self._hook_h_adapted = None
 
             total_loss = total_loss + loss_eos_total
+
+            S_actual = self._compute_entropy_from_geo_state()
+            rolling_s = None
+            if S_actual is not None:
+                self.train_entropy_history.append(S_actual)
+                rolling_s = float(sum(self.train_entropy_history) / len(self.train_entropy_history))
+                if (
+                    len(self.train_entropy_history) == TRAINING_S_WINDOW
+                    and rolling_s < ENTROPY_COLLAPSE_THRESHOLD
+                ):
+                    self._report_telemetry(
+                        step,
+                        {
+                            "S": S_actual,
+                            "rolling_train_S_50": rolling_s,
+                            "collapse_guard_triggered": 1.0,
+                        },
+                    )
+                    self._save_emergency_collapse_checkpoint(step, rolling_s)
+                    raise RuntimeError(
+                        f"Entropy collapse guard tripped: rolling_train_S_50={rolling_s:.4f} "
+                        f"< {ENTROPY_COLLAPSE_THRESHOLD:.2f}"
+                    )
 
             # --- Backward ---
             total_loss.backward()
@@ -966,21 +1462,55 @@ class OdysseyV3Trainer:
                 if step % 64 == 0:
                     torch.cuda.empty_cache()
 
+                metrics = {
+                    "loss_llm": loss_llm.item(),
+                    "loss_geo": loss_geo.item(),
+                    "loss_geo_effective": (lambda_t * loss_geo).item(),
+                    "lambda_t": lambda_t,
+                    "nan_count": nan_count,
+                }
+                if S_actual is not None:
+                    metrics["S"] = S_actual
+                if rolling_s is not None:
+                    metrics["rolling_train_S_50"] = rolling_s
+                if geo_losses:
+                    if "curvature" in geo_losses:
+                        v = geo_losses["curvature"]
+                        metrics["K"] = v.item() if hasattr(v, "item") else float(v)
+                    if "fiber_diversity" in geo_losses:
+                        v = geo_losses["fiber_diversity"]
+                        metrics["fiber_diversity"] = v.item() if hasattr(v, "item") else float(v)
+                    for k, v in geo_losses.items():
+                        metrics[f"geo_raw_{k}"] = v.item() if hasattr(v, "item") else float(v)
+                    for k, v in geo_weighted_terms.items():
+                        metrics[f"geo_weighted_{k}"] = v
+                    for k, v in geo_effective_terms.items():
+                        metrics[f"geo_effective_{k}"] = v
+                if eos_detail:
+                    metrics["loss_eos"] = loss_eos_total.item()
+                    metrics.update({f"eos_{k}": v for k, v in eos_detail.items()})
+                self._report_telemetry(step, metrics)
+
                 # --- Logging ---
                 if (step + 1) % (sc.grad_accum * 2) == 0 or step < 10:
                     geo_detail = ""
-                    S_actual = None
                     if geo_losses:
                         parts = [f"{k}={v.item() if hasattr(v, 'item') else v:.3f}"
                                  for k, v in sorted(geo_losses.items())]
                         geo_detail = f" [{', '.join(parts)}]"
+                    if geo_effective_terms:
+                        top_geo = sorted(
+                            geo_effective_terms.items(),
+                            key=lambda item: abs(item[1]),
+                            reverse=True,
+                        )[:4]
+                        geo_top = ", ".join(f"{k}={v:.3f}" for k, v in top_geo)
+                        geo_detail += f" GeoEff[{geo_top}]"
 
-                    if (self._current_geo_state is not None
-                            and self._current_geo_state.fiber_sections is not None):
-                        with torch.no_grad():
-                            p = self._current_geo_state.fiber_sections.clamp(min=1e-8)
-                            S_actual = -(p * p.log()).sum(dim=-1).mean().item()
-                            geo_detail += f" S={S_actual:.4f}"
+                    if S_actual is not None:
+                        geo_detail += f" S={S_actual:.4f}"
+                    if rolling_s is not None:
+                        geo_detail += f" S50={rolling_s:.4f}"
 
                     nan_info = f" NaN={nan_count}" if nan_count > 0 else ""
                     eos_info = ""
@@ -993,47 +1523,71 @@ class OdysseyV3Trainer:
                         f"lam={lambda_t:.4f}{geo_detail}{eos_info}{nan_info}"
                     )
 
-                    # IACS telemetry
-                    metrics = {
-                        "loss_llm": loss_llm.item(),
-                        "loss_geo": loss_geo.item(),
-                        "lambda_t": lambda_t,
-                        "nan_count": nan_count,
-                    }
-                    if S_actual is not None:
-                        metrics["S"] = S_actual
-                    # Extract K and fiber_diversity for dashboard
-                    if geo_losses:
-                        if "curvature" in geo_losses:
-                            v = geo_losses["curvature"]
-                            metrics["K"] = v.item() if hasattr(v, "item") else float(v)
-                        if "fiber_diversity" in geo_losses:
-                            v = geo_losses["fiber_diversity"]
-                            metrics["fiber_diversity"] = v.item() if hasattr(v, "item") else float(v)
-                    if eos_detail:
-                        metrics["loss_eos"] = loss_eos_total.item()
-                        metrics.update({f"eos_{k}": v for k, v in eos_detail.items()})
-                    self._report_telemetry(step, metrics)
-
             # --- Checkpoint ---
             step += 1
             if step % sc.checkpoint_every == 0 or step == sc.max_steps:
-                self.evaluate(step)
-                
+                eval_metrics = self.evaluate(step)
+
                 ckpt_dir = os.path.join(
                     self.args.output_dir, f"checkpoint-{sc.name}-{step}"
                 )
-                os.makedirs(ckpt_dir, exist_ok=True)
-                torch.save(
-                    self.adapter.state_dict(),
-                    os.path.join(ckpt_dir, "adapter_weights.pt"),
+                self._save_adapter_checkpoint(ckpt_dir)
+
+                checkpoint_record = {
+                    "stage": sc.name,
+                    "checkpoint_dir": ckpt_dir,
+                    **eval_metrics,
+                }
+                self.checkpoint_eval_history[step] = checkpoint_record
+
+                self._write_json(
+                    os.path.join(ckpt_dir, "metrics.json"),
+                    {
+                        "stage": sc.name,
+                        "step": step,
+                        "eos_validation_ratio": eval_metrics["eos_ratio"],
+                        "eval_S_mean": eval_metrics["eval_S_mean"],
+                    },
                 )
-                # Save QLoRA weights separately if active
-                if sc.use_qlora and hasattr(self.llm, "save_pretrained"):
-                    qlora_dir = os.path.join(ckpt_dir, "qlora")
-                    self.llm.save_pretrained(qlora_dir)
+                self._write_json(
+                    os.path.join(ckpt_dir, "eval_metrics.json"),
+                    checkpoint_record,
+                )
+
+                if self._is_better_best_checkpoint(checkpoint_record):
+                    self.best_eval = {
+                        "eos_ratio": checkpoint_record["eos_ratio"],
+                        "eval_S_mean": checkpoint_record["eval_S_mean"],
+                        "degeneration_rate": checkpoint_record["degeneration_rate"],
+                        "step": step,
+                        "checkpoint_dir": ckpt_dir,
+                        "leakage_rate": checkpoint_record["leakage_rate"],
+                        "benchmark_score": checkpoint_record["benchmark_score"],
+                        "promotion_status": checkpoint_record["promotion_status"],
+                    }
+                    best_path = os.path.join(self.args.output_dir, "best_eos_checkpoint.json")
+                    self._write_json(best_path, self.best_eval)
+                    logger.info(
+                        f"New best EOS checkpoint: step={step} ratio={checkpoint_record['eos_ratio']:.2f} "
+                        f"S={checkpoint_record['eval_S_mean']:.2f} path={ckpt_dir}"
+                    )
+
+                if checkpoint_record["promotion_status"]:
+                    self.promoted_checkpoint = checkpoint_record
+                    self._write_json(
+                        os.path.join(self.args.output_dir, "promoted_checkpoint.json"),
+                        checkpoint_record,
+                    )
+                    logger.info(
+                        f"New promoted checkpoint: step={step} eos_ratio={checkpoint_record['eos_ratio']:.2f} "
+                        f"S={checkpoint_record['eval_S_mean']:.2f}"
+                    )
 
                 logger.info(f"Checkpoint saved: {ckpt_dir}")
+
+                if self._should_abort_run_after_checkpoint(checkpoint_record):
+                    logger.warning(f"Stopping run after checkpoint {step} due to recovery guardrails.")
+                    break
 
         logger.info(f"Stage '{sc.name}' complete at step {step}")
 
@@ -1045,7 +1599,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="OdysseyV3: Foundational Multimodal Training")
     parser.add_argument(
         "--stage",
-        choices=["alignment", "instruction", "domain"],
+        choices=["alignment", "alignment-eos", "instruction", "domain"],
         default="alignment",
         help="Training stage (default: alignment)",
     )
@@ -1083,6 +1637,72 @@ def parse_args():
         "--iacs-telemetry",
         action="store_true",
         help="Report training metrics to IACS telemetry endpoint",
+    )
+    parser.add_argument(
+        "--max-steps",
+        type=int,
+        default=None,
+        help="Override stage max_steps for short iterative runs",
+    )
+    parser.add_argument(
+        "--checkpoint-every",
+        type=int,
+        default=None,
+        help="Override checkpoint/evaluation cadence",
+    )
+    parser.add_argument(
+        "--entropy-loss-scale",
+        type=float,
+        default=None,
+        help="Override entropy loss multiplier for the selected stage",
+    )
+    parser.add_argument(
+        "--base-lr",
+        type=float,
+        default=None,
+        help="Override adapter base parameter learning rate",
+    )
+    parser.add_argument(
+        "--fiber-lr",
+        type=float,
+        default=None,
+        help="Override adapter fiber parameter learning rate",
+    )
+    parser.add_argument(
+        "--geo-lambda-max",
+        type=float,
+        default=None,
+        help="Override max homotopy weight for geometric loss",
+    )
+    parser.add_argument(
+        "--geo-ramp-steps",
+        type=int,
+        default=None,
+        help="Override geometric loss ramp length",
+    )
+    parser.add_argument(
+        "--eos-ce-weight",
+        type=float,
+        default=None,
+        help="Override supervised EOS cross-entropy weight",
+    )
+    parser.add_argument(
+        "--eos-margin-weight",
+        type=float,
+        default=None,
+        help="Override supervised EOS margin loss weight",
+    )
+    parser.add_argument(
+        "--eos-stop-kl-weight",
+        type=float,
+        default=None,
+        help="Override supervised EOS stop-distribution KL weight",
+    )
+    parser.add_argument(
+        "--eos-norm-weight",
+        type=float,
+        default=None,
+        help="Override hidden-state EOS norm regularizer weight",
     )
     return parser.parse_args()
 

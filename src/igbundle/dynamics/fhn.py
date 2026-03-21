@@ -35,8 +35,14 @@ class FHNIntegrator(nn.Module):
         Computes the lateral input from other fibers.
         Current = J @ tanh(q)
         """
-        # We use tanh as the activation function h(.)
-        return torch.matmul(self.coupling, torch.tanh(q))
+        # Support both single-state [F] and batched [B, F] inputs without using
+        # `.T`, which is deprecated for non-2D tensor shape reversal semantics.
+        q_act = torch.tanh(q)
+        if q_act.dim() == 1:
+            return torch.matmul(self.coupling, q_act)
+        if q_act.dim() == 2:
+            return torch.matmul(q_act, self.coupling.T)
+        raise ValueError(f"Expected q to have shape [F] or [B, F], got {tuple(q.shape)}")
 
     def derivative(self, state, input_drive):
         """
@@ -49,7 +55,7 @@ class FHNIntegrator(nn.Module):
         q, p = state
         
         # 1. Compute Coupling
-        i_couple = self.coupling_current(q.T).T # Handle batch dim if present
+        i_couple = self.coupling_current(q)
         
         # 2. Fast Variable (q) Dynamics
         # dq/dt = q - q^3/3 - p + I_ext + I_couple

@@ -952,15 +952,23 @@ def generate_stream(text, image_path, max_new_tokens):
     # Both must be stop tokens — otherwise model either stops too early or never stops.
     _eos_ids = [tokenizer.eos_token_id]
     _im_end_id = tokenizer.convert_tokens_to_ids("<|im_end|>")
+    if _im_end_id is None or _im_end_id == tokenizer.unk_token_id:
+        _im_end_id = 151645
     if _im_end_id is not None and _im_end_id != tokenizer.eos_token_id:
         _eos_ids.append(_im_end_id)
 
     # New-turn hallucination guard: stop if model emits <|im_start|> or continues after <|im_end|>
     _im_start_id = tokenizer.convert_tokens_to_ids("<|im_start|>")
+    if _im_start_id is None or _im_start_id == tokenizer.unk_token_id:
+        _im_start_id = 151644
+        
+    # Also catch <|im_start|>system if it somehow merged
+    _im_start_system_ids = tokenizer.encode("<|im_start|>system", add_special_tokens=False) if hasattr(tokenizer, "encode") else []
+        
     _prompt_len = inputs.input_ids.shape[-1]
     _stop_criteria = [_StopOnEvent(_stop_generation)]
     if _im_start_id is not None and _im_end_id is not None:
-        _stop_criteria.append(_StopOnNewTurn(_im_start_id, _im_end_id, _prompt_len, min_gen=10))
+        _stop_criteria.append(_StopOnNewTurn(_im_start_id, _im_end_id, _prompt_len, min_gen=2))
         print(f"DEBUG: NewTurn guard active (im_start={_im_start_id}, im_end={_im_end_id}, prompt_len={_prompt_len})")
     else:
         print(f"WARNING: NewTurn guard DISABLED — im_start={_im_start_id}, im_end={_im_end_id}")

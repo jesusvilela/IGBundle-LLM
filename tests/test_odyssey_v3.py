@@ -12,6 +12,8 @@ import torch
 import pytest
 import sys
 import os
+import dataclasses
+from types import SimpleNamespace
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -20,12 +22,18 @@ from train_odyssey_v3 import (
     MultimodalStreamingDataset,
     multimodal_collate,
     StageConfig,
+    OdysseyV3Trainer,
 )
 
 
 class TestStageConfigs:
     def test_all_stages_exist(self):
-        assert set(STAGE_CONFIGS.keys()) == {"alignment", "instruction", "domain"}
+        assert set(STAGE_CONFIGS.keys()) == {
+            "alignment",
+            "alignment-eos",
+            "instruction",
+            "domain",
+        }
 
     def test_stage_types(self):
         for name, cfg in STAGE_CONFIGS.items():
@@ -39,8 +47,42 @@ class TestStageConfigs:
 
     def test_qlora_only_stage2_3(self):
         assert not STAGE_CONFIGS["alignment"].use_qlora
+        assert not STAGE_CONFIGS["alignment-eos"].use_qlora
         assert STAGE_CONFIGS["instruction"].use_qlora
         assert STAGE_CONFIGS["domain"].use_qlora
+
+    def test_runtime_overrides_update_stage_config(self):
+        args = SimpleNamespace(
+            stage="alignment-eos",
+            use_delta_fiber=False,
+            max_steps=111,
+            checkpoint_every=37,
+            entropy_loss_scale=8.5,
+            base_lr=2.5e-5,
+            fiber_lr=4.5e-3,
+            geo_lambda_max=0.08,
+            geo_ramp_steps=123,
+            eos_ce_weight=2.8,
+            eos_margin_weight=1.4,
+            eos_stop_kl_weight=0.3,
+            eos_norm_weight=0.07,
+        )
+        trainer = OdysseyV3Trainer(args)
+        trainer.stage_cfg = StageConfig(**dataclasses.asdict(STAGE_CONFIGS["alignment-eos"]))
+
+        trainer._apply_runtime_overrides()
+
+        assert trainer.stage_cfg.max_steps == 111
+        assert trainer.stage_cfg.checkpoint_every == 37
+        assert trainer.stage_cfg.entropy_loss_scale == 8.5
+        assert trainer.stage_cfg.base_lr == 2.5e-5
+        assert trainer.stage_cfg.fiber_lr == 4.5e-3
+        assert trainer.stage_cfg.geo_lambda_max == 0.08
+        assert trainer.stage_cfg.geo_ramp_steps == 123
+        assert trainer.stage_cfg.eos_ce_weight == 2.8
+        assert trainer.stage_cfg.eos_margin_weight == 1.4
+        assert trainer.stage_cfg.eos_stop_kl_weight == 0.3
+        assert trainer.stage_cfg.eos_norm_weight == 0.07
 
 
 class TestMultimodalDataset:

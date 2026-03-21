@@ -320,8 +320,8 @@ class GeometricSteeringProbe(nn.Module):
         self._active = len(self._hooks) > 0
         print(f"[GSP] Attached to {len(attached)} layers {attached}, "
               f"S_target={self.genome.S_target:.2f}, "
-              f"τ_lock={self.genome.tau_lock:.2f}, "
-              f"λ_max={self.genome.lambda_max:.3f}")
+              f"tau_lock={self.genome.tau_lock:.2f}, "
+              f"lambda_max={self.genome.lambda_max:.3f}")
 
     def detach(self):
         for h in self._hooks:
