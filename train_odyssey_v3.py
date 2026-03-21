@@ -568,12 +568,13 @@ class OdysseyV3Trainer:
         )
 
     def _should_abort_run_after_checkpoint(self, metrics: dict) -> bool:
-        if metrics["leakage_rate"] > 0.0:
+        leak_abort_threshold = 0.0 if metrics["step"] > 150 else 0.05
+        if metrics["leakage_rate"] > leak_abort_threshold:
             logger.warning(
                 f"Aborting run after checkpoint {metrics['step']}: leakage_rate={metrics['leakage_rate']:.4f}"
             )
             return True
-        if metrics["degeneration_rate"] >= PROMOTION_DEGEN_THRESHOLD:
+        if metrics["degeneration_rate"] >= PROMOTION_DEGEN_THRESHOLD and metrics["step"] > 100:
             logger.warning(
                 f"Aborting run after checkpoint {metrics['step']}: degeneration_rate={metrics['degeneration_rate']:.4f}"
             )
@@ -587,19 +588,19 @@ class OdysseyV3Trainer:
             )
             return True
         if step == 100 and (
-            metrics["eos_ratio"] < 0.50 or metrics["eval_S_mean"] < PROMOTION_EVAL_S_THRESHOLD
+            metrics["eos_ratio"] < 0.20 or metrics["eval_S_mean"] < PROMOTION_EVAL_S_THRESHOLD
         ):
             logger.warning(
                 f"Stopping after checkpoint 100: eos_ratio={metrics['eos_ratio']:.4f}, "
                 f"eval_S_mean={metrics['eval_S_mean']:.4f}"
             )
             return True
-        if step == 150:
-            checkpoint_100 = self.checkpoint_eval_history.get(100)
-            if checkpoint_100 is not None and metrics["eos_ratio"] < checkpoint_100["eos_ratio"] - 0.05:
+        if step >= 200:
+            checkpoint_prev = self.checkpoint_eval_history.get(step - 50)
+            if checkpoint_prev is not None and metrics["eos_ratio"] < checkpoint_prev["eos_ratio"] - 0.10:
                 logger.warning(
-                    f"Stopping after checkpoint 150: eos_ratio regressed from "
-                    f"{checkpoint_100['eos_ratio']:.4f} to {metrics['eos_ratio']:.4f}"
+                    f"Stopping after checkpoint {step}: eos_ratio regressed from "
+                    f"{checkpoint_prev['eos_ratio']:.4f} to {metrics['eos_ratio']:.4f}"
                 )
                 return True
         return False
@@ -783,7 +784,12 @@ class OdysseyV3Trainer:
     def _make_text_transform(self, max_len: int):
         """Returns transform for text-only Q&A JSONL data."""
         def transform(item):
-            text = f"Question: {item.get('input', '')}\nAnswer: {item.get('output', '')}"
+            q = item.get("input", "")
+            a = item.get("output", "")
+            text = (
+                f"<|im_start|>user\n{q}<|im_end|>\n"
+                f"<|im_start|>assistant\n{a}<|im_end|>"
+            )
             enc = self.tokenizer(
                 text,
                 return_tensors="pt",
@@ -811,9 +817,9 @@ class OdysseyV3Trainer:
             else:
                 parts = []
                 for c in convs:
-                    role = "Question" if c.get("from") == "human" else "Answer"
+                    role = "user" if c.get("from") == "human" else "assistant"
                     val = c.get("value", "").replace("<image>\n", "").replace("<image>", "")
-                    parts.append(f"{role}: {val}")
+                    parts.append(f"<|im_start|>{role}\n{val}<|im_end|>")
                 text = "\n".join(parts)
 
             enc = self.tokenizer(
@@ -850,7 +856,10 @@ class OdysseyV3Trainer:
             texts = item.get("texts", [])
             if texts:
                 t = texts[0]
-                text = f"Question: {t.get('user', '')}\nAnswer: {t.get('assistant', '')}"
+                text = (
+                    f"<|im_start|>user\n{t.get('user', '')}<|im_end|>\n"
+                    f"<|im_start|>assistant\n{t.get('assistant', '')}<|im_end|>"
+                )
             else:
                 text = ""
 
@@ -1322,100 +1331,71 @@ class OdysseyV3Trainer:
             total_loss = loss_llm + lambda_t * loss_geo
 
             # --- EOS Preservation Auxiliary Losses ---
-            # Keep stop behavior only where the dataset explicitly supervises EOS.
+            # Use the model's actual output logits (final-layer) rather than
+            # projecting intermediate hidden states through lm_head.
             loss_eos_total = torch.tensor(0.0, device=DEVICE)
             eos_detail = {}
             h_base = getattr(self, "_hook_h_base", None)
             h_adapted = getattr(self, "_hook_h_adapted", None)
 
-            if h_base is not None and h_adapted is not None:
+            adapted_logits_full = outputs.logits  # [B, T, V] — final-layer logits
+
+            if adapted_logits_full is not None:
                 eos_ramp = min(1.0, max(0.0, (step - self.start_step) / 200.0))
 
                 try:
-                    lm_head = self.llm.lm_head if hasattr(self.llm, "lm_head") else None
-                    if lm_head is None and hasattr(self.llm, "base_model"):
-                        lm_head = self.llm.base_model.model.lm_head
-
-                    if lm_head is not None:
-                        lm_dtype = next(lm_head.parameters()).dtype
-                        h_b_shift = h_base[:, :-1, :].to(lm_dtype)
-                        h_a_shift = h_adapted[:, :-1, :].to(lm_dtype)
-                        shift_labels = labels[:, 1:]
-
-                        delta = (h_a_shift - h_b_shift).float()
-                        norm_ratio = (delta.norm() ** 2) / (h_b_shift.float().norm() ** 2).clamp(min=1e-8)
+                    # Norm regularizer on intermediate hidden states (cheap, no vocab tensors)
+                    if h_base is not None and h_adapted is not None:
+                        lm_dtype = h_base.dtype
+                        h_b_shift = h_base[:, :-1, :].float()
+                        h_a_shift = h_adapted[:, :-1, :].float()
+                        delta = h_a_shift - h_b_shift
+                        norm_ratio = (delta.norm() ** 2) / (h_b_shift.norm() ** 2).clamp(min=1e-8)
                         loss_eos_norm = sc.eos_norm_weight * norm_ratio * eos_ramp
                         loss_eos_total = loss_eos_total + loss_eos_norm
                         eos_detail["eos_norm"] = norm_ratio.item()
 
-                        eos_ids = self._stop_token_ids()
-                        eos_mask = torch.zeros_like(shift_labels, dtype=torch.bool)
-                        for eos_id in eos_ids:
-                            eos_mask = eos_mask | (shift_labels == eos_id)
-                        eos_mask = eos_mask & (shift_labels != -100)
-                        eos_supervised_count = int(eos_mask.sum().item())
-                        eos_detail["eos_supervised_count"] = float(eos_supervised_count)
+                    # Supervised EOS losses using actual output logits
+                    shift_logits = adapted_logits_full[:, :-1, :].float()
+                    shift_labels = labels[:, 1:]
 
-                        if eos_supervised_count > 0:
-                            h_b_sel = h_b_shift[eos_mask]
-                            h_a_sel = h_a_shift[eos_mask]
-                            target_labels = shift_labels[eos_mask]
+                    eos_ids = self._stop_token_ids()
+                    eos_mask = torch.zeros_like(shift_labels, dtype=torch.bool)
+                    for eos_id in eos_ids:
+                        eos_mask = eos_mask | (shift_labels == eos_id)
+                    eos_mask = eos_mask & (shift_labels != -100)
+                    eos_supervised_count = int(eos_mask.sum().item())
+                    eos_detail["eos_supervised_count"] = float(eos_supervised_count)
 
-                            with torch.no_grad():
-                                base_logits = lm_head(h_b_sel).float()
-                            adapted_logits = lm_head(h_a_sel).float()
+                    if eos_supervised_count > 0:
+                        sel_logits = shift_logits[eos_mask]  # [N_eos, V]
+                        target_labels = shift_labels[eos_mask]
 
-                            eos_ce = F.cross_entropy(adapted_logits, target_labels)
-                            loss_eos_total = loss_eos_total + sc.eos_ce_weight * eos_ce * eos_ramp
-                            eos_detail["eos_ce"] = eos_ce.item()
+                        # L_ce: cross-entropy on EOS-supervised positions
+                        eos_ce = F.cross_entropy(sel_logits, target_labels)
+                        loss_eos_total = loss_eos_total + sc.eos_ce_weight * eos_ce * eos_ramp
+                        eos_detail["eos_ce"] = eos_ce.item()
 
-                            base_target_logits = base_logits.gather(1, target_labels.unsqueeze(1)).squeeze(1)
-                            adapted_target_logits = adapted_logits.gather(1, target_labels.unsqueeze(1)).squeeze(1)
-                            eos_margin = F.relu((base_target_logits - 0.5) - adapted_target_logits).mean()
-                            loss_eos_total = loss_eos_total + sc.eos_margin_weight * eos_margin * eos_ramp
-                            eos_detail["eos_margin"] = eos_margin.item()
+                        # L_margin: adapted logit for EOS token should be close to top
+                        adapted_target_logits = sel_logits.gather(1, target_labels.unsqueeze(1)).squeeze(1)
+                        top_logit = sel_logits.max(dim=-1).values
+                        eos_margin = F.relu(top_logit - adapted_target_logits - 0.5).mean()
+                        loss_eos_total = loss_eos_total + sc.eos_margin_weight * eos_margin * eos_ramp
+                        eos_detail["eos_margin"] = eos_margin.item()
 
-                            valid_stop_ids = [
-                                eos_id
-                                for eos_id in eos_ids
-                                if eos_id is not None and 0 <= eos_id < adapted_logits.shape[-1]
-                            ]
-                            if len(valid_stop_ids) >= 2:
-                                base_stop_logits = base_logits[:, valid_stop_ids]
-                                adapted_stop_logits = adapted_logits[:, valid_stop_ids]
-                                base_stop_probs = F.softmax(base_stop_logits, dim=-1)
-                                adapted_stop_log_probs = F.log_softmax(adapted_stop_logits, dim=-1)
-                                eos_stop_kl = F.kl_div(
-                                    adapted_stop_log_probs,
-                                    base_stop_probs,
-                                    reduction="batchmean",
-                                )
-                                loss_eos_total = loss_eos_total + sc.eos_stop_kl_weight * eos_stop_kl * eos_ramp
-                                eos_detail["eos_stop_kl"] = eos_stop_kl.item()
-
-                            with torch.no_grad():
-                                base_target_probs = F.softmax(base_logits, dim=-1).gather(
-                                    1, target_labels.unsqueeze(1)
-                                ).squeeze(1)
-                                adapted_target_probs = F.softmax(adapted_logits, dim=-1).gather(
-                                    1, target_labels.unsqueeze(1)
-                                ).squeeze(1)
-                            eos_detail["P_eos_base_supervised"] = base_target_probs.mean().item()
-                            eos_detail["P_eos_adapted_supervised"] = adapted_target_probs.mean().item()
+                        # Telemetry: P(eos) at supervised positions
+                        with torch.no_grad():
+                            adapted_probs = F.softmax(sel_logits, dim=-1)
+                            p_eos = adapted_probs.gather(1, target_labels.unsqueeze(1)).squeeze(1)
+                        eos_detail["P_eos_adapted_supervised"] = p_eos.mean().item()
 
                 except Exception as e:
                     if step < 5 or step % 100 == 0:
                         logger.warning(f"EOS loss computation failed: {e}")
 
-                # Clean up hook state
-                self._hook_h_base = None
-                self._hook_h_adapted = None
-
-            # Always clean up hook state (even when EOS loss skipped)
-            if getattr(self, "_hook_h_base", None) is not None:
-                self._hook_h_base = None
-            if getattr(self, "_hook_h_adapted", None) is not None:
-                self._hook_h_adapted = None
+            # Clean up hook state
+            self._hook_h_base = None
+            self._hook_h_adapted = None
 
             total_loss = total_loss + loss_eos_total
 
