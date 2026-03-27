@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.egg-info/
 
 # Virtual Environments
 venv/
@@ -9,20 +10,39 @@ venv_fixed/
 unsloth_env/
 .env
 
-# Checkpoints and Outputs
+# Checkpoints and Model Weights (go to HuggingFace, not GitHub)
 output/
+export/
 *.pt
 *.safetensors
 *.bin
 *.pth
-!trained_adapter/*.pt
-!trained_adapter/*.safetensors
-!trained_adapter/*.json
+*.gguf
+igbundle_merged_hf/
+igbundle_full_scale_reasoning/
+igbundle_phase9_odyssey/
+igbundle_odyssey_v3_*/
+
+# Gradio
+.gradio/
+
+# Logs and Diagnostics
+*.log
 crash.txt
-braintop/
 diag_*.txt
 smoke_log.txt
 validate_result.txt
+last_error.log
+
+# Caches
+unsloth_compiled_cache/
+equations_cache/
+braintop/
+memory/
+
+# Training Data
+data/*.jsonl
+arc_data.zip
 
 # Thesis Generation and Review Artifacts
 *_REVIEW*.md
@@ -30,10 +50,12 @@ validate_result.txt
 *_v[0-9].[0-9].md
 *_v[0-9].[0-9]_*.md
 PEER_REVIEW_*.md
-equations_cache/
+AI_SCIENTIST_*.md
+
+# PDFs (thesis PDFs are in thesis/ dir)
 *.pdf
-!IGBundle_Thesis.pdf
-!requirements.txt
+!thesis/*.pdf
+!thesis/old_versions/*.pdf
 
 # IDE
 .vscode/
@@ -44,9 +66,32 @@ equations_cache/
 !fix_environment.ps1
 !setup_env.ps1
 !Activate.ps1
+NUL
 
+# External tools
 ARC-AGI-master/
-igbundle_merged_hf/
-*.gguf
 llama.cpp/
-unsloth_compiled_cache/
+
+# Node
+node_modules/
+
+# One-off diagnostic scripts
+diagnose_*.py
+validate_*.py
+validate_*.json
+check_*.py
+send_*.py
+poll_*.py
+fetch_*.py
+
+# Temporary / scratch
+dummy*
+*.patch
+*.zip
+salvos_results/
+gsp_smoke_test_*.json
+*_messages.json
+
+# IACS (inter-agent communication — local only)
+iacs/data/
+iacs/dashboard/package-lock.json
