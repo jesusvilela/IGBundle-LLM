@@ -1,27 +1,53 @@
-# ManifoldGL Project Context
+# IGBundle — Fiber Bundle Adapters for Language Models
 
 ## Project Overview
-ManifoldGL (formerly IGBundle-LLM) is a research project adapting Large Language Models with Information-Geometric constraints.
-It uses Hyperbolic Fiber Bundles to model semantic spaces, achieving +131.5% accuracy on ARC-AGI tasks.
+IGBundle is a research project that applies fiber bundle geometry to transformer language models.
+A geometric adapter at a single transformer layer (Layer 12 of Qwen 2.5-7B) introduces Poincare
+ball coordinates, categorical fiber sections, Hamiltonian dynamics, and Riemannian curvature
+regularization as an inductive bias for hierarchical reasoning.
+
+## Team
+- Jesus Vilela Jato — Principal Researcher & Orchestrator
+- Claude (Anthropic) — Geometry, diagnostics, training pipeline, GSP, NMEM
+- Gemini (Google) — UI, memory backend, evaluation, dashboard
 
 ## Key Documentation
-- **Thesis**: /docs/wiki.html (Full mathematical and experimental details)
-- **Codebase**: https://github.com/jesusvilela/IGBundle-LLM
-- **Demo Guide**: /docs/demo.html (Instructions for local 4-bit inference)
+- Thesis: /docs/wiki.html
+- Get Started: /docs/demo.html
+- Source: https://github.com/jesusvilela/IGBundle-LLM
+- Model: https://huggingface.co/jesusvilela/igbundle-qwen2.5-7b-riemannian
 
 ## Architecture
-- **Base Model**: Qwen2.5-7B
-- **Adapter**: IGBundle (Fiber Bundle projection, Sheaf Consistency Loss)
-- **Optimization**: Natural Gradient Descent (Fisher Information Metric)
-- **Curvature**: Learned Hyperbolic (κ → -1)
+- Base Model: Qwen 2.5-7B (NF4 quantized via Unsloth)
+- Adapter: GeometricIGBundleAdapter at Layer 12 (~0.9% params added)
+- Base Manifold: Poincare Ball H^64 (D=64, curvature c=1)
+- Fibers: K=16 categorical sections, P=8 mixture components
+- Dynamics: Hamiltonian system with symplectic integration, Lorentz limiter (c=5.0)
+- Curvature: Log-determinant Laplacian estimator, regularized toward kappa=-1
+- Inference: GSP (Geometric Steering Probe) — GENERIC-compliant homeostatic controller
+- Memory: NMEM (neuromorphic) with FHN decay, FFT spectral forgetting, Gabor interference
+- UI: Neural Glass (Gradio) with real-time curvature/entropy telemetry
 
-## Setup
+## Key Results
+- Manifold Faithfulness: 6/6 tests PASS (K=-5.63, S=0.95, JSD=0.424, PT=0.041)
+- Benchmarks preserved: ARC 54.86%, TruthfulQA 64.78%, Winogrande 71.03%, GSM8K 75.51%
+- Geometry is real and measurable, not decorative
+- Overhead: +15% training time, +4% inference latency, -30% convergence steps
+
+## Quick Start
 ```bash
 git clone https://github.com/jesusvilela/IGBundle-LLM
+cd IGBundle-LLM
 pip install -r requirements.txt
-python trainv2.py --config configs/qwen25_7b_igbundle_lora.yaml
+python train.py --config configs/igbundle_standard.yaml
 ```
 
-## Results
-- Accuracy: 28.7% (vs 12.4% baseline)
-- MFR (Manifold Faithfulness Rate): 94.2%
+## Source Structure
+src/igbundle/
+  geometry/      — Riemannian, hyperbolic, Poincare, KAN manifold
+  modules/       — Geometric adapter, losses, attention, vision
+  dynamics/      — Hamiltonian, FitzHugh-Nagumo, equilibrium propagation
+  fibers/        — Fiber state, constraints, swarm executor
+  steering/      — GSP controller
+  optimization/  — Symplectic optimizer, SPIDER variance reduction
+  training/      — Geometric trainer, GRPO, losses

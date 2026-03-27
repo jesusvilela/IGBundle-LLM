@@ -1,87 +1,316 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ManifoldGL | Information-Geometric LLM Adapters</title>
+    <title>IGBundle | Fiber Bundle Adapters for Language Models</title>
     <link rel="stylesheet" href="assets/css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono&display=swap"
-        rel="stylesheet">
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
 </head>
-
 <body>
     <nav class="navbar">
-        <div class="brand">ManifoldGL</div>
+        <div class="brand">IGBundle</div>
         <div class="nav-links">
             <a href="index.html" class="nav-link active">Home</a>
-            <a href="wiki.html" class="nav-link">Wiki</a>
-            <a href="demo.html" class="nav-link">Demo</a>
-            <a href="llms.txt" class="nav-link" title="AI Context">🤖</a>
-            <a href="https://github.com/jesusvilela/IGBundle-LLM" target="_blank" class="nav-link">GitHub</a>
+            <a href="wiki.html" class="nav-link">Thesis</a>
+            <a href="demo.html" class="nav-link">Get Started</a>
+            <a href="https://huggingface.co/jesusvilela/igbundle-qwen2.5-7b-riemannian" target="_blank" class="nav-badge">HF Model</a>
+            <a href="https://github.com/jesusvilela/IGBundle-LLM" target="_blank" class="nav-badge">GitHub</a>
         </div>
     </nav>
 
     <div class="container">
+
+        <!-- Hero -->
         <section class="hero">
             <h1 class="hero-title">The Geometry of Reasoning</h1>
             <p class="hero-subtitle">
-                Enhancing Large Language Models with Hyperbolic Fiber Bundles and Information-Geometric Optimization.
+                A geometric adapter for transformer language models. Fiber bundle topology,
+                hyperbolic latent spaces, and information-geometric optimization &mdash;
+                injected at a single layer.
             </p>
             <div class="hero-btns">
-                <a href="demo.html" class="btn btn-primary">Launch Guide</a>
-                <a href="wiki.html" class="btn btn-secondary">Read Thesis</a>
+                <a href="https://github.com/jesusvilela/IGBundle-LLM" target="_blank" class="btn btn-primary">View on GitHub</a>
+                <a href="wiki.html" class="btn btn-secondary">Read the Thesis</a>
             </div>
         </section>
 
-        <section class="features">
-            <div class="card">
-                <div class="card-icon">📐</div>
-                <h3 class="card-title">Hyperbolic Geometry</h3>
-                <p class="card-text">
-                    Embeds semantic hierarchies in a Poincaré ball manifold (κ = -1), enabling natural representation of
-                    complex abstract concepts.
-                </p>
+        <!-- Key Metrics -->
+        <div class="stats-hero">
+            <div class="stat-block">
+                <span class="stat-value" style="color: var(--green);">6/6</span>
+                <span class="stat-label">Faithfulness Tests</span>
             </div>
-            <div class="card">
-                <div class="card-icon">🧠</div>
-                <h3 class="card-title">Natural Gradients</h3>
-                <p class="card-text">
-                    Optimizes using the Fisher Information Metric, accelerating convergence by 30% and respecting the
-                    statistical manifold structure.
-                </p>
+            <div class="stat-block">
+                <span class="stat-value" style="color: var(--accent);">K = -5.63</span>
+                <span class="stat-label">Learned Curvature</span>
             </div>
-            <div class="card">
-                <div class="card-icon">🔗</div>
-                <h3 class="card-title">Fiber Bundles</h3>
-                <p class="card-text">
-                    Models tokens as sections of a fiber bundle, allowing for compositional semantics via lambda
-                    calculus operations in fiber space.
-                </p>
+            <div class="stat-block">
+                <span class="stat-value" style="color: var(--accent2);">S = 0.95</span>
+                <span class="stat-label">Fiber Entropy</span>
+            </div>
+            <div class="stat-block">
+                <span class="stat-value" style="color: var(--yellow);">0.9%</span>
+                <span class="stat-label">Params Added</span>
+            </div>
+        </div>
+
+        <!-- Core Ideas -->
+        <section class="section">
+            <h2 class="section-title">Core Ideas</h2>
+            <div class="cards-grid">
+                <div class="card">
+                    <div class="card-icon">H<sup>64</sup></div>
+                    <h3 class="card-title">Poincare Base Manifold</h3>
+                    <p class="card-text">
+                        Hidden states are projected into a 64-dimensional Poincare ball with constant negative curvature.
+                        Hierarchical concepts get exponentially more room at the boundary &mdash; a natural fit for language semantics.
+                    </p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&pi;</div>
+                    <h3 class="card-title">Categorical Fiber Sections</h3>
+                    <p class="card-text">
+                        Each base point carries a fiber: K=16 categorical sections with P=8 mixture components.
+                        Parallel transport moves fiber state between tokens while preserving geometric consistency.
+                    </p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&part;H</div>
+                    <h3 class="card-title">Hamiltonian Dynamics</h3>
+                    <p class="card-text">
+                        Fiber state evolves via symplectic integration with a Lorentz-factor speed limiter.
+                        Energy conservation prevents gradient explosion; the manifold stays stable during training.
+                    </p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&kappa;</div>
+                    <h3 class="card-title">Riemannian Curvature</h3>
+                    <p class="card-text">
+                        A log-determinant Laplacian estimator measures curvature of the learned metric tensor.
+                        Curvature loss regularizes toward &kappa; = -1, ensuring genuine hyperbolic geometry.
+                    </p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">GSP</div>
+                    <h3 class="card-title">Geometric Steering Probe</h3>
+                    <p class="card-text">
+                        At inference time, a GENERIC-compliant homeostatic controller reads curvature K and entropy S
+                        to modulate temperature and sampling &mdash; no retraining required.
+                    </p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">FHN</div>
+                    <h3 class="card-title">Neuromorphic Memory</h3>
+                    <p class="card-text">
+                        Biologically-inspired memory using FitzHugh-Nagumo excitable dynamics, FFT spectral forgetting,
+                        and Gabor retroactive interference. Details decay before gist &mdash; like human memory.
+                    </p>
+                </div>
             </div>
         </section>
 
-        <section style="margin-top: 6rem; text-align: center;">
-            <h2>Performance Breakthrough</h2>
-            <div style="margin-top: 2rem; display: flex; justify-content: center; gap: 4rem; flex-wrap: wrap;">
-                <div>
-                    <div style="font-size: 3rem; font-weight: 800; color: #3fb950;">+131.5%</div>
-                    <div style="color: var(--text-secondary);">Accuracy vs Base Model</div>
+        <!-- Results -->
+        <section class="section">
+            <h2 class="section-title">Results</h2>
+
+            <div class="cards-grid" style="grid-template-columns: 1fr 1fr;">
+
+                <div class="card">
+                    <h3 class="card-title">Manifold Faithfulness</h3>
+                    <p class="card-text" style="margin-bottom: 1rem;">
+                        The geometric constraints produce measurable, non-trivial structure &mdash; not decorative.
+                    </p>
+                    <table>
+                        <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+                        <tbody>
+                            <tr><td>Curvature K</td><td><strong>-5.63</strong></td></tr>
+                            <tr><td>Entropy S</td><td><strong>0.95</strong> <span class="tag">target: 1.39</span></td></tr>
+                            <tr><td>Jensen-Shannon Div.</td><td><strong>0.424</strong></td></tr>
+                            <tr><td>Parallel Transport</td><td><strong>0.041</strong> <span class="tag">near-zero holonomy</span></td></tr>
+                            <tr><td>Faithfulness Tests</td><td style="color: var(--green);"><strong>6/6 PASS</strong></td></tr>
+                        </tbody>
+                    </table>
                 </div>
-                <div>
-                    <div style="font-size: 3rem; font-weight: 800; color: #a78bfa;">94.2%</div>
-                    <div style="color: var(--text-secondary);">Geometric Faithfulness</div>
+
+                <div class="card">
+                    <h3 class="card-title">Benchmark Preservation</h3>
+                    <p class="card-text" style="margin-bottom: 1rem;">
+                        The adapter preserves base Qwen 2.5-7B capabilities with minimal degradation.
+                    </p>
+                    <table>
+                        <thead><tr><th>Benchmark</th><th>Score</th></tr></thead>
+                        <tbody>
+                            <tr><td>ARC-Challenge</td><td><strong>54.86%</strong> <span class="tag">= baseline</span></td></tr>
+                            <tr><td>TruthfulQA (MC2)</td><td><strong>64.78%</strong></td></tr>
+                            <tr><td>Winogrande</td><td><strong>71.03%</strong></td></tr>
+                            <tr><td>GSM8K</td><td><strong>75.51%</strong></td></tr>
+                        </tbody>
+                    </table>
                 </div>
-                <div>
-                    <div style="font-size: 3rem; font-weight: 800; color: #f43f5e;">-30%</div>
-                    <div style="color: var(--text-secondary);">Training Steps</div>
+
+            </div>
+        </section>
+
+        <!-- Architecture -->
+        <section class="section">
+            <h2 class="section-title">Architecture</h2>
+            <div class="card" style="max-width: 800px; margin: 0 auto;">
+                <pre style="background: var(--bg); padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border); overflow-x: auto; line-height: 1.7; color: var(--text-muted);">
+  <span style="color: var(--text);">Qwen 2.5-7B</span>
+  Layers 0-11  ──▶  <span style="color: var(--accent);">Layer 12 + IGBundle Adapter</span>  ──▶  Layers 13-27  ──▶  LM Head
+                           │                                          ▲
+                           ▼                                          │
+                    ┌──────────────┐                                  │
+                    │ Input Proj   │  H → 256                         │
+                    │ <span style="color: var(--accent2);">Poincare Ball</span> │  H^64, &kappa;=-1                      │
+                    │ <span style="color: var(--yellow);">Fiber Sect.</span>  │  K=16 &times; P=8                       │
+                    │ <span style="color: var(--pink);">Hamiltonian</span>  │  Symplectic integration              │
+                    │ Output Proj  │  256 → H                         │
+                    └──────┬───────┘                                  │
+                           │  h + &alpha;&middot;&delta;  (clamped &le;10% of ‖h‖)          │
+                           └──────────────────────────────────────────┘
+                                        │
+                                 <span style="color: var(--green);">GSP Controller</span>
+                             reads K, S  ──▶  modulates temp, top_p</pre>
+            </div>
+        </section>
+
+        <!-- Team -->
+        <section class="section">
+            <h2 class="section-title">Team</h2>
+            <p style="color: var(--text-muted); margin-bottom: 0.5rem; font-size: 0.9rem;">
+                IGBundle is built by a human-AI team: one researcher orchestrating two AI agents in a
+                continuous multi-agent development loop.
+            </p>
+            <div class="team-grid">
+                <div class="team-card">
+                    <div class="team-avatar" style="background: linear-gradient(135deg, var(--accent), var(--pink));">
+                        JV
+                    </div>
+                    <div class="team-info">
+                        <div class="team-name">Jesus Vilela Jato</div>
+                        <div class="team-role">Principal Researcher &amp; Orchestrator</div>
+                        <div class="team-desc">
+                            Thesis author, architectural decisions, experiment design, evaluation.
+                            Directs research priorities and coordinates the multi-agent workflow.
+                            IE / UCLA / SMU Global XMBA.
+                        </div>
+                    </div>
+                </div>
+                <div class="team-card">
+                    <div class="team-avatar" style="background: linear-gradient(135deg, #d4a574, #8B6914);">
+                        C
+                    </div>
+                    <div class="team-info">
+                        <div class="team-name">Claude <span class="tag">Anthropic</span></div>
+                        <div class="team-role">Geometry &amp; Diagnostics Agent</div>
+                        <div class="team-desc">
+                            Geometric adapter implementation, Riemannian geometry, training pipeline,
+                            GSP controller, NMEM memory system, inference hardening, diagnostic root cause analysis.
+                        </div>
+                    </div>
+                </div>
+                <div class="team-card">
+                    <div class="team-avatar" style="background: linear-gradient(135deg, #4285f4, #34a853);">
+                        G
+                    </div>
+                    <div class="team-info">
+                        <div class="team-name">Gemini <span class="tag">Google</span></div>
+                        <div class="team-role">UI, Memory &amp; Evaluation Agent</div>
+                        <div class="team-desc">
+                            Neural Glass interface, IMD memory backend, ARC-AGI evaluation,
+                            salvo testing, UI/UX, dashboard systems, inter-agent communication.
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
+
+        <!-- Timeline -->
+        <section class="section">
+            <h2 class="section-title">Development Timeline</h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-date">Mar 2026</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Multimodal + Falsification</div>
+                        <div class="timeline-desc">SigLIP v2 vision encoder, controlled experiment vs. vanilla LoRA, NMEM neuromorphic memory.</div>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date">Mar 2026</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">EOS Crisis Resolved</div>
+                        <div class="timeline-desc">9 training iterations failed to fix EOS suppression. Resolved with inference-time token boost. Decision: ship cp-3000.</div>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date">Mar 2026</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Phase B: Entropy Unfrozen</div>
+                        <div class="timeline-desc">10 coupled gradient blockages identified and fixed. Entropy S: 2.77 (frozen) &rarr; 0.85 (alive). Fiber diversity achieved.</div>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date">Mar 2026</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">GSP Controller &amp; Neural Glass</div>
+                        <div class="timeline-desc">GENERIC-compliant inference-time steering. Gradio UI with real-time curvature/entropy telemetry.</div>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date">Jan 2026</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Tier 3 Faithfulness Passed</div>
+                        <div class="timeline-desc">6/6 geometric verification tests. K=-5.63, S=0.95, JSD=0.424, PT=0.041. Geometry is real.</div>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date">Jan 2026</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Initial Training &amp; Benchmarks</div>
+                        <div class="timeline-desc">Qwen 2.5-7B + IGBundle adapter. ARC 54.86%, TruthfulQA 64.78%, GSM8K 75.51%. Zero degradation from base.</div>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date">Dec 2025</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Project Inception</div>
+                        <div class="timeline-desc">Fiber bundle hypothesis formulated. Poincare ball + categorical fibers + Hamiltonian dynamics design.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tech Stack -->
+        <section class="section">
+            <h2 class="section-title">Stack</h2>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                <span class="tag">PyTorch 2.6</span>
+                <span class="tag">Qwen 2.5-7B</span>
+                <span class="tag">Unsloth</span>
+                <span class="tag">LoRA + GeometricAdapter</span>
+                <span class="tag">Poincare Ball</span>
+                <span class="tag">Riemannian Geometry</span>
+                <span class="tag">Symplectic Integration</span>
+                <span class="tag">Fisher Information</span>
+                <span class="tag">SigLIP v2</span>
+                <span class="tag">Gradio</span>
+                <span class="tag">GGUF / llama.cpp</span>
+                <span class="tag">FitzHugh-Nagumo</span>
+                <span class="tag">BFloat16</span>
+                <span class="tag">NF4 Quantization</span>
+            </div>
+        </section>
+
+        <div class="footer">
+            <p>IGBundle &mdash; Fiber Bundle Adapters for Language Models</p>
+            <p style="margin-top: 0.3rem;">&copy; 2025-2026 <a href="https://github.com/jesusvilela">Jesus Vilela Jato</a>. All rights reserved.</p>
+        </div>
+
     </div>
 
     <script src="assets/js/main.js"></script>
 </body>
-
 </html>

@@ -1,140 +1,201 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thesis | ManifoldGL</title>
+    <title>Thesis | IGBundle</title>
     <link rel="stylesheet" href="assets/css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono&display=swap"
-        rel="stylesheet">
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
-
 <body>
     <nav class="navbar">
-        <div class="brand">ManifoldGL</div>
+        <div class="brand">IGBundle</div>
         <div class="nav-links">
             <a href="index.html" class="nav-link">Home</a>
-            <a href="wiki.html" class="nav-link active">Wiki</a>
-            <a href="demo.html" class="nav-link">Demo</a>
-            <a href="https://github.com/jesusvilela/IGBundle-LLM" target="_blank" class="nav-link">GitHub</a>
+            <a href="wiki.html" class="nav-link active">Thesis</a>
+            <a href="demo.html" class="nav-link">Get Started</a>
+            <a href="https://huggingface.co/jesusvilela/igbundle-qwen2.5-7b-riemannian" target="_blank" class="nav-badge">HF Model</a>
+            <a href="https://github.com/jesusvilela/IGBundle-LLM" target="_blank" class="nav-badge">GitHub</a>
         </div>
     </nav>
 
     <div class="container">
         <div class="wiki-content">
-            <h1>ManifoldGL: Information-Geometric Bundle Adapters for LLMs</h1>
-            <p class="hero-subtitle" style="margin: 0; text-align: left;">A Rigorous Framework for Non-Euclidean
-                Semantic Representation Learning</p>
+            <h1 style="font-size: 1.6rem;">IGBundle: Fiber Bundle Adapters for Language Models</h1>
+            <p style="color: var(--text-muted); margin-bottom: 0;">A geometric inductive bias for transformer reasoning</p>
 
-            <div
-                style="margin: 2rem 0; padding: 1rem; border-left: 4px solid var(--accent-color); background: rgba(124, 58, 237, 0.1);">
-                <strong>Author</strong>: Jesús Vilela Jato<br>
-                <strong>Date</strong>: January 2026<br>
-                <strong>Institution</strong>: Independent Research
+            <div class="callout" style="margin-top: 1.5rem;">
+                <strong>Author</strong>: Jesus Vilela Jato<br>
+                <strong>Date</strong>: December 2025 &ndash; present (active research)<br>
+                <strong>Affiliation</strong>: Independent Research<br>
+                <strong>Team</strong>: Jesus Vilela (orchestrator) + Claude (Anthropic) + Gemini (Google)
             </div>
-
-            <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 2rem 0;">
 
             <h2>1. Mathematical Foundations</h2>
 
-            <h3>1.1 Riemannian Manifold Geometry</h3>
-            <p>We implement a proper Riemannian metric \(g_{ij}\) with positive definiteness via Cholesky decomposition.
-            </p>
-
-            <h4>Christoffel Symbols</h4>
-            <pre><code class="language-python">def christoffel_symbols(self, positions, metric):
-    """Γ^k_{ij} = 0.5 * g^{kl} * (∂g_{il}/∂x^j + ∂g_{jl}/∂x^i - ∂g_{ij}/∂x^l)"""
-    # Proper connection coefficients for covariant differentiation</code></pre>
-
-            <h4>Riemann Curvature Tensor</h4>
-            <p>The curvature is computed explicitly to characterize the geometry:</p>
+            <h3>1.1 Fiber Bundle Structure</h3>
             <p>
-                \[ R^i_{jkl} = \partial_k \Gamma^i_{jl} - \partial_l \Gamma^i_{jk} + \Gamma^i_{mk}\Gamma^m_{jl} -
-                \Gamma^i_{ml}\Gamma^m_{jk} \]
+                The central object is a fiber bundle \(\pi: E \to M\) where the base manifold \(M\) is a
+                Poincare ball \(\mathbb{B}^{64}\) with constant curvature \(\kappa = -1\), and each fiber
+                \(F_x\) is a categorical distribution over \(K=16\) sections with \(P=8\) mixture components.
             </p>
-
-            <h3>1.2 True Fiber-to-Fiber Bundle Lambda Calculus</h3>
             <p>
-                Tokens are modeled as sections of a fiber bundle \(\pi: E \to M\). We implement lambda calculus
-                operations directly on these fibers.
+                Hidden states from transformer layer 12 are projected into this bundle. The projection is
+                a residual perturbation clamped to &le;10% of the base hidden state norm, preserving the
+                pretrained distribution.
             </p>
 
-            <pre><code class="language-python">def lambda_abstraction(self, variable_type, body):
-    """λx:A. body - Proper abstraction over fiber bundle sections"""
-    combined = torch.cat([variable_type, body], dim=-1)
-    return self.lambda_encoder(combined)</code></pre>
-
-            <h3>1.3 Information-Geometric Natural Gradients</h3>
-            <p>Optimization follows the natural gradient direction on the statistical manifold, using the Fisher
-                Information Matrix \(F\):</p>
+            <h3>1.2 Riemannian Metric and Curvature</h3>
             <p>
-                \[ \theta_{t+1} = \theta_t - \eta F^{-1} \nabla_\theta \mathcal{L} \]
+                The adapter learns a metric tensor \(g_{ij}\) on \(M\), approximated via the Fisher information
+                matrix of the fiber distributions. Curvature is computed via a log-determinant Laplacian estimator:
+            </p>
+            <p>\[ K \approx -\frac{1}{2} \nabla^2 \log \det g \]</p>
+            <p>
+                A curvature loss regularizes toward \(\kappa = -1\). The learned curvature
+                at convergence is \(K = -5.63\) &mdash; strongly hyperbolic, overshooting the target but
+                geometrically meaningful.
             </p>
 
-            <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 2rem 0;">
+            <h3>1.3 Symplectic Dynamics</h3>
+            <p>
+                Fiber state evolves via a Hamiltonian system with symplectic integration and a Lorentz-factor
+                speed limiter (\(c = 5.0\)):
+            </p>
+            <p>\[ \dot{q} = \frac{\partial H}{\partial p}, \quad \dot{p} = -\frac{\partial H}{\partial q} \]</p>
+            <p>
+                The speed limiter prevents gradient explosion: \(v \to v / \sqrt{1 + \|v\|^2 / c^2}\).
+                Combined with the SymplecticSPIDER optimizer, this replaces global gradient clipping
+                (which was found to kill fiber gradients due to the 7M-parameter curvature norm dominating).
+            </p>
 
-            <h2>2. Experimental Validation</h2>
+            <h3>1.4 Information Geometry</h3>
+            <p>
+                Optimization follows the natural gradient direction on the statistical manifold:
+            </p>
+            <p>\[ \theta_{t+1} = \theta_t - \eta \, F^{-1} \nabla_\theta \mathcal{L} \]</p>
+            <p>
+                This respects the Fisher-Rao metric and converges ~30% faster than Euclidean gradient descent.
+            </p>
 
-            <h3>2.1 Core Performance Metrics on ARC-AGI</h3>
-            <p>ManifoldGL was evaluated on the Abstract Reasoning Corpus (ARC-AGI).</p>
+            <h3>1.5 Sheaf Consistency</h3>
+            <p>
+                Adjacent tokens must agree on their fiber distributions. The Jensen-Shannon divergence
+                between neighboring sections is penalized:
+            </p>
+            <p>\[ \mathcal{L}_{\text{sheaf}} = \frac{1}{N} \sum_{i} \text{JSD}(\sigma_i \| \sigma_{i+1}) \]</p>
+            <p>
+                This enforces local-to-global semantic coherence &mdash; the "gluing condition" of the sheaf.
+            </p>
 
-            <table style="width: 100%; border-collapse: collapse; margin: 2rem 0;">
+            <h2>2. Key Components</h2>
+
+            <h3>2.1 Geometric Steering Probe (GSP)</h3>
+            <p>
+                At inference time, the GSP reads curvature \(K\) and entropy \(S\) from the adapter
+                and modulates generation parameters (temperature, top_p) via a GENERIC-compliant
+                homeostatic controller. No retraining required.
+            </p>
+            <ul>
+                <li>High curvature |K| &rarr; model is confident &rarr; lower temperature</li>
+                <li>High entropy S &rarr; uncertain fiber state &rarr; more conservative sampling</li>
+                <li>Tracks reversible (Hamiltonian) and irreversible (dissipative) energy flows</li>
+            </ul>
+
+            <h3>2.2 Neuromorphic Memory (NMEM)</h3>
+            <p>
+                Biologically-inspired memory replacing the 3-tier IMD system:
+            </p>
+            <ul>
+                <li><strong>FitzHugh-Nagumo decay</strong>: excitable dynamics, not exponential &mdash; memories can reactivate</li>
+                <li><strong>FFT spectral forgetting</strong>: high-frequency detail decays before low-frequency gist</li>
+                <li><strong>Gabor retroactive interference</strong>: new similar memories degrade old ones</li>
+                <li><strong>Multi-anchor retrieval</strong>: Method of Loci spatial indexing</li>
+                <li><strong>Savant preservation</strong>: exact verbatim recall for code, dates, formulas</li>
+                <li><strong>Ghost entries</strong>: decayed memories leave retrievable traces</li>
+            </ul>
+
+            <h3>2.3 Neural Glass</h3>
+            <p>
+                Gradio-based inference UI with real-time telemetry: curvature heatmap, entropy gauge,
+                fiber distribution visualization, thought trace, generation stability metrics.
+                OOM-hardened for 5 GiB VRAM GPUs with dynamic token budgeting.
+            </p>
+
+            <h2>3. Experimental Results</h2>
+
+            <h3>3.1 Manifold Faithfulness (Tier 3)</h3>
+            <table>
                 <thead>
-                    <tr style="background: rgba(255,255,255,0.05);">
-                        <th style="padding: 1rem; text-align: left;">Metric</th>
-                        <th style="padding: 1rem; text-align: center;">Baseline (Qwen-7B)</th>
-                        <th style="padding: 1rem; text-align: center;">ManifoldGL</th>
-                        <th style="padding: 1rem; text-align: center;">Δ (Relative)</th>
-                    </tr>
+                    <tr><th>Metric</th><th>Value</th><th>Interpretation</th></tr>
                 </thead>
                 <tbody>
-                    <tr style="border-bottom: 1px solid var(--glass-border);">
-                        <td style="padding: 1rem;">Task Accuracy</td>
-                        <td style="padding: 1rem; text-align: center;">12.4%</td>
-                        <td style="padding: 1rem; text-align: center; color: #3fb950; font-weight: bold;">28.7%</td>
-                        <td style="padding: 1rem; text-align: center;">+131.5%</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid var(--glass-border);">
-                        <td style="padding: 1rem;">Curvature (κ)</td>
-                        <td style="padding: 1rem; text-align: center;">-0.12</td>
-                        <td style="padding: 1rem; text-align: center; color: #a78bfa; font-weight: bold;">-0.98</td>
-                        <td style="padding: 1rem; text-align: center;">Hyperbolic</td>
-                    </tr>
+                    <tr><td>Curvature K</td><td><strong>-5.63</strong></td><td>Strongly hyperbolic</td></tr>
+                    <tr><td>Entropy S</td><td><strong>0.95</strong></td><td>Below uniform (ln16 &asymp; 2.77), sections specialized</td></tr>
+                    <tr><td>Jensen-Shannon Div.</td><td><strong>0.424</strong></td><td>Fibers differ across contexts</td></tr>
+                    <tr><td>Parallel Transport</td><td><strong>0.041</strong></td><td>Near-zero holonomy &mdash; geometric consistency</td></tr>
+                    <tr><td>Faithfulness</td><td style="color: var(--green);"><strong>6/6 PASS</strong></td><td>All verification tests pass</td></tr>
                 </tbody>
             </table>
 
-            <h3>2.2 Ablation Study</h3>
-            <p>Removing geometric components systematically degrades performance, proving their necessity.</p>
+            <h3>3.2 Benchmark Preservation</h3>
+            <table>
+                <thead>
+                    <tr><th>Benchmark</th><th>Score</th><th>Notes</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>ARC-Challenge</td><td><strong>54.86%</strong></td><td>Identical to base Qwen 2.5-7B</td></tr>
+                    <tr><td>TruthfulQA (MC2)</td><td><strong>64.78%</strong></td><td>Strong factual grounding</td></tr>
+                    <tr><td>Winogrande</td><td><strong>71.03%</strong></td><td>Commonsense reasoning intact</td></tr>
+                    <tr><td>GSM8K</td><td><strong>75.51%</strong></td><td>Multi-step math preserved</td></tr>
+                </tbody>
+            </table>
+
+            <h3>3.3 Entropy Diagnostic History</h3>
+            <p>
+                Entropy was frozen at \(S = \ln(16) \approx 2.77\) for 3000 training steps due to
+                10 coupled gradient blockages (arcosh NaN, per-component Poincare projection, global
+                grad clipping killing fiber grads, etc.). After systematic diagnosis and Phase A fixes,
+                entropy unfroze to oscillating \([0.58, 1.04]\), mean ~0.85.
+            </p>
+
+            <h3>3.4 Ablation Studies</h3>
+            <p>13 systematic ablations isolating each geometric component. Key findings:</p>
+            <table>
+                <thead>
+                    <tr><th>Component Removed</th><th>Accuracy Drop</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Euclidean Target (&kappa;=0)</td><td><strong>-10.9%</strong></td></tr>
+                    <tr><td>No Curvature Loss</td><td><strong>-9.5%</strong></td></tr>
+                    <tr><td>No Natural Gradients</td><td><strong>-8.4%</strong></td></tr>
+                    <tr><td>No Sheaf Consistency</td><td><strong>-5.6%</strong></td></tr>
+                    <tr><td>No Bundle Structure</td><td><strong>-4.9%</strong></td></tr>
+                </tbody>
+            </table>
+
+            <h2>4. References</h2>
             <ul>
-                <li><strong>No Curvature Loss</strong>: -9.5% accuracy drop.</li>
-                <li><strong>No Natural Gradients</strong>: -8.4% accuracy drop.</li>
-                <li><strong>Euclidean Geometry (κ=0)</strong>: -10.9% accuracy drop.</li>
+                <li>Nickel &amp; Kiela (2017) &mdash; Poincare Embeddings for Hierarchical Representations</li>
+                <li>Turner et al. (2023) &mdash; Activation Addition: Steering Without Optimization</li>
+                <li>Grmela &amp; Ottinger (1997) &mdash; GENERIC framework for non-equilibrium thermodynamics</li>
+                <li>Chen et al. (2022) &mdash; Fully Hyperbolic Neural Networks</li>
+                <li>McClelland et al. (1995) &mdash; Complementary Learning Systems</li>
+                <li>Shimizu et al. (2021) &mdash; Hyperbolic Neural Networks++</li>
+                <li>Dai et al. (2021) &mdash; Hyperbolic Attention in Transformers</li>
             </ul>
 
-            <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 2rem 0;">
-
-            <h2>3. Usage & Implementation</h2>
-
-            <h3>3.1 Installation</h3>
-            <pre><code>pip install -r requirements.txt</code></pre>
-
-            <h3>3.2 Training</h3>
-            <p>To train the adapter from scratch:</p>
-            <pre><code>python trainv2.py --config configs/qwen25_7b_igbundle_lora.yaml</code></pre>
-
-            <h3>3.3 Evaluation</h3>
-            <pre><code>python eval_arc.py --checkpoint output/igbundle_qwen7b_riemannian/checkpoint-50 --limit 100 --mfr</code></pre>
-
-            <div style="margin-top: 3rem; text-align: center;">
-                <a href="../IGBundle_Thesis.pdf" class="btn btn-primary" download>Download PDF Version</a>
+            <div style="margin-top: 2.5rem; text-align: center;">
+                <a href="https://github.com/jesusvilela/IGBundle-LLM/blob/main/thesis/IGBundle_Thesis_V3_GENERIC_Merged_c_Jesus_Vilela_Jato.pdf" class="btn btn-primary" target="_blank">Full Thesis (PDF)</a>
             </div>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2025-2026 <a href="https://github.com/jesusvilela">Jesus Vilela Jato</a>. All rights reserved.</p>
         </div>
     </div>
 
     <script src="assets/js/main.js"></script>
 </body>
-
 </html>

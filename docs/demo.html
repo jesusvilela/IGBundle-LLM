@@ -1,64 +1,115 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Launcher | ManifoldGL</title>
+    <title>Get Started | IGBundle</title>
     <link rel="stylesheet" href="assets/css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
 </head>
-
 <body>
     <nav class="navbar">
-        <div class="brand">ManifoldGL</div>
+        <div class="brand">IGBundle</div>
         <div class="nav-links">
             <a href="index.html" class="nav-link">Home</a>
-            <a href="wiki.html" class="nav-link">Wiki</a>
-            <a href="demo.html" class="nav-link active">Demo</a>
-            <a href="https://github.com/jesusvilela/IGBundle-LLM" target="_blank" class="nav-link">GitHub</a>
+            <a href="wiki.html" class="nav-link">Thesis</a>
+            <a href="demo.html" class="nav-link active">Get Started</a>
+            <a href="https://huggingface.co/jesusvilela/igbundle-qwen2.5-7b-riemannian" target="_blank" class="nav-badge">HF Model</a>
+            <a href="https://github.com/jesusvilela/IGBundle-LLM" target="_blank" class="nav-badge">GitHub</a>
         </div>
     </nav>
 
     <div class="container">
         <div style="text-align: center; margin-bottom: 2rem;">
-            <h1>Interactive Demo Platform</h1>
-            <p class="hero-subtitle">Real-time Abstract Reasoning Interface</p>
+            <h1 class="hero-title" style="font-size: 2rem;">Get Started</h1>
+            <p class="hero-subtitle">Run the pretrained model or train your own geometric adapter.</p>
         </div>
 
-        <div class="wiki-content" style="text-align: center; margin: 0 auto; max-width: 800px;">
-            <div style="font-size: 4rem; margin-bottom: 1rem;">🚀</div>
-            <h2>Launch Local Engine</h2>
-            <p>
-                Due to the advanced nature of the **7B parameter** ManifoldGL model (running on 4-bit quantization),
-                the inference engine runs locally on your machine for maximum privacy and performance.
-            </p>
+        <div class="wiki-content">
 
-            <div
-                style="background: rgba(46, 160, 67, 0.1); border: 1px solid rgba(46, 160, 67, 0.2); border-radius: 8px; padding: 2rem; margin: 2rem 0; text-align: left;">
-                <h3 style="color: #3fb950; margin-top: 0;">Step 1: Get the Code</h3>
-                <pre style="margin: 1rem 0;"><code>git clone https://github.com/jesusvilela/IGBundle-LLM.git
-cd IGBundle-LLM</code></pre>
+            <h2>Option A: Load the Pretrained Model</h2>
+            <p>The fastest path. Pulls the model from Hugging Face and runs inference.</p>
 
-                <h3 style="color: #3fb950;">Step 2: Launch Optimized Engine</h3>
-                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Windows users
-                    (Double-click the file):</p>
-                <div style="background: #111; padding: 1rem; border-radius: 6px; font-family: monospace; color: #fff;">
-                    .\launch_optimized.bat
-                </div>
+            <pre><code>pip install transformers torch accelerate</code></pre>
+
+            <pre><code class="language-python">from transformers import AutoModelForCausalLM, AutoTokenizer
+
+model = AutoModelForCausalLM.from_pretrained(
+    "jesusvilela/igbundle-qwen2.5-7b-riemannian",
+    device_map="auto",
+    trust_remote_code=True
+)
+tokenizer = AutoTokenizer.from_pretrained(
+    "jesusvilela/igbundle-qwen2.5-7b-riemannian"
+)
+
+inputs = tokenizer("Explain the geometry of attention.", return_tensors="pt").to(model.device)
+outputs = model.generate(**inputs, max_new_tokens=256)
+print(tokenizer.decode(outputs[0], skip_special_tokens=True))</code></pre>
+
+            <div class="callout">
+                <strong>Requirements</strong>: ~8 GB VRAM for NF4 quantization, or ~16 GB for BFloat16.
+                CPU inference works but is slow.
             </div>
 
-            <p style="color: var(--text-secondary); margin-top: 2rem;">
-                This will automatically:
-                <br>1. Check for **CUDA Acceleration**.
-                <br>2. Activate the **Unsloth** environment.
-                <br>3. Open the **Local Bridge** portal in your browser.
+            <h2>Option B: Clone and Train</h2>
+            <p>Full source with geometric adapter, training pipeline, and evaluation.</p>
+
+            <h3>1. Clone</h3>
+            <pre><code>git clone https://github.com/jesusvilela/IGBundle-LLM.git
+cd IGBundle-LLM
+pip install -r requirements.txt</code></pre>
+
+            <h3>2. Train</h3>
+            <pre><code>python train.py --config configs/igbundle_standard.yaml</code></pre>
+
+            <p>Training uses Unsloth for 4-bit quantization and LoRA + GeometricAdapter.
+               The adapter is injected at Layer 12 and adds ~0.9% parameters.</p>
+
+            <div class="callout">
+                <strong>Training losses</strong>: Causal LM + Curvature (&kappa; &rarr; -1) + Sheaf Consistency (JSD) + Bundle Structure.
+                Natural gradient optimizer (Fisher Information Metric) for 30% faster convergence.
+            </div>
+
+            <h3>3. Evaluate</h3>
+            <pre><code># Manifold Faithfulness Rate + ARC benchmarks
+python eval_arc.py --checkpoint &lt;path&gt; --limit 100 --mfr
+
+# Standard benchmarks via llama.cpp server
+python export_gguf.py --checkpoint &lt;path&gt;
+# Then point lm-evaluation-harness at localhost:8080</code></pre>
+
+            <h2>Option C: Neural Glass (Interactive UI)</h2>
+            <p>
+                Gradio-based chat interface with real-time geometric telemetry: curvature heatmap,
+                entropy gauge, fiber distributions, thought trace.
             </p>
+            <pre><code>python app_neural_glass.py</code></pre>
+            <p>Opens at <code>http://localhost:7860</code>. Requires a CUDA GPU with &ge;5 GB VRAM.</p>
+
+            <h2>Project Structure</h2>
+            <pre><code>src/igbundle/
+  geometry/      &mdash; Riemannian, hyperbolic, Poincare, KAN manifold
+  modules/       &mdash; Geometric adapter, losses, attention, vision
+  dynamics/      &mdash; Hamiltonian, FitzHugh-Nagumo, equilibrium propagation
+  fibers/        &mdash; Fiber state, constraints, swarm executor
+  steering/      &mdash; GSP controller (inference-time feedback)
+  optimization/  &mdash; Symplectic optimizer, SPIDER variance reduction
+  training/      &mdash; Geometric trainer, GRPO, losses
+  quantum/       &mdash; Gibbs sampling, scrambling
+  nn/            &mdash; KAN (Kolmogorov-Arnold Networks)
+
+thesis/          &mdash; Academic thesis (PDF + sources)
+tests/           &mdash; Geometry, pipeline, integration tests
+configs/         &mdash; Training and ablation configs</code></pre>
+
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2025-2026 <a href="https://github.com/jesusvilela">Jesus Vilela Jato</a>. All rights reserved.</p>
         </div>
     </div>
 
     <script src="assets/js/main.js"></script>
 </body>
-
 </html>

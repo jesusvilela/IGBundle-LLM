@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('ManifoldGL Documentation Loaded');
+    console.log('IGBundle Documentation Loaded');
 
     // Smooth scroll
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
