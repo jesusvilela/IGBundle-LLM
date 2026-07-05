@@ -141,6 +141,19 @@ class TestConfigFlags(unittest.TestCase):
         self.assertFalse(cfg.learnable_conformal)
         self.assertFalse(cfg.differentiable_dynamics)
 
+    def test_supported_modalities_not_shared_default(self):
+        """AUDIT FIX (2026-07): mutable default argument must not leak across instances."""
+        cfg1 = _make_config()
+        cfg2 = _make_config()
+        cfg1.supported_modalities.append("vision")
+        self.assertEqual(cfg2.supported_modalities, ["text"])
+
+    def test_supported_modalities_explicit_not_aliased(self):
+        mods = ["text", "vision"]
+        cfg = _make_config(supported_modalities=mods)
+        mods.append("audio")
+        self.assertEqual(cfg.supported_modalities, ["text", "vision"])
+
 
 if __name__ == "__main__":
     unittest.main()

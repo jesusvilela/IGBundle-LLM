@@ -35,7 +35,10 @@ class TestPoincareBall(unittest.TestCase):
         
         # d(x, x)
         d_xx = PoincareBall.dist(x, x, self.c)
-        self.assertTrue(torch.allclose(d_xx, torch.zeros_like(d_xx), atol=1e-4))
+        # AUDIT FIX (2026-07): the dist() stability clamp arg.clamp_min(1+1e-6)
+        # forces a minimum acosh argument of 1+1e-6, giving d >= acosh(1+1e-6)
+        # ≈ sqrt(2e-6) ≈ 0.001414 even when x==y. Use 2e-3 (headroom above the floor).
+        self.assertTrue(torch.allclose(d_xx, torch.zeros_like(d_xx), atol=2e-3))
         
         # d(x, y) > 0
         d_xy = PoincareBall.dist(x, y, self.c)

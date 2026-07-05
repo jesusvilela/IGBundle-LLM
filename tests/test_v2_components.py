@@ -30,22 +30,34 @@ def test_phase_memory():
 
 def test_hamiltonian():
     print("Testing HamiltonianSystem...")
-    sys = HamiltonianSystem(hidden_dim=64)
+    # AUDIT FIX (2026-07): HamiltonianSystem is an alias for VectorField,
+    # which takes (manifold, potential_module) — not hidden_dim. The old test
+    # also called sys.hamiltonian() and sys.symplectic_step() which don't exist
+    # on VectorField; the real API is total_energy() and LeapfrogIntegrator.step().
+    from igbundle.geometry.poincare import PoincareBall
+    from igbundle.dynamics.potential import NeuralPotential
+    from igbundle.dynamics.hamiltonian import LeapfrogIntegrator
+    manifold = PoincareBall(dim=64, c=1.0)
+    potential = NeuralPotential(latent_dim=64)
+    sys = HamiltonianSystem(manifold=manifold, potential_module=potential)
+    integrator = LeapfrogIntegrator(sys, step_size=0.01, num_steps=1)
     q = torch.randn(2, 64) * 0.1 # Small initial q
     p = torch.zeros_like(q)
     
     # Check energy
-    H = sys.hamiltonian(q, p)
-    print(f"Initial Energy: {H}")
+    H = sys.total_energy(q, p)
+    print(f"Initial Energy: {H.shape} mean={H.mean().item():.4f}")
     
     # Step
-    q_new, p_new = sys.symplectic_step(q, p, dt=0.01)
-    H_new = sys.hamiltonian(q_new, p_new)
-    print(f"New Energy: {H_new}")
+    q_new, p_new = integrator.step(q, p)
+    H_new = sys.total_energy(q_new, p_new)
+    print(f"New Energy: mean={H_new.mean().item():.4f}")
     
     # Check conservation (approx)
     diff = (H_new - H).abs().mean().item()
     print(f"Energy Drift: {diff}")
+    assert not torch.isnan(q_new).any()
+    print("Hamiltonian Test Passed.")
     assert not torch.isnan(q_new).any()
     print("Hamiltonian Test Passed.")
 

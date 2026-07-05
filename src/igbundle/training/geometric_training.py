@@ -382,7 +382,11 @@ class GeometricTrainer:
 
     def load_checkpoint(self, path: str):
         """Load training checkpoint."""
-        checkpoint = torch.load(path)
+        # AUDIT FIX (2026-07): weights_only=False is required here because the
+        # checkpoint stores non-tensor objects (config, loss_history, optimizer
+        # state). Loading from trusted local paths only; do NOT load untrusted
+        # checkpoints through this code path.
+        checkpoint = torch.load(path, weights_only=False)
         self.model.load_state_dict(checkpoint['model_state_dict'])
 
         if hasattr(self.optimizer, 'load_state_dict'):

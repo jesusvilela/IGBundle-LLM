@@ -25,7 +25,7 @@ Author: IGBundle Research
 import torch
 import torch.nn as nn
 import numpy as np
-from typing import Any, Dict, Optional, List, Tuple
+from typing import Any, Dict, Iterable, Optional, List, Tuple
 from dataclasses import dataclass, field
 
 
@@ -172,8 +172,17 @@ class GeometricSteeringProbe(nn.Module):
         self._prev_error:     float = 0.0
         self._cached_lambda:  float = 0.0   # computed once per step, used by all layers
         self._step_id:        int   = 0     # incremented by step_begin()
+        self._layer_weight_index: Dict[int, int] = {}
+        self.last_attached_layers: List[int] = []
 
         # Live geometric state (updated by Neural Glass bridge)
+        # AUDIT NOTE (2026-07): K_current defaults to the architecture-constant
+        # value of the hardcoded conformal factor at the projection boundary
+        # (see draft_paper_falsification.md §2.6). It is NOT evidence of learned
+        # hyperbolicity. If the bridge does not call update_geometric_state() with
+        # a value from the corrected estimator under learnable_conformal=True,
+        # this default remains an unfalsifiable constant — do not quote it as a
+        # measurement of the model's geometry.
         self.K_current:          float = -5.88
         self.S_current:          float = 0.80
         self.Constraint_current: float = 0.80
@@ -248,7 +257,7 @@ class GeometricSteeringProbe(nn.Module):
         if λ < 1e-8:
             return torch.zeros_like(h)
 
-        offset = layer_idx - 8
+        offset = self._layer_weight_index.get(layer_idx, layer_idx - 8)
         if offset < 0 or offset >= len(self.genome.layer_weights):
             return torch.zeros_like(h)
         α_l = self.genome.layer_weights[offset]
@@ -288,9 +297,10 @@ class GeometricSteeringProbe(nn.Module):
 
     @staticmethod
     def _find_layers(model):
-        """Locate transformer layers across Qwen/PeftModel variants."""
+        """Locate transformer layers across Qwen/Gemma/PeftModel variants."""
         for path in [
-            lambda m: m.model.layers,                       # vanilla Qwen
+            lambda m: m.model.language_model.layers,        # Gemma4ForConditionalGeneration
+            lambda m: m.model.layers,                       # vanilla Qwen/Gemma
             lambda m: m.model.model.layers,                 # PeftModel wrapping
             lambda m: m.base_model.model.model.layers,      # double-wrapped
         ]:
@@ -302,31 +312,50 @@ class GeometricSteeringProbe(nn.Module):
                 continue
         return None
 
-    def attach(self, model, target_layers=range(8, 21)):
+    def attach(self, model, target_layers: Iterable[int] = range(8, 21)) -> List[int]:
         self.detach()
         layers = self._find_layers(model)
         if layers is None:
             print("[GSP] ERROR: Could not locate transformer layers. Hook injection failed.")
-            return
+            self.last_attached_layers = []
+            return []
         attached = []
-        for idx in target_layers:
+        requested = [int(idx) for idx in target_layers]
+        for idx in requested:
             try:
                 layer = layers[idx]
                 handle = layer.register_forward_hook(self.make_hook(idx))
                 self._hooks.append(handle)
                 attached.append(idx)
             except (AttributeError, IndexError):
-                pass
+                continue
+        if attached:
+            weight_count = len(self.genome.layer_weights)
+            if len(attached) == 1:
+                self._layer_weight_index = {attached[0]: min(weight_count // 2, weight_count - 1)}
+            else:
+                self._layer_weight_index = {
+                    layer_idx: int(round(pos * (weight_count - 1) / max(len(attached) - 1, 1)))
+                    for pos, layer_idx in enumerate(attached)
+                }
+        else:
+            self._layer_weight_index = {}
+        self.last_attached_layers = attached
         self._active = len(self._hooks) > 0
         print(f"[GSP] Attached to {len(attached)} layers {attached}, "
               f"S_target={self.genome.S_target:.2f}, "
               f"tau_lock={self.genome.tau_lock:.2f}, "
               f"lambda_max={self.genome.lambda_max:.3f}")
+        if requested and len(attached) < len(requested):
+            print(f"[GSP] Skipped {len(requested) - len(attached)} unavailable target layers.")
+        return attached
 
     def detach(self):
         for h in self._hooks:
             h.remove()
         self._hooks.clear()
+        self._layer_weight_index = {}
+        self.last_attached_layers = []
         self._active = False
         self.reset_pid()
 
@@ -466,27 +495,32 @@ def create_gsp_for_qwen7b(
     state_file: Optional[str] = None,
     genome: Optional[GSPGenome] = None
 ) -> Tuple[GeometricSteeringProbe, NeuralGlassBridge]:
+    """Legacy factory for Qwen2.5-7B. Use create_gsp() instead."""
+    return create_gsp(hidden_dim=3584, telemetry_dict=telemetry_dict,
+                       state_file=state_file, genome=genome)
+
+
+def create_gsp(
+    hidden_dim: int = 2560,
+    telemetry_dict: Optional[Dict[str, Any]] = None,
+    state_file: Optional[str] = None,
+    genome: Optional[GSPGenome] = None
+) -> Tuple[GeometricSteeringProbe, NeuralGlassBridge]:
     """
-    Factory for Qwen2.5-7B + IGBundle configuration.
+    Model-agnostic GSP factory.
+
+    Args:
+        hidden_dim: Base model hidden size (2560 for Gemma4-E4B, 3584 for Qwen7B).
 
     Returns (gsp, bridge) ready to attach.
 
-    Typical usage (Neural Glass — live dict):
-        gsp, bridge = create_gsp_for_qwen7b(telemetry_dict=TELEMETRY_STATE)
-        gsp.attach(model, range(8, 21))
-
-        # Before each .generate() call:
-        bridge.poll_and_update()   # reads state + calls step_begin()
-
-        output = model.generate(input_ids, max_new_tokens=512)
-
-    Typical usage (standalone — JSON file):
-        gsp, bridge = create_gsp_for_qwen7b(state_file="output/ng_state.json")
+    Typical usage:
+        gsp, bridge = create_gsp(hidden_dim=2560, telemetry_dict=TELEMETRY_STATE)
         gsp.attach(model, range(8, 21))
         bridge.poll_and_update()
         output = model.generate(...)
     """
     g = genome or GSPGenome()
-    gsp    = GeometricSteeringProbe(genome=g, hidden_dim=3584)
+    gsp    = GeometricSteeringProbe(genome=g, hidden_dim=hidden_dim)
     bridge = NeuralGlassBridge(gsp, telemetry_dict=telemetry_dict, state_file=state_file)
     return gsp, bridge

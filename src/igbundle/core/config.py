@@ -15,7 +15,7 @@ class IGBundleConfig(PretrainedConfig):
         num_categories: int = 8,
         curvature: float = 1.0,
         version: str = "2.0.0",
-        supported_modalities: List[str] = ["text"],
+        supported_modalities: Optional[List[str]] = None,
         rlvr_enabled: bool = False,
         use_dynamics: bool = False,
         use_geodesic_attn: bool = False,
@@ -55,7 +55,10 @@ class IGBundleConfig(PretrainedConfig):
         self.num_categories = num_categories # New assignment
         self.curvature = curvature
         self.version = version
-        self.supported_modalities = supported_modalities
+        # AUDIT FIX (2026-07): mutable default argument ["text"] was shared
+        # across instances (classic Python footgun); also unsafe for HF
+        # PretrainedConfig round-trip. Materialize per-instance.
+        self.supported_modalities = list(supported_modalities) if supported_modalities is not None else ["text"]
         self.rlvr_enabled = rlvr_enabled
         self.use_dynamics = use_dynamics # New assignment
         self.use_geodesic_attn = use_geodesic_attn # New assignment

@@ -9,6 +9,7 @@ References:
 - Skopek et al., "Mixed-curvature Variational Autoencoders" (ICLR 2020)
 """
 
+import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -99,15 +100,57 @@ class PoincareBall:
         return dist / sqrt_c
 
     @staticmethod
+    def kernelized_coords(x: torch.Tensor, c: float) -> torch.Tensor:
+        """
+        Precompute a normalized kernel-like representation for manifold coordinates.
+        This is useful for memory-efficient distance approximation and NMTRIX caching.
+        """
+        lambda_x = PoincareBall.lambda_x(x, c, keepdim=True)
+        return x * lambda_x
+
+    @staticmethod
+    def pairwise_dist2_fast(q: torch.Tensor, k: torch.Tensor, c: float, eps: float = 1e-8) -> torch.Tensor:
+        """
+        Squared hyperbolic distance using a memory-reduced pairwise kernel.
+        q: (B, H, T, D)
+        k: (B, H, S, D)
+        Returns: (B, H, T, S)
+        """
+        B, H, T, D = q.shape
+        S = k.shape[2]
+
+        q_flat = q.reshape(B * H, T, D)
+        k_flat = k.reshape(B * H, S, D)
+
+        # Use cdist to avoid explicit (T,S,D) broadcast when possible.
+        dist2 = torch.cdist(q_flat, k_flat, p=2).pow(2)
+        dist2 = dist2.view(B, H, T, S)
+
+        q2 = torch.sum(q.pow(2), dim=-1, keepdim=True)  # (B,H,T,1)
+        k2 = torch.sum(k.pow(2), dim=-1, keepdim=True)  # (B,H,S,1)
+
+        alpha = (1.0 - c * q2).clamp_min(MIN_NORM)      # (B,H,T,1)
+        beta = (1.0 - c * k2).clamp_min(MIN_NORM)       # (B,H,S,1)
+        # AUDIT FIX (2026-07): beta.expand(-1,-1,T,-1) was a shape bug — beta's
+        # dim 2 is S (not 1), so expand raised RuntimeError whenever T != S.
+        # alpha broadcasts (B,H,T,1) vs (B,H,T,S); beta must broadcast as
+        # (B,H,1,S). Transpose S axis to dim 3 (giving (B,H,1,S)), then expand T.
+        # NO second transpose — that would undo the fix.
+        alpha = alpha.expand(-1, -1, -1, S)             # (B,H,T,S)
+        beta = beta.transpose(2, 3).expand(-1, -1, T, -1)  # (B,H,T,S)
+
+        arg = 1.0 + 2.0 * c * dist2 / (alpha * beta + eps)
+        arg = arg.clamp_min(1.0 + 1e-6)
+        return (torch.acosh(arg) / math.sqrt(c)).pow(2)
+
+    @staticmethod
     def dist2_fast(x: torch.Tensor, y: torch.Tensor, c: float) -> torch.Tensor:
         """
         Squared Distance (Faster, for scoring).
         Returns d(x,y)^2.
         """
-        # Optimization: Don't take sqrt then square?
-        # dist = 1/sqrt(c) * acosh(...)
-        # dist^2 = 1/c * acosh(...)^2
-        # We still need acosh.
+        if x.dim() == 4 and y.dim() == 4:
+            return PoincareBall.pairwise_dist2_fast(x, y, c)
         d = PoincareBall.dist(x, y, c)
         return d.pow(2)
 

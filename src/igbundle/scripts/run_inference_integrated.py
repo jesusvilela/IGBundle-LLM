@@ -85,7 +85,14 @@ def run_refined_inference(base_model_path, adapter_weight_path, prompt, max_toke
     adapter = create_geometric_adapter(config).to(device)
     
     if os.path.exists(adapter_weight_path):
-        adapter.load_state_dict(torch.load(adapter_weight_path), strict=False)
+        # AUDIT FIX (2026-07): weights_only=True for security (avoid arbitrary
+        # pickle execution) and reproducibility. Falls back to legacy load on
+        # older checkpoints that stored optimizer state etc.
+        try:
+            state = torch.load(adapter_weight_path, map_location="cpu", weights_only=True)
+        except Exception:
+            state = torch.load(adapter_weight_path, map_location="cpu")
+        adapter.load_state_dict(state, strict=False)
         print("Adapter weights loaded successfully.")
     else:
         print(f"Warning: Adapter weights not found at {adapter_weight_path}. Using random init.")
