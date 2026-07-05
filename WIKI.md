@@ -25,8 +25,12 @@ The adapter is a lightweight module injected into the Transformer layers.
 
 ## 3. Benchmarks & Performance
 See [README](../README.md) for latest results.
-- **ARC-AGI**: +131.5% Relative Improvement.
-- **MFR**: 94.2% Geometric Faithfulness.
+<!-- RETRACTED (2026-07 audit): "+131.5% Relative Improvement" and "MFR: 94.2%" are
+     refuted by arc_evaluation_results.json (accuracy 0.01, mfr_compliance 0.0, n=100)
+     and match no measured value. See draft_paper_falsification.md §2.5–§2.7. -->
+- **ARC-Challenge**: 54.86% — identical to base Qwen2.5-7B (no measurable geometric transfer).
+- **Kernel faithfulness**: 100% on fixed Poincaré operations (verifies fixed kernels, not learned geometry).
+- **MFR-compliance** (Model-First Reasoning prompting protocol — distinct metric sharing the acronym): 0.0% on ARC (n=100).
 
 ## 4. Usage Guide
 ### Colab Demo

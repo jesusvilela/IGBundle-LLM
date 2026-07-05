@@ -108,8 +108,19 @@ def compute_affinity_matrix(means: torch.Tensor, log_sigmas: torch.Tensor, fiber
         
     else: # riemannian (default)
         # 1. Base Manifold: Hyperbolic (Poincare Ball)
-        # Project Euclidean means to Poincare Ball via Tanh
-        means_hyp = torch.tanh(means) 
+        # AUDIT FIX (2026-07): element-wise tanh(means) is WRONG for the ball —
+        # in D dims it allows ||x|| up to sqrt(D), so the boundary clamps inside
+        # compute_poincare_distance saturate and the hyperbolic affinity geometry
+        # degenerates. Project by vector norm instead (mirrors
+        # GeometricIGBundleAdapter._project_to_ball, max_norm=0.95).
+        max_norm = 0.95
+        means_norm = means.norm(dim=-1, keepdim=True).clamp(min=1e-6)
+        ball_scale = torch.where(
+            means_norm > max_norm,
+            max_norm / means_norm,
+            torch.ones_like(means_norm),
+        )
+        means_hyp = means * ball_scale
         
         # Compute Geodesic Distances
         # We interpret 'log_sigmas' not as variance, but as Inverse Curvature / Temperature

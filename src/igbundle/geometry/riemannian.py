@@ -70,10 +70,31 @@ class RiemannianGeometry(nn.Module):
         
         self.manifold_type = getattr(config, 'manifold_type', 'riemannian')
 
+        # AUDIT FIX (2026-07): the conformal factor lambda(x) = 1 + a*tanh(||x||)
+        # was hardcoded (a=0.5). Since log det g = D*log(lambda) + const, every
+        # curvature statistic derived from it was invariant w.r.t. trained weights
+        # (a constant of the architecture dressed as a measurement). With
+        # config.learnable_conformal=True, `a` becomes trainable so the curvature
+        # regularizer can actually bind. Default False preserves checkpoint
+        # compatibility (non-persistent buffer => identical state_dict).
+        if getattr(config, 'learnable_conformal', False):
+            self.conformal_scale = nn.Parameter(torch.tensor(0.5))
+        else:
+            self.register_buffer('conformal_scale', torch.tensor(0.5), persistent=False)
+
         if self.manifold_type == 'kan':
              # For KAN, we might need a different parameterized approach
              # But for now, we rely on the metric_chol parameters
              pass
+
+    def _conformal_factor(self, positions: torch.Tensor) -> torch.Tensor:
+        """lambda(x) = 1 + a * tanh(||x||), shape (..., 1).
+
+        Single source of truth shared by get_metric and the curvature
+        estimator (previously duplicated, risking silent divergence).
+        """
+        norm_x = torch.norm(positions, dim=-1, keepdim=True)
+        return 1.0 + self.conformal_scale * torch.tanh(norm_x)
 
     def get_metric(self, positions: torch.Tensor) -> RiemannianMetric:
         """
@@ -111,8 +132,7 @@ class RiemannianGeometry(nn.Module):
         # Position-dependent conformal factor for non-zero curvature.
         # FIX: Increased from 0.1 to 0.5 — 0.1 capped curvature capacity at ~10%,
         # making it nearly impossible for the metric to express hyperbolic geometry.
-        norm_x = torch.norm(positions, dim=-1, keepdim=True) # (B, T, P, 1)
-        conformal_factor = 1.0 + 0.5 * torch.tanh(norm_x)
+        conformal_factor = self._conformal_factor(positions)  # (B, T, P, 1)
         conformal_factor = conformal_factor.unsqueeze(-1) # (B, T, P, 1, 1)
         
         metric = metric * conformal_factor
@@ -150,52 +170,99 @@ class RiemannianGeometry(nn.Module):
     def estimate_sectional_curvature_stochastic(self, positions: torch.Tensor,
                                               num_samples: int = 1) -> torch.Tensor:
         """
-        Estimate scalar curvature via stochastic Laplacian of log-determinant.
+        Estimate sectional-scale curvature for the conformal metric g = lambda(x) * g0.
 
-        For a conformal metric g = lambda * g0:
-            R_scalar ~ -(D-1) * Laplacian(log lambda) / lambda
+        AUDIT FIX (2026-07): the previous proxy returned -0.5 * Lap(log det g) / D,
+        which dropped (i) the lambda^{-1} prefactor, (ii) the |grad log lambda|^2
+        term, and (iii) the dimensional constants of the conformal scalar-curvature
+        formula. This version implements the closed form for g = lambda * g0 with
+        g0 position-constant (so R0 = 0):
 
-        We compute this via finite differences along randomly sampled directions,
-        giving an O(num_samples) estimator that avoids O(D^3) Christoffel tensors.
+            R = lambda^{-1} [ -(n-1) * Lap(log lambda)
+                              - ((n-1)(n-2)/4) * |grad log lambda|^2 ]
+
+        and returns the sectional scale kappa = R / (n(n-1)) so that a constant-
+        curvature space of curvature K yields kappa = K.
+
+        HONESTY CAVEATS (keep these when quoting telemetry):
+        - Derivatives are taken w.r.t. Euclidean coordinates; exact only when
+          g0 = L L^T ~ I (empirically true for trained checkpoints).
+        - With config.learnable_conformal=False, lambda(x) is HARDCODED, so this
+          value is weight-invariant: a constant of the architecture, NOT evidence
+          of learned geometry. It must not be reported as a training outcome
+          unless learnable_conformal=True.
 
         Args:
             positions: (B, T, P, D)
-            num_samples: number of random directions to sample for Laplacian
+            num_samples: number of coordinate directions sampled for the
+                stochastic Laplacian / gradient-norm estimates
 
         Returns:
-            curvature: (B, T, P) - estimated scalar curvature (negative = hyperbolic)
+            curvature: (B, T, P) - estimated sectional-scale curvature
         """
         B, T, P, D = positions.shape
         eps = 1e-3
 
-        # log|det g| at current position — using slogdet for numerical stability
-        metric_base = self.get_metric(positions).metric_tensor  # (B, T, P, D, D)
-        log_det_base = self._safe_log_det(metric_base)  # (B, T, P)
+        if self.manifold_type == 'euclidean' or D < 2:
+            return torch.zeros(B, T, P, device=positions.device, dtype=positions.dtype)
 
-        # Stochastic Laplacian: Lap(f) ~ (D / num_samples) * sum_i [f(x+eps*e_i) + f(x-eps*e_i) - 2f(x)] / eps^2
-        laplacian_sum = torch.zeros_like(log_det_base)
+        # f(x) = log lambda(x). The x-independent log det(L L^T) term cancels in
+        # finite differences, so we work with lambda directly (single source of
+        # truth via _conformal_factor).
+        log_lam_base = torch.log(self._conformal_factor(positions)).squeeze(-1)  # (B, T, P)
+
+        second_sum = torch.zeros_like(log_lam_base)
+        grad_sq_sum = torch.zeros_like(log_lam_base)
 
         for _ in range(num_samples):
             k = torch.randint(0, D, (1,)).item()
 
             pos_plus = positions.clone()
             pos_plus[..., k] += eps
-            log_det_plus = self._safe_log_det(self.get_metric(pos_plus).metric_tensor)
+            log_lam_plus = torch.log(self._conformal_factor(pos_plus)).squeeze(-1)
 
             pos_minus = positions.clone()
             pos_minus[..., k] -= eps
-            log_det_minus = self._safe_log_det(self.get_metric(pos_minus).metric_tensor)
+            log_lam_minus = torch.log(self._conformal_factor(pos_minus)).squeeze(-1)
 
-            # Second derivative: d^2(log|det g|)/dx_k^2
-            laplacian_sum = laplacian_sum + (log_det_plus + log_det_minus - 2.0 * log_det_base) / (eps * eps)
+            # d^2 f / dx_k^2 and (df/dx_k)^2 along the sampled axis
+            second_sum = second_sum + (log_lam_plus + log_lam_minus - 2.0 * log_lam_base) / (eps * eps)
+            grad_sq_sum = grad_sq_sum + ((log_lam_plus - log_lam_minus) / (2.0 * eps)) ** 2
 
-        # Scale: Laplacian ~ (D / num_samples) * sum
-        # Curvature proxy: K ~ -0.5 * Laplacian(log|det g|) / D
-        # The -0.5/D normalizes to approximate sectional curvature
-        estimated_laplacian = laplacian_sum * (D / num_samples)
-        curvature = -0.5 * estimated_laplacian / max(D, 1)
+        # Stochastic trace estimators: E_k[d^2_k f] * D ~ Lap(f), E_k[(d_k f)^2] * D ~ |grad f|^2
+        laplacian_log_lam = second_sum * (D / num_samples)
+        grad_sq_log_lam = grad_sq_sum * (D / num_samples)
+
+        lam = self._conformal_factor(positions).squeeze(-1)  # (B, T, P)
+
+        # R = lambda^{-1} [ -(D-1) Lap(log lam) - ((D-1)(D-2)/4) |grad log lam|^2 ]
+        scalar_R = (-(D - 1) * laplacian_log_lam
+                    - ((D - 1) * (D - 2) / 4.0) * grad_sq_log_lam) / lam.clamp(min=1e-6)
+
+        # Sectional scale: R = n(n-1) K for constant curvature K
+        curvature = scalar_R / (D * (D - 1))
 
         return curvature
+
+    def sectional_curvature(self, positions: torch.Tensor,
+                            u: Optional[torch.Tensor] = None,
+                            v: Optional[torch.Tensor] = None,
+                            num_samples: int = 4) -> torch.Tensor:
+        """Compatibility shim for legacy callers (bundle_curvature_loss,
+        adaptive_curvature_loss).
+
+        AUDIT FIX (2026-07): this method was removed when the neural-Christoffel
+        machinery was retired, leaving callers to raise AttributeError. It now
+        delegates to the stochastic conformal estimator. NOTE: the estimator
+        returns a scalar-curvature-derived sectional scale; the direction
+        arguments (u, v) are accepted for API compatibility but IGNORED — the
+        conformal metric here is isotropic in the plane choice at this level of
+        approximation.
+
+        Returns:
+            curvature: (B, T, P)
+        """
+        return self.estimate_sectional_curvature_stochastic(positions, num_samples=num_samples)
 
     def inner_product(self, u: torch.Tensor, v: torch.Tensor, metric: RiemannianMetric) -> torch.Tensor:
         """
@@ -299,6 +366,15 @@ class RiemannianGeometry(nn.Module):
         Returns:
             tangent_vec: (B, T, P, D) - logarithmic map
         """
+        # AUDIT FIX (2026-07): christoffel_symbols returns zeros by design, so
+        # exp_map integrates a straight line and log_map is exactly the Euclidean
+        # difference. The LBFGS inner loop was an expensive no-op (and returned
+        # detached, breaking gradients). Fast path taken whenever the connection
+        # is flat; the LBFGS branch is retained for a future non-flat connection.
+        christoffel_probe = self.christoffel_symbols(base_point, metric)
+        if torch.count_nonzero(christoffel_probe) == 0:
+            return target_point - base_point
+
         # Simplified implementation: use gradient descent to find initial velocity
         # such that exp_map(base_point, velocity) = target_point
 
@@ -431,6 +507,11 @@ def bundle_curvature_loss(geometry: RiemannianGeometry, positions: torch.Tensor,
                          target_curvature: float = -1.0) -> torch.Tensor:
     """
     Loss function to encourage specific curvature properties.
+
+    AUDIT NOTE (2026-07): with config.learnable_conformal=False (default) the
+    curvature estimate is a constant of the architecture (hardcoded lambda(x)),
+    so this MSE optimizes a target no parameter can reach — the loss is
+    unfalsifiable by construction. Enable learnable_conformal for it to bind.
 
     Args:
         geometry: RiemannianGeometry instance

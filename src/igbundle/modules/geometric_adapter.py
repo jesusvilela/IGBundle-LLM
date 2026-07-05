@@ -22,6 +22,7 @@ from typing import Tuple, Optional, Dict, Any, Set
 from dataclasses import dataclass
 
 from .delta_fiber import DeltaFiberUpdate, DeltaNetAttention
+from .geometric_cache import GeometricCacheManager
 
 def check_nan(tensor, name):
     if torch.isnan(tensor).any():
@@ -134,19 +135,16 @@ class GeometricIGBundleAdapter(nn.Module):
         self.riemannian_geometry = RiemannianGeometry(config)
         self.lambda_calculus = FiberBundleLambdaCalculus(config)
         
-
+        # Initialize Manifold Geometry (Required for Exp/Log maps)
+        self.manifold_type = getattr(config, 'manifold_type', 'poincare')
+        if self.manifold_type == 'kan':
+             print("GeometricIGBundle: Initialization KAN Manifold (Learnable Geometry)")
+             self.manifold = KanManifold(dim=self.D, hidden_dim=64, base_manifold='poincare')
+        else:
+             self.manifold = PoincareBall(dim=self.D)
         
         if config.use_dynamics:
             # --- Phase 2: Hamiltonian Dynamics Engine ---
-            # Initialize Poincare Ball Geometry (K=-1)
-
-            self.manifold_type = getattr(config, 'manifold_type', 'poincare')
-            if self.manifold_type == 'kan':
-                 print("GeometricIGBundle: Initialization KAN Manifold (Learnable Geometry)")
-                 self.manifold = KanManifold(dim=self.D, hidden_dim=64, base_manifold='poincare')
-            else:
-                 self.manifold = PoincareBall(dim=self.D)
-            
             # Epic 35: Semantic Potential Field (V)
             self.potential_net = NeuralPotential(latent_dim=self.D, hidden_dim=256)
             
@@ -269,9 +267,11 @@ class GeometricIGBundleAdapter(nn.Module):
 
         # EPIC 2: Geodesic Attention
         self.use_geodesic_attn = getattr(config, 'use_geodesic_attn', False)
+        self.use_geometric_cache = getattr(config, 'use_geometric_cache', False)
+        self.geometric_cache = GeometricCacheManager(config) if self.use_geometric_cache else None
         if self.use_geodesic_attn:
             # Phase 7 Upgrade: Use Riemannian Attention + Gating
-            self.geodesic_attn = RiemannianAttention(config)
+            self.geodesic_attn = RiemannianAttention(config, cache_manager=self.geometric_cache)
             self.gating = EntropyGating(config)
             self.euclidean_bypass = nn.Linear(self.D, self.D) # Fast path
 
@@ -450,13 +450,27 @@ class GeometricIGBundleAdapter(nn.Module):
              flat_indices = active_indices.view(-1).unique().tolist()
              self.fiber_executor.update_resonance(flat_indices)
 
-             # Coordinate dynamics: detached to prevent NaN from LeapfrogIntegrator sub-graphs.
-             # Gradient for coords flows through the residual connection instead.
-             with torch.no_grad():
+             # AUDIT FIX (2026-07): running the integrator under torch.no_grad()
+             # and detaching the direction meant NO gradient path to potential_net
+             # existed by construction — the dynamics were untrained (confirmed at
+             # weight level: byte-identical potential_module copies across
+             # checkpoints). With config.differentiable_dynamics=True the
+             # integrator runs with grad enabled and the direction is kept in the
+             # graph, so potential_net receives training signal. Default False
+             # preserves the legacy NaN-safe behavior.
+             if getattr(self.cfg, 'differentiable_dynamics', False):
                  updated_coords_dyn, _ = self._symplectic_integrate(
                      transported_coords, transformed_sections, metric, active_indices=active_indices
                  )
-             dynamics_direction = (updated_coords_dyn - transported_coords).detach()
+                 dynamics_direction = updated_coords_dyn - transported_coords
+             else:
+                 # Legacy: detached to prevent NaN from LeapfrogIntegrator sub-graphs.
+                 # Gradient for coords flows through the residual connection instead.
+                 with torch.no_grad():
+                     updated_coords_dyn, _ = self._symplectic_integrate(
+                         transported_coords, transformed_sections, metric, active_indices=active_indices
+                     )
+                 dynamics_direction = (updated_coords_dyn - transported_coords).detach()
              updated_coords = transported_coords + 0.1 * dynamics_direction
              updated_coords = self._project_to_ball(updated_coords, max_norm=0.95)
 
@@ -520,8 +534,9 @@ class GeometricIGBundleAdapter(nn.Module):
             # If P corresponds to Heads, let's treat P as H.
             
             z_perm = updated_coords.permute(0, 2, 1, 3) # (B, P, T, D)
+            if self.geometric_cache is not None:
+                self.geometric_cache.update(0, z_perm, z_perm, projector=None)
             
-            # Riemannian Path
             # Note: RiemannianAttention expects (B, H, T, D).
             # We assume P == H for this adapter config.
             # Or we let module handle it.
@@ -839,9 +854,15 @@ class GeometricIGBundleAdapter(nn.Module):
         losses = {}
 
         # 1. Curvature regularization - encourage hyperbolic structure
-        # 1. Curvature regularization - encourage hyperbolic structure
         # Enabled via stochastic estimation (O(1))
         # This provides telemetry without crashing performance
+        # AUDIT NOTE (2026-07): with learnable_conformal=False (default) the
+        # estimator output is weight-invariant — a constant of the hardcoded
+        # conformal factor evaluated at the coordinate-norm distribution, NOT a
+        # measurement of learned geometry. The published K=-5.63/-5.72 values
+        # were this constant read at the projection boundary (r≈0.95). Do not
+        # report this telemetry as a training outcome unless
+        # config.learnable_conformal=True (in which case the MSE below binds).
         if hasattr(self.riemannian_geometry, 'estimate_sectional_curvature_stochastic'):
              # MEMORY FIX: Downsample tokens to prevent OOM (D^3 tensor is huge)
              # Take max 16 random tokens

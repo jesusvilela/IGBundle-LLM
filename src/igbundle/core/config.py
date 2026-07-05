@@ -6,8 +6,8 @@ class IGBundleConfig(PretrainedConfig):
     
     def __init__(
         self,
-        base_model_name_or_path: str = "unsloth/Qwen2.5-7B-Instruct",
-        hidden_size: int = 4096,
+        base_model_name_or_path: str = "google/gemma-4-E4B-it",
+        hidden_size: int = 2560,
         adapter_dim: int = 128,
         manifold_type: str = "riemannian",
         latent_dim: int = 32,
@@ -19,15 +19,22 @@ class IGBundleConfig(PretrainedConfig):
         rlvr_enabled: bool = False,
         use_dynamics: bool = False,
         use_geodesic_attn: bool = False,
-        vision_dim: int = 1152,
+        vision_dim: int = 768,
         adapter_scale: float = 1.0,
         dropout: float = 0.1,
         eta_b: float = 0.01,
         eta_f: float = 0.1,
         num_attention_heads: int = 4, # Phase 7 Requirement
+        num_hidden_layers: int = 1,
         use_delta_fiber: bool = False,  # Epic 17b: delta-net fiber dynamics
         delta_mem_dim: int = 64,        # memory key/value dim for delta rule
         delta_num_heads: int = 4,       # multi-head delta for capacity
+        use_geometric_cache: bool = False,
+        geometric_cache_max_length: int = 128,
+        geometric_eviction: bool = False,
+        use_nmtrixed: bool = True,
+        learnable_conformal: bool = False,       # Audit 2026-07: make lambda(x) trainable so curvature telemetry/regularizer can bind
+        differentiable_dynamics: bool = False,   # Audit 2026-07: open gradient path through symplectic integrator to potential_net
         **kwargs,
     ):
         """
@@ -58,9 +65,16 @@ class IGBundleConfig(PretrainedConfig):
         self.eta_b = eta_b
         self.eta_f = eta_f
         self.num_attention_heads = num_attention_heads
+        self.num_hidden_layers = num_hidden_layers
         self.use_delta_fiber = use_delta_fiber
         self.delta_mem_dim = delta_mem_dim
         self.delta_num_heads = delta_num_heads
+        self.use_geometric_cache = use_geometric_cache
+        self.geometric_cache_max_length = geometric_cache_max_length
+        self.geometric_eviction = geometric_eviction
+        self.use_nmtrixed = use_nmtrixed
+        self.learnable_conformal = learnable_conformal
+        self.differentiable_dynamics = differentiable_dynamics
         
         super().__init__(**kwargs)
 

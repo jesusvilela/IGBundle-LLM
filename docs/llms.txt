@@ -23,5 +23,10 @@ python trainv2.py --config configs/qwen25_7b_igbundle_lora.yaml
 ```
 
 ## Results
-- Accuracy: 28.7% (vs 12.4% baseline)
-- MFR (Manifold Faithfulness Rate): 94.2%
+<!-- RETRACTED (2026-07 audit): the previous figures here (28.7% vs 12.4% accuracy;
+     94.2% "MFR") are refuted by the project's own evaluation artifacts and have no
+     surviving provenance. Measured values below. See draft_paper_falsification.md
+     §2.5–§2.7 for the full reconciliation. -->
+- ARC evaluation (n=100): accuracy 0.01, MFR-compliance (Model-First Reasoning protocol) 0.0% (arc_evaluation_results.json)
+- ARC-Challenge: 54.86% — identical to base Qwen2.5-7B (no measurable geometric transfer)
+- Kernel faithfulness (fixed Poincaré operations): 100% — verifies fixed kernels, not learned geometry

@@ -56,7 +56,10 @@ class PoincareBall(nn.Module):
         lambda_x = self._lambda(x)
         
         sqrt_c = math.sqrt(self.c)
-        factor = (2 / (sqrt_c * lambda_x)) * torch.atanh(sqrt_c * sub_norm.clamp(max=1.0 - 1e-5))
+        # AUDIT FIX (2026-07): the ball for curvature c has radius 1/sqrt(c),
+        # so the atanh domain guard must clamp sqrt(c)*||sub||, not ||sub||.
+        # The old clamp(max=1-eps) on ||sub|| assumed c=1 (wrong radius for c!=1).
+        factor = (2 / (sqrt_c * lambda_x)) * torch.atanh((sqrt_c * sub_norm).clamp(max=1.0 - 1e-5))
         
         return factor * (sub / sub_norm)
 
@@ -70,7 +73,9 @@ class PoincareBall(nn.Module):
         sqrt_c = math.sqrt(self.c)
         
         # d = (2/sqrt(c)) * atanh(sqrt(c) * ||-x + y||)
-        dist = (2 / sqrt_c) * torch.atanh(sqrt_c * sub_norm.clamp(max=1.0 - 1e-5))
+        # AUDIT FIX (2026-07): clamp the product sqrt(c)*||sub|| (atanh domain),
+        # not ||sub|| alone — the old form used the wrong ball radius for c!=1.
+        dist = (2 / sqrt_c) * torch.atanh((sqrt_c * sub_norm).clamp(max=1.0 - 1e-5))
         return dist.squeeze(-1)
 
     def parallel_transport(self, x: torch.Tensor, y: torch.Tensor, v: torch.Tensor) -> torch.Tensor:

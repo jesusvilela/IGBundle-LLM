@@ -7,10 +7,14 @@ from tqdm import tqdm
 
 def compute_sectional_curvature(h_states):
     """
-    Estimate sectional curvature from hidden states.
-    k(u, v) = <R(u, v)v, u> / (|u|^2|v|^2 - <u, v>^2)
-    This is a simplified proxy: we measure the 'deviation' from Euclidean flatness
-    by checking how distances expand/contract relative to parallelism.
+    AUDIT NOTE (2026-07): despite the name, this is a TURNING-RATE PROXY, not a
+    sectional curvature. It measures the mean norm of the change in normalized
+    token-difference directions, ||t_hat_{i+1} - t_hat_i|| in [0, 2] — non-negative
+    by construction. It CANNOT express hyperbolicity (sign) and is NOT commensurable
+    with the signed kappa produced by the adapter-internal estimator. The
+    avg_curvature ≈ +1.71 in geometric_validation.json is this statistic; quoting it
+    alongside K = -5.63 as a single "curvature" is a category error.
+    See draft_paper_falsification.md §2.5. Name kept for artifact compatibility.
     """
     # Simplified proxy: measure cosine similarity variance vs distance
     # Identify "tangent vectors" as differences between consecutive tokens
@@ -84,23 +88,29 @@ def validate_geometry():
             })
             
     avg_curvature = np.mean(all_curvatures)
-    print(f"\nAverage Latent Curvature Proxy: {avg_curvature:.4f}")
+    print(f"\nAverage Latent Turning-Rate Proxy (unsigned; NOT sectional curvature): {avg_curvature:.4f}")
     
     # Save results
     with open("geometric_validation.json", "w") as f:
         json.dump({
-            "metrics": {"avg_curvature": float(avg_curvature)},
+            "metrics": {
+                "avg_curvature": float(avg_curvature),
+                "metric_name": "turning_rate_proxy_unsigned",
+                "note": "Mean ||t_hat_{i+1} - t_hat_i|| over final hidden layer; in [0,2]; not commensurable with signed sectional curvature. See draft_paper_falsification.md 2.5."
+            },
             "samples": results
         }, f, indent=2)
         
     print("Validation detailed results saved to geometric_validation.json")
     
     # Check PASS/FAIL
-    # We expect Non-Zero curvature (since we trained for it) but stable generation.
+    # AUDIT NOTE (2026-07): a nonzero turning rate indicates token-trajectory
+    # direction changes — expected for ANY transformer, trained-for-geometry or not.
+    # It is NOT evidence of hyperbolic structure.
     if avg_curvature > 0.001: 
-        print("PASS: Manifold shows non-trivial geometric structure.")
+        print("PASS: Latent trajectories show non-trivial direction changes (expected for any transformer; not evidence of hyperbolicity).")
     else:
-        print("WARNING: Latent space appears suspiciously flat (Euclidean).")
+        print("WARNING: Latent trajectories are suspiciously straight.")
 
 if __name__ == "__main__":
     validate_geometry()
