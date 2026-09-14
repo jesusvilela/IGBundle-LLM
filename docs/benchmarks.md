@@ -8,7 +8,7 @@ A fresh adapter-integrity run is available: the unified checkpoint loads exactly
 
 ## A publishable run
 
-Every reported result must contain a committed manifest with the base-model and adapter checkpoint revisions, tokenizer and dataset revisions, command, environment, hardware, seed, decoding configuration, raw predictions, and a paired base-model run under identical settings. Use the project's Unsloth 4-bit loader for the local Qwen base when it is available, and record its version. Training-dependent claims additionally require at least three seeds with uncertainty.
+Every reported result must contain a committed manifest with the base-model and adapter checkpoint revisions, tokenizer and dataset revisions, command, environment, hardware, seed, decoding configuration, raw predictions, and a paired base-model run under identical settings. Record the loader and its memory-placement plan; the local Qwen paired runner uses the Neural Glass-style 4-bit GPU/CPU split and Windows commit preflight. Training-dependent claims additionally require at least three seeds with uncertainty.
 
 Kernel tests, telemetry, and task quality must be reported separately. Kernel correctness does not imply model improvement.
 

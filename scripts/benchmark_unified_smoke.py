@@ -9,16 +9,18 @@ import json
 import os
 import platform
 import sys
+import ctypes
 from datetime import datetime, timezone
 
 import torch
-from unsloth import FastLanguageModel
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
 PROJECT_ROOT = r"H:\LLM-MANIFOLD\igbundle-llm"
 SOURCE_ROOT = os.path.join(PROJECT_ROOT, "igbundle_unified_deployment", "src")
 BASE_MODEL = r"H:\LLM-MANIFOLD\igbundle_qwen7b_cp600"
 CHECKPOINT = os.path.join(PROJECT_ROOT, "igbundle_unified_training", "final", "adapter_weights.pt")
 OUTPUT_DIR = r"H:\LLM-MANIFOLD\benchmark-runs\unified-smoke-2026-09-14"
+OFFLOAD_DIR = os.path.join(os.path.dirname(__file__), "..", "offload_unified_smoke")
 PROMPTS = [
     "What is the next number in the sequence 2, 6, 12, 20, 30? Answer briefly.",
     "If every A is B and no B is C, can any A be C? Answer briefly.",
@@ -44,6 +46,70 @@ def generate(model, tokenizer, prompt):
     return tokenizer.decode(output[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
 
 
+def windows_available_commit_bytes():
+    """Return available Windows commit/pagefile bytes when available."""
+    if os.name != "nt":
+        return None
+
+    class MemoryStatus(ctypes.Structure):
+        _fields_ = [
+            ("dwLength", ctypes.c_ulong), ("dwMemoryLoad", ctypes.c_ulong),
+            ("ullTotalPhys", ctypes.c_ulonglong), ("ullAvailPhys", ctypes.c_ulonglong),
+            ("ullTotalPageFile", ctypes.c_ulonglong), ("ullAvailPageFile", ctypes.c_ulonglong),
+            ("ullTotalVirtual", ctypes.c_ulonglong), ("ullAvailVirtual", ctypes.c_ulonglong),
+            ("ullAvailExtendedVirtual", ctypes.c_ulonglong),
+        ]
+
+    status = MemoryStatus()
+    status.dwLength = ctypes.sizeof(status)
+    if not ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(status)):
+        return None
+    return int(status.ullAvailPageFile)
+
+
+def model_safetensor_bytes(model_path):
+    return sum(
+        os.path.getsize(os.path.join(root, name))
+        for root, _, files in os.walk(model_path)
+        for name in files if name.endswith(".safetensors")
+    )
+
+
+def load_qwen_neural_glass_style():
+    """Load Qwen with Neural Glass's explicit GPU/CPU split and disk offload."""
+    available_commit = windows_available_commit_bytes()
+    shard_bytes = model_safetensor_bytes(BASE_MODEL)
+    required_commit = shard_bytes + 2 * 1024 ** 3
+    if available_commit is not None and available_commit < required_commit:
+        raise RuntimeError(
+            "Insufficient Windows commit headroom for safe 7B load: "
+            f"available={available_commit / 1024 ** 3:.2f} GiB, "
+            f"required~={required_commit / 1024 ** 3:.2f} GiB "
+            f"({shard_bytes / 1024 ** 3:.2f} GiB shards + 2 GiB headroom). "
+            "Increase the paging file or close memory-heavy applications, then rerun."
+        )
+    os.makedirs(OFFLOAD_DIR, exist_ok=True)
+    tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL, trust_remote_code=True)
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+    # Keep the adapted layer and language-model boundary on GPU; offload the
+    # upper half. This mirrors Neural Glass's explicit placement discipline.
+    device_map = {"model.embed_tokens": 0, "model.norm": 0, "lm_head": 0}
+    for index in range(28):
+        device_map[f"model.layers.{index}"] = 0 if index <= 13 else "cpu"
+    quantization = BitsAndBytesConfig(
+        load_in_4bit=True, bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch.bfloat16,
+        llm_int8_enable_fp32_cpu_offload=True,
+    )
+    model = AutoModelForCausalLM.from_pretrained(
+        BASE_MODEL, quantization_config=quantization, device_map=device_map,
+        max_memory={0: "5GiB", "cpu": "24GiB"}, offload_folder=OFFLOAD_DIR,
+        offload_state_dict=True, low_cpu_mem_usage=True, trust_remote_code=True,
+    )
+    return model.eval(), tokenizer
+
+
 def validate_adapter(adapter):
     """Reject a checkpoint that is non-finite, inert, or implausibly disruptive."""
     torch.manual_seed(7)
@@ -66,13 +132,7 @@ def main():
     from igbundle.core.config import IGBundleConfig
     from igbundle.modules.geometric_adapter import GeometricIGBundleAdapter
 
-    model, tokenizer = FastLanguageModel.from_pretrained(
-        model_name=BASE_MODEL, max_seq_length=8192, dtype=None,
-        load_in_4bit=True, trust_remote_code=True, device_map={"": 0},
-    )
-    FastLanguageModel.for_inference(model)
-    if tokenizer.pad_token is None:
-        tokenizer.pad_token = tokenizer.eos_token
+    model, tokenizer = load_qwen_neural_glass_style()
 
     config = IGBundleConfig(
         hidden_size=3584, num_components=8, latent_dim=64, num_categories=16,

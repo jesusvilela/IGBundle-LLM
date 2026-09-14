@@ -11,7 +11,9 @@ The checkpoint loads into `GeometricIGBundleAdapter` with zero missing and zero 
 
 ## Current execution result
 
-No task-quality figure has been produced. The local 7B base model terminated during 4-bit loading without a Python traceback (at shard 96 of 339 in one Transformers attempt and after the first shard in both direct-GPU Transformers and Unsloth 2026.4.5 attempts). A 5 GiB GPU cap fails earlier because the installed bitsandbytes path rejects CPU-dispatched 4-bit modules. At the time of execution the host exposed about 6.7 GiB free GPU memory and about 8 GiB free RAM; the four base-model shards total about 15.1 GB. There is no locally available smaller base with the required 3584-wide hidden state.
+No task-quality figure has been produced. The local 7B base model terminated during 4-bit loading without a Python traceback (at shard 96 of 339 in one Transformers attempt and after the first shard in both direct-GPU Transformers and Unsloth 2026.4.5 attempts). The four base-model shards total **14.19 GiB**. There is no locally available smaller base with the required 3584-wide hidden state.
+
+Neural Glass provides the appropriate loader pattern: explicit GPU/CPU layer placement, 4-bit CPU offload, disk offload, and a Windows commit preflight. The paired runner now applies it to Qwen (layers 0–13 plus embedding/head on GPU; upper layers on CPU). Its preflight currently stops safely at **8.89 GiB** available Windows commit against **16.19 GiB** required (the shards plus 2 GiB headroom). Increase the Windows paging file or release at least 7.3 GiB of committed memory before rerunning; do not bypass this guard.
 
 The local CPU llama.cpp binary can load the separate 8.10 GB Q4 base GGUF and complete a minimal `2 + 2 = 4` probe (7.27 GB working set; 17.6 prompt tokens/s and 5.0 generated tokens/s). That validates a base-only fallback, not the geometric arm: the GGUF runner has no adapter injection path and this llama.cpp build reports no usable GPU backend. It must not be substituted for a paired base/adapted benchmark.
 
