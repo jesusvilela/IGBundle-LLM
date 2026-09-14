@@ -13,6 +13,8 @@ The checkpoint loads into `GeometricIGBundleAdapter` with zero missing and zero 
 
 No task-quality figure has been produced. The local 7B base model terminated during 4-bit loading without a Python traceback (at shard 96 of 339 in one Transformers attempt and after the first shard in both direct-GPU Transformers and Unsloth 2026.4.5 attempts). A 5 GiB GPU cap fails earlier because the installed bitsandbytes path rejects CPU-dispatched 4-bit modules. At the time of execution the host exposed about 6.7 GiB free GPU memory and about 8 GiB free RAM; the four base-model shards total about 15.1 GB. There is no locally available smaller base with the required 3584-wide hidden state.
 
+The local CPU llama.cpp binary can load the separate 8.10 GB Q4 base GGUF and complete a minimal `2 + 2 = 4` probe (7.27 GB working set; 17.6 prompt tokens/s and 5.0 generated tokens/s). That validates a base-only fallback, not the geometric arm: the GGUF runner has no adapter injection path and this llama.cpp build reports no usable GPU backend. It must not be substituted for a paired base/adapted benchmark.
+
 ## Completed adapter-integrity run
 
 The executable checkpoint is `igbundle_unified_training/final/adapter_weights.pt` (SHA-256 `ccea55d142cc8d962966011213bb9db5f90e2f9436ba847f6dba1c5edff0328e`) paired with the preserved `igbundle_unified_deployment/src` source snapshot. It loaded strictly with **0 missing and 0 unexpected tensors**.
