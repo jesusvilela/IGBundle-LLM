@@ -21,7 +21,7 @@
 
 ## What is IGBundle?
 
-IGBundle is a parameter-efficient fine-tuning method that models the semantic latent space of a transformer as a **fiber bundle** over a **hyperbolic base manifold**. Instead of flat Euclidean weight updates (LoRA), it enforces geometric constraints — Riemannian curvature, sheaf consistency, and symplectic dynamics — that provide an inductive bias for hierarchical and abstract reasoning.
+IGBundle is an experimental parameter-efficient fine-tuning method that explores fiber-bundle-inspired structure over transformer latent states. The repository contains geometric kernels, an adapter prototype, and evaluation tooling. It does **not** currently establish that the method improves reasoning or that its telemetry measures learned geometry.
 
 The adapter is injected at a single transformer layer (Layer 12 of Qwen 2.5-7B) and introduces:
 
@@ -30,7 +30,7 @@ The adapter is injected at a single transformer layer (Layer 12 of Qwen 2.5-7B) 
 - **Hamiltonian dynamics** — symplectic integration for fiber evolution
 - **Riemannian curvature regularization** — enforces target curvature kappa = -1
 
-At inference time, a **Geometric Steering Probe (GSP)** uses measured curvature and entropy as real-time feedback to modulate generation without retraining.
+At inference time, a **Geometric Steering Probe (GSP)** can use adapter telemetry to modulate generation. Its utility is a hypothesis pending controlled evaluation.
 
 ## Architecture
 
@@ -74,39 +74,15 @@ The adapter operates as a residual perturbation clamped to ≤10% of the base hi
 
 **Symplectic Integration.** Fiber state evolves via a Hamiltonian system with a Lorentz-factor speed limiter (c=5.0), ensuring energy conservation and preventing gradient explosion.
 
-## Key Results
+## Evidence status
 
-### Manifold Faithfulness (Tier 3)
+The previously displayed curvature, benchmark, overhead, and ablation figures are not carried forward as project results: they lack a complete, paired reproduction record in this branch. In particular, the legacy curvature estimator depends on a fixed conformal term and cannot support a claim about learned hyperbolicity.
 
-The geometric constraints are not decorative — they produce measurable, non-trivial structure:
+What is currently supported:
 
-| Metric | Value | Interpretation |
-|:---|:---:|:---|
-| Curvature K | -5.63 | Strongly hyperbolic (target: -1.0) |
-| Entropy S | 0.95 | Below uniform (ln16 ≈ 2.77), sections specialized |
-| Jensen-Shannon Div. | 0.424 | Fibers differ across contexts |
-| Parallel Transport | 0.041 | Near-zero holonomy — geometric consistency |
-| Faithfulness | **6/6** | All geometric verification tests pass |
-
-### Benchmark Preservation
-
-The adapter preserves base model capabilities with minimal degradation:
-
-| Benchmark | Score | Notes |
-|:---|:---:|:---|
-| ARC-Challenge | 54.86% | Identical to base Qwen 2.5-7B |
-| TruthfulQA (MC2) | 64.78% | Strong factual grounding |
-| Winogrande | 71.03% | Commonsense reasoning intact |
-| GSM8K | 75.51% | Multi-step math preserved |
-
-### Computational Overhead
-
-| Metric | vs. LoRA Baseline |
-|:---|:---:|
-| Training speed | -15% per step |
-| VRAM (8GB GPU) | +0.6 GB |
-| Inference latency | +4% |
-| Convergence steps | **-30%** (natural gradients) |
+- The repository contains testable geometric-kernel and adapter implementations.
+- Historical runs are preserved as artifacts, not as comparative evidence.
+- A result becomes publishable only when it follows the [benchmark protocol](docs/benchmarks.md) and commits its configuration, environment, raw outputs, and paired baseline.
 
 ## Project Structure
 

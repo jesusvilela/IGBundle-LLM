@@ -28,11 +28,10 @@ regularization as an inductive bias for hierarchical reasoning.
 - Memory: NMEM (neuromorphic) with FHN decay, FFT spectral forgetting, Gabor interference
 - UI: Neural Glass (Gradio) with real-time curvature/entropy telemetry
 
-## Key Results
-- Manifold Faithfulness: 6/6 tests PASS (K=-5.63, S=0.95, JSD=0.424, PT=0.041)
-- Benchmarks preserved: ARC 54.86%, TruthfulQA 64.78%, Winogrande 71.03%, GSM8K 75.51%
-- Geometry is real and measurable, not decorative
-- Overhead: +15% training time, +4% inference latency, -30% convergence steps
+## Evidence Status
+- No comparative performance, speed, or learned-geometry figure is currently claimed.
+- Kernel checks and telemetry are distinct from downstream model-quality evidence.
+- New figures require paired base/adapter runs, immutable configuration, raw outputs, and environment provenance; see /docs/benchmarks.md.
 
 ## Quick Start
 ```bash

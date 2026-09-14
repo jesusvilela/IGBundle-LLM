@@ -53,9 +53,9 @@
             </p>
             <p>\[ K \approx -\frac{1}{2} \nabla^2 \log \det g \]</p>
             <p>
-                A curvature loss regularizes toward \(\kappa = -1\). The learned curvature
-                at convergence is \(K = -5.63\) &mdash; strongly hyperbolic, overshooting the target but
-                geometrically meaningful.
+                A curvature loss is intended to regularize toward \(\kappa = -1\). Historical curvature
+                telemetry is not presented as a learned result: its legacy estimator must first pass a
+                weight-sensitivity test at fixed coordinates.
             </p>
 
             <h3>1.3 Symplectic Dynamics</h3>
@@ -76,7 +76,7 @@
             </p>
             <p>\[ \theta_{t+1} = \theta_t - \eta \, F^{-1} \nabla_\theta \mathcal{L} \]</p>
             <p>
-                This respects the Fisher-Rao metric and converges ~30% faster than Euclidean gradient descent.
+                This is an optimization hypothesis; a speed or convergence claim requires a paired, reproducible comparison.
             </p>
 
             <h3>1.5 Sheaf Consistency</h3>
@@ -123,57 +123,40 @@
                 OOM-hardened for 5 GiB VRAM GPUs with dynamic token budgeting.
             </p>
 
-            <h2>3. Experimental Results</h2>
+            <h2>3. Evidence Status</h2>
 
-            <h3>3.1 Manifold Faithfulness (Tier 3)</h3>
+            <h3>3.1 What is supported</h3>
             <table>
                 <thead>
                     <tr><th>Metric</th><th>Value</th><th>Interpretation</th></tr>
                 </thead>
                 <tbody>
-                    <tr><td>Curvature K</td><td><strong>-5.63</strong></td><td>Strongly hyperbolic</td></tr>
-                    <tr><td>Entropy S</td><td><strong>0.95</strong></td><td>Below uniform (ln16 &asymp; 2.77), sections specialized</td></tr>
-                    <tr><td>Jensen-Shannon Div.</td><td><strong>0.424</strong></td><td>Fibers differ across contexts</td></tr>
-                    <tr><td>Parallel Transport</td><td><strong>0.041</strong></td><td>Near-zero holonomy &mdash; geometric consistency</td></tr>
-                    <tr><td>Faithfulness</td><td style="color: var(--green);"><strong>6/6 PASS</strong></td><td>All verification tests pass</td></tr>
+                    <tr><td>Geometric kernels</td><td><strong>Testable</strong></td><td>Requires unit-test evidence</td></tr>
+                    <tr><td>Learned curvature</td><td><strong>Not established</strong></td><td>Requires weight sensitivity</td></tr>
+                    <tr><td>Task improvement</td><td><strong>Not established</strong></td><td>Requires paired baseline</td></tr>
                 </tbody>
             </table>
 
-            <h3>3.2 Benchmark Preservation</h3>
+            <h3>3.2 Benchmark publication gate</h3>
             <table>
                 <thead>
                     <tr><th>Benchmark</th><th>Score</th><th>Notes</th></tr>
                 </thead>
                 <tbody>
-                    <tr><td>ARC-Challenge</td><td><strong>54.86%</strong></td><td>Identical to base Qwen 2.5-7B</td></tr>
-                    <tr><td>TruthfulQA (MC2)</td><td><strong>64.78%</strong></td><td>Strong factual grounding</td></tr>
-                    <tr><td>Winogrande</td><td><strong>71.03%</strong></td><td>Commonsense reasoning intact</td></tr>
-                    <tr><td>GSM8K</td><td><strong>75.51%</strong></td><td>Multi-step math preserved</td></tr>
+                    <tr><td>Base and adapter</td><td><strong>Paired</strong></td><td>Same prompts and decoding</td></tr>
+                    <tr><td>Raw outputs</td><td><strong>Required</strong></td><td>Per-example scores retained</td></tr>
+                    <tr><td>Environment</td><td><strong>Required</strong></td><td>Model, data, package, hardware, seed</td></tr>
                 </tbody>
             </table>
 
-            <h3>3.3 Entropy Diagnostic History</h3>
+            <h3>3.3 Historical artifacts</h3>
             <p>
-                Entropy was frozen at \(S = \ln(16) \approx 2.77\) for 3000 training steps due to
-                10 coupled gradient blockages (arcosh NaN, per-component Poincare projection, global
-                grad clipping killing fiber grads, etc.). After systematic diagnosis and Phase A fixes,
-                entropy unfroze to oscillating \([0.58, 1.04]\), mean ~0.85.
+                Older telemetry, benchmark, and ablation values are historical artifacts rather than current claims.
+                They may inform hypotheses, but cannot substitute for a rerun under the public benchmark policy.
             </p>
 
-            <h3>3.4 Ablation Studies</h3>
-            <p>13 systematic ablations isolating each geometric component. Key findings:</p>
-            <table>
-                <thead>
-                    <tr><th>Component Removed</th><th>Accuracy Drop</th></tr>
-                </thead>
-                <tbody>
-                    <tr><td>Euclidean Target (&kappa;=0)</td><td><strong>-10.9%</strong></td></tr>
-                    <tr><td>No Curvature Loss</td><td><strong>-9.5%</strong></td></tr>
-                    <tr><td>No Natural Gradients</td><td><strong>-8.4%</strong></td></tr>
-                    <tr><td>No Sheaf Consistency</td><td><strong>-5.6%</strong></td></tr>
-                    <tr><td>No Bundle Structure</td><td><strong>-4.9%</strong></td></tr>
-                </tbody>
-            </table>
+            <h3>3.4 Reproduction protocol</h3>
+            <p>New results must follow the <a href="benchmarks.md">benchmark protocol</a>, including paired baselines, immutable configuration, raw predictions, and uncertainty for training-dependent claims.</p>
 
             <h2>4. References</h2>
             <ul>

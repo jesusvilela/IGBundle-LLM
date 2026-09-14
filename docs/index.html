@@ -13,6 +13,7 @@
         <div class="nav-links">
             <a href="index.html" class="nav-link active">Home</a>
             <a href="wiki.html" class="nav-link">Thesis</a>
+            <a href="benchmarks.html" class="nav-link">Evidence</a>
             <a href="demo.html" class="nav-link">Get Started</a>
             <a href="https://huggingface.co/jesusvilela/igbundle-qwen2.5-7b-riemannian" target="_blank" class="nav-badge">HF Model</a>
             <a href="https://github.com/jesusvilela/IGBundle-LLM" target="_blank" class="nav-badge">GitHub</a>
@@ -31,27 +32,27 @@
             </p>
             <div class="hero-btns">
                 <a href="https://github.com/jesusvilela/IGBundle-LLM" target="_blank" class="btn btn-primary">View on GitHub</a>
-                <a href="wiki.html" class="btn btn-secondary">Read the Thesis</a>
+                <a href="benchmarks.html" class="btn btn-secondary">Evidence status</a>
             </div>
         </section>
 
         <!-- Key Metrics -->
         <div class="stats-hero">
             <div class="stat-block">
-                <span class="stat-value" style="color: var(--green);">6/6</span>
-                <span class="stat-label">Faithfulness Tests</span>
+                <span class="stat-value" style="color: var(--green);">Open</span>
+                <span class="stat-label">Benchmark status</span>
             </div>
             <div class="stat-block">
-                <span class="stat-value" style="color: var(--accent);">K = -5.63</span>
-                <span class="stat-label">Learned Curvature</span>
+                <span class="stat-value" style="color: var(--accent);">No claim</span>
+                <span class="stat-label">Learned curvature</span>
             </div>
             <div class="stat-block">
-                <span class="stat-value" style="color: var(--accent2);">S = 0.95</span>
-                <span class="stat-label">Fiber Entropy</span>
+                <span class="stat-value" style="color: var(--accent2);">Paired</span>
+                <span class="stat-label">Baseline required</span>
             </div>
             <div class="stat-block">
-                <span class="stat-value" style="color: var(--yellow);">0.9%</span>
-                <span class="stat-label">Params Added</span>
+                <span class="stat-value" style="color: var(--yellow);">Traceable</span>
+                <span class="stat-label">Reproduction policy</span>
             </div>
         </div>
 
@@ -112,39 +113,36 @@
 
         <!-- Results -->
         <section class="section">
-            <h2 class="section-title">Results</h2>
+            <h2 class="section-title">Evidence status</h2>
 
             <div class="cards-grid" style="grid-template-columns: 1fr 1fr;">
 
                 <div class="card">
-                    <h3 class="card-title">Manifold Faithfulness</h3>
+                    <h3 class="card-title">What the repository supports</h3>
                     <p class="card-text" style="margin-bottom: 1rem;">
-                        The geometric constraints produce measurable, non-trivial structure &mdash; not decorative.
+                        The repository provides prototypes and testable kernels. Kernel tests do not establish learned geometry or model improvement.
                     </p>
                     <table>
                         <thead><tr><th>Metric</th><th>Value</th></tr></thead>
                         <tbody>
-                            <tr><td>Curvature K</td><td><strong>-5.63</strong></td></tr>
-                            <tr><td>Entropy S</td><td><strong>0.95</strong> <span class="tag">target: 1.39</span></td></tr>
-                            <tr><td>Jensen-Shannon Div.</td><td><strong>0.424</strong></td></tr>
-                            <tr><td>Parallel Transport</td><td><strong>0.041</strong> <span class="tag">near-zero holonomy</span></td></tr>
-                            <tr><td>Faithfulness Tests</td><td style="color: var(--green);"><strong>6/6 PASS</strong></td></tr>
+                            <tr><td>Kernel behavior</td><td><strong>Testable</strong></td></tr>
+                            <tr><td>Learned curvature</td><td><strong>Not established</strong></td></tr>
+                            <tr><td>Task improvement</td><td><strong>Not established</strong></td></tr>
                         </tbody>
                     </table>
                 </div>
 
                 <div class="card">
-                    <h3 class="card-title">Benchmark Preservation</h3>
+                    <h3 class="card-title">Benchmark policy</h3>
                     <p class="card-text" style="margin-bottom: 1rem;">
-                        The adapter preserves base Qwen 2.5-7B capabilities with minimal degradation.
+                        A result is published only after paired adapter/base runs, immutable configuration, raw outputs, and environment provenance.
                     </p>
                     <table>
                         <thead><tr><th>Benchmark</th><th>Score</th></tr></thead>
                         <tbody>
-                            <tr><td>ARC-Challenge</td><td><strong>54.86%</strong> <span class="tag">= baseline</span></td></tr>
-                            <tr><td>TruthfulQA (MC2)</td><td><strong>64.78%</strong></td></tr>
-                            <tr><td>Winogrande</td><td><strong>71.03%</strong></td></tr>
-                            <tr><td>GSM8K</td><td><strong>75.51%</strong></td></tr>
+                            <tr><td>Smoke suite</td><td><strong>ARC, TruthfulQA, GSM8K</strong></td></tr>
+                            <tr><td>Comparison</td><td><strong>Base + adapter</strong></td></tr>
+                            <tr><td>Publication gate</td><td><strong>Raw outputs + manifest</strong></td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -263,14 +261,14 @@
                     <div class="timeline-date">Jan 2026</div>
                     <div class="timeline-content">
                         <div class="timeline-title">Tier 3 Faithfulness Passed</div>
-                        <div class="timeline-desc">6/6 geometric verification tests. K=-5.63, S=0.95, JSD=0.424, PT=0.041. Geometry is real.</div>
+                        <div class="timeline-desc">Historical telemetry and kernel checks were preserved for audit; they are not evidence of learned geometric transfer.</div>
                     </div>
                 </div>
                 <div class="timeline-item">
                     <div class="timeline-date">Jan 2026</div>
                     <div class="timeline-content">
                         <div class="timeline-title">Initial Training &amp; Benchmarks</div>
-                        <div class="timeline-desc">Qwen 2.5-7B + IGBundle adapter. ARC 54.86%, TruthfulQA 64.78%, GSM8K 75.51%. Zero degradation from base.</div>
+                        <div class="timeline-desc">Historical benchmark artifacts retained; a paired, reproducible rerun is required before public comparison.</div>
                     </div>
                 </div>
                 <div class="timeline-item">
