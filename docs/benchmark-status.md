@@ -1,4 +1,4 @@
-# Phase 8 benchmark status
+# Benchmark status
 
 ## Candidate
 
@@ -11,7 +11,15 @@ The checkpoint loads into `GeometricIGBundleAdapter` with zero missing and zero 
 
 ## Current execution result
 
-No task-quality figure has been produced. Two 4-bit GPU loads terminated at shard 96 of 339 without a Python traceback. A 5 GiB GPU cap fails earlier because the installed bitsandbytes path rejects CPU-dispatched 4-bit modules. At the time of execution the host exposed about 6.7 GiB free GPU memory and 7.78 GiB free RAM; the four base-model shards total about 15.1 GB.
+No task-quality figure has been produced. The local 7B base model terminated during 4-bit loading without a Python traceback (at shard 96 of 339 in one attempt and after the first shard in a direct-GPU attempt). A 5 GiB GPU cap fails earlier because the installed bitsandbytes path rejects CPU-dispatched 4-bit modules. At the time of execution the host exposed about 6.7 GiB free GPU memory and about 8 GiB free RAM; the four base-model shards total about 15.1 GB. There is no locally available smaller base with the required 3584-wide hidden state.
+
+## Completed adapter-integrity run
+
+The executable checkpoint is `igbundle_unified_training/final/adapter_weights.pt` (SHA-256 `ccea55d142cc8d962966011213bb9db5f90e2f9436ba847f6dba1c5edff0328e`) paired with the preserved `igbundle_unified_deployment/src` source snapshot. It loaded strictly with **0 missing and 0 unexpected tensors**.
+
+On an RTX 3060 Ti, CUDA 11.8, PyTorch 2.7.1, the fresh deterministic numerical-integrity run produced finite outputs on all four hidden-state shapes. The residual norm ratio `||Δh|| / ||h||` was **3.22%–3.57%** (four seeds; shapes from `1×1×3584` through `2×32×3584`). Base coordinates had shape `B×T×8×64`; fiber sections had shape `B×T×8×16`. This establishes numerical execution and a non-inert effect only; it is not language-task accuracy, speed, or a geometry-quality result. Raw artifact: `H:\LLM-MANIFOLD\benchmark-runs\unified-integrity-2026-09-14\results.json`.
+
+The historical deployment implementation requires autograd inside its Hamiltonian step even during evaluation. Benchmark runners must not use `torch.inference_mode()` around adapter calls; use `torch.no_grad()` for the base model and a local `torch.enable_grad()` scope for the adapter.
 
 ## Checkpoint-selection audit
 
@@ -21,7 +29,7 @@ Controlled GPU execution (seeded random hidden states, shape `1×4×3584`) separ
 | --- | --- | --- | --- |
 | Phase 8 cp3000 / cp3900 | Exact load: 0 missing, 0 unexpected | Exactly zero: `output_proj` weight and bias are all zero | Do not benchmark: it cannot change generation. |
 | Phase 9 Odyssey cp4001 | Text core loads; 6 vision keys missing / 12 spectral-normalization keys unexpected | Finite but `||Δh|| / ||h|| = 2.00` | Do not benchmark until the vision-key conversion and residual calibration are explicit and tested. |
-| Unified final | 40 missing / 12 unexpected parameters against current adapter code | Finite; `||Δh|| / ||h|| = 0.0138` on the probe | Promising magnitude, but not benchmarkable until the implementation version matching its state dict is restored or a migration is validated. |
+| Unified final | 40 missing / 12 unexpected parameters against current adapter code; **0 / 0** against preserved unified-deployment source | Finite; fresh four-shape run: `||Δh|| / ||h|| = 0.0322–0.0357` | Selected for paired generation only with the preserved exact source; task scoring remains blocked by base-model loading. |
 
 This is a direct falsification result: a checkpoint can deserialize and emit telemetry while being inert, incompatible, or unsafe for downstream generation. A successful benchmark must select a checkpoint only after exact-load and residual-effect gates pass.
 
@@ -35,4 +43,4 @@ This is a direct falsification result: a checkpoint can deserialize and emit tel
 
 ## Next execution gate
 
-Run `scripts/benchmark_phase8_smoke.py` on a host that can load the paired base and adapter. It records raw greedy-decoding outputs for identical base and geometric-adapter prompts. Inspect that artifact before launching scored ARC-Challenge, TruthfulQA MC2, and GSM8K evaluation. This checkpoint's legacy curvature telemetry must remain separated from downstream task scores because its historical fixed-conformal estimator was shown weight-invariant.
+Run `scripts/benchmark_unified_smoke.py` on a host that can load the paired base and adapter. It records raw greedy-decoding outputs for identical base and geometric-adapter prompts, and rejects non-finite, inert, and overly disruptive adapters. Inspect that artifact before launching scored ARC-Challenge, TruthfulQA MC2, and GSM8K evaluation. Legacy curvature telemetry must remain separated from downstream task scores because its historical fixed-conformal estimator was shown weight-invariant.
