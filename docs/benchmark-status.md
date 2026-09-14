@@ -11,7 +11,7 @@ The checkpoint loads into `GeometricIGBundleAdapter` with zero missing and zero 
 
 ## Current execution result
 
-No task-quality figure has been produced. The local 7B base model terminated during 4-bit loading without a Python traceback (at shard 96 of 339 in one attempt and after the first shard in a direct-GPU attempt). A 5 GiB GPU cap fails earlier because the installed bitsandbytes path rejects CPU-dispatched 4-bit modules. At the time of execution the host exposed about 6.7 GiB free GPU memory and about 8 GiB free RAM; the four base-model shards total about 15.1 GB. There is no locally available smaller base with the required 3584-wide hidden state.
+No task-quality figure has been produced. The local 7B base model terminated during 4-bit loading without a Python traceback (at shard 96 of 339 in one Transformers attempt and after the first shard in both direct-GPU Transformers and Unsloth 2026.4.5 attempts). A 5 GiB GPU cap fails earlier because the installed bitsandbytes path rejects CPU-dispatched 4-bit modules. At the time of execution the host exposed about 6.7 GiB free GPU memory and about 8 GiB free RAM; the four base-model shards total about 15.1 GB. There is no locally available smaller base with the required 3584-wide hidden state.
 
 ## Completed adapter-integrity run
 

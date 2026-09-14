@@ -12,7 +12,7 @@ import sys
 from datetime import datetime, timezone
 
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+from unsloth import FastLanguageModel
 
 PROJECT_ROOT = r"H:\LLM-MANIFOLD\igbundle-llm"
 SOURCE_ROOT = os.path.join(PROJECT_ROOT, "igbundle_unified_deployment", "src")
@@ -66,16 +66,13 @@ def main():
     from igbundle.core.config import IGBundleConfig
     from igbundle.modules.geometric_adapter import GeometricIGBundleAdapter
 
-    tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL, trust_remote_code=True)
+    model, tokenizer = FastLanguageModel.from_pretrained(
+        model_name=BASE_MODEL, max_seq_length=8192, dtype=None,
+        load_in_4bit=True, trust_remote_code=True, device_map={"": 0},
+    )
+    FastLanguageModel.for_inference(model)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
-    quantization = BitsAndBytesConfig(
-        load_in_4bit=True, bnb_4bit_quant_type="nf4", bnb_4bit_compute_dtype=torch.float16,
-    )
-    model = AutoModelForCausalLM.from_pretrained(
-        BASE_MODEL, quantization_config=quantization, device_map={"": 0},
-        low_cpu_mem_usage=True, trust_remote_code=True,
-    ).eval()
 
     config = IGBundleConfig(
         hidden_size=3584, num_components=8, latent_dim=64, num_categories=16,
