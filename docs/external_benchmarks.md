@@ -1,38 +1,29 @@
-# External benchmark harnesses (common)
+# External benchmark harnesses
 
-This repo does not implement the full benchmark set you listed. The usual approach is to run the model behind an OpenAI-compatible API (llama.cpp `llama-server`) and point third-party harnesses at it.
+This repository does not implement or publish results for the benchmarks listed below. No score from these harnesses is claimed anywhere in this repository. The list is a starting point for future evaluations; check each project's current documentation before use.
 
-I cannot browse the web from this environment, but the packages below are commonly used in public LLM evals and accept OpenAI-compatible endpoints.
+A common approach is to serve a model behind an OpenAI-compatible endpoint (for example, llama.cpp `llama-server`) and point a third-party harness at it.
 
-## Reasoning / General knowledge
-- lighteval: MMLU-style suites, GPQA, AIME-style math, MiniF2F (depending on task packs)
-- lm-evaluation-harness: broad coverage of MMLU/MMLU-Pro-like subsets and math tasks (varies by config)
-- OpenCompass: large benchmark zoo, including GPQA and math tasks
-- bigcode-evaluation-harness: LiveCodeBench-style code evals
+## Reasoning and general knowledge
 
-## Agentic
-- SWE-bench (OpenHands) for SWE-Bench
-- TauBench v2 (official repo)
-- Terminal Bench (official repo)
+- [lm-evaluation-harness](https://github.com/EleutherAI/lm-evaluation-harness): MMLU-style, MMLU-Pro, and math tasks (coverage depends on configuration).
+- [lighteval](https://github.com/huggingface/lighteval): MMLU-style suites, GPQA, and math task packs.
+- [OpenCompass](https://github.com/open-compass/opencompass): broad benchmark collection, including GPQA and math tasks.
 
-## Chat / Instruction
-- IFEval / IFBench (prompt-following)
-- LMSYS Arena-Hard v2 (official scripts)
-- Scale AI Multi Challenge (requires access)
+## Instruction following
 
-## Long context
-- RULER (official repo)
-- AA-LCR (if you have the dataset release)
+- IFEval / IFBench.
 
-## Multilingual
-- MMLU-ProX (official repo)
-- WMT24++ (official WMT release)
+## Agentic and long context
 
-## Minimal llama.cpp server setup
-1) Start the server:
-   - scripts/run_llama_server.ps1 -ModelPath igbundle_qwen7b.gguf
-2) Export OpenAI-compatible env vars:
-   - scripts/set_eval_env.ps1
-3) Configure your chosen harness to use `OPENAI_API_BASE` and `OPENAI_API_KEY`.
+- SWE-bench, tau-bench, Terminal-Bench, and RULER, through their official repositories.
 
-If you want, tell me which specific harness you plan to run first and I will add a launcher for it.
+## ARC-AGI in this repository
+
+`eval_arc_gguf.py` and `eval_arc.py` use the shared exact scorer in `arc_eval.py` (all test pairs, no substring matching, backend failures counted in the denominator). Real backend inference is not covered by the repository's tests. Defaults are deliberately light (`--gpu-layers 0`, `--threads 1`):
+
+```powershell
+python eval_arc_gguf.py --model path\to\model.gguf --data-path ARC-AGI-master\data\evaluation --limit 10 --output arc_gguf_results.json
+```
+
+A valid comparison requires matched base and adapter runs under the same protocol, decoding settings, and task selection. See the [correction notice](correction-notice.md) for how historical ARC results should be read.
