@@ -3,9 +3,8 @@ import json
 import torch
 import os
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from peft import PeftModel
 from igbundle.integrations.hf_patch import wrap_hf_candidate, StateCollector
-from igbundle.integrations.checkpoint import load_weights, require_checkpoint_file
+from igbundle.integrations.checkpoint import load_weights, require_checkpoint_file, load_peft_checked
 
 # Representative MT-Bench Questions
 MT_BENCH_QUESTIONS = [
@@ -59,7 +58,7 @@ def generate_arena_answers(model_id, checkpoint_path):
         model = wrap_hf_candidate(model, DictConfig(adapter_config))
         
         if os.path.isfile(os.path.join(checkpoint_path, "adapter_config.json")):
-            model = PeftModel.from_pretrained(model, checkpoint_path)
+            model = load_peft_checked(model, checkpoint_path)
         print("Loading complete IGBundle weights...")
         load_weights(model, ig_weights)
 

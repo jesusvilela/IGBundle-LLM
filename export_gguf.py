@@ -62,7 +62,10 @@ def export_to_gguf_ready(base_model_id, checkpoint_path, output_dir, *,
     sys.modules["torchao"] = None
     os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:128"
     import torch
-    from peft import PeftModel
+    src = str(Path(__file__).resolve().parent / "src")
+    if src not in sys.path:
+        sys.path.insert(0, src)
+    from igbundle.integrations.checkpoint import load_peft_checked
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
     # Reserve fresh destinations before heavyweight allocation; failures remain visible.
@@ -76,7 +79,7 @@ def export_to_gguf_ready(base_model_id, checkpoint_path, output_dir, *,
         trust_remote_code=False,
     )
     tokenizer = AutoTokenizer.from_pretrained(base_model_id, trust_remote_code=False)
-    model = PeftModel.from_pretrained(model, plan["checkpoint"], device_map="cpu")
+    model = load_peft_checked(model, plan["checkpoint"], device_map="cpu")
     model = model.merge_and_unload(safe_merge=True)
     model.save_pretrained(plan["merged_hf"])
     tokenizer.save_pretrained(plan["merged_hf"])

@@ -1,13 +1,12 @@
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from peft import PeftModel
 import argparse
 import math
 import os
 import glob
 from tqdm import tqdm
 from igbundle.integrations.hf_patch import wrap_hf_candidate, StateCollector
-from igbundle.integrations.checkpoint import load_weights, require_checkpoint_file
+from igbundle.integrations.checkpoint import load_weights, require_checkpoint_file, load_peft_checked
 from igbundle.utils import triton_fix
 
 class ValidationBenchmark:
@@ -55,7 +54,7 @@ class ValidationBenchmark:
             
             # A declared PEFT component must load successfully.
             if os.path.isfile(os.path.join(checkpoint_path, "adapter_config.json")):
-                self.model = PeftModel.from_pretrained(self.model, checkpoint_path)
+                self.model = load_peft_checked(self.model, checkpoint_path)
             print(f"Loading complete IGBundle weights: {ig_weights}")
             load_weights(self.model, ig_weights)
 

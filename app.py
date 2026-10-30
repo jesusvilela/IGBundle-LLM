@@ -17,11 +17,12 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import torch
 import yaml
-from peft import PeftModel
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from igbundle.demo_evidence import DemoTelemetry, format_metrics
-from igbundle.integrations.checkpoint import load_weights, require_checkpoint_file
+from igbundle.integrations.checkpoint import (
+    load_weights, require_checkpoint_file, load_peft_checked, verify_peft_checkpoint,
+)
 from igbundle.integrations.hf_patch import wrap_hf_candidate
 
 
@@ -169,13 +170,15 @@ def load_model(config_path, checkpoint_path):
             device_map={"": 0},
         )
         FastLanguageModel.for_inference(model)
+        if os.path.isfile(os.path.join(checkpoint_path, "adapter_config.json")):
+            verify_peft_checkpoint(model, checkpoint_path)
     else:
         tokenizer = AutoTokenizer.from_pretrained(base_model_id, trust_remote_code=True)
         model = AutoModelForCausalLM.from_pretrained(
             base_model_id, device_map="cpu", trust_remote_code=True,
         )
         if os.path.isfile(os.path.join(checkpoint_path, "adapter_config.json")):
-            model = PeftModel.from_pretrained(model, checkpoint_path)
+            model = load_peft_checked(model, checkpoint_path)
 
     cfg["ig_adapter"]["hidden_size"] = model.config.hidden_size
     from types import SimpleNamespace

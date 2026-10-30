@@ -11,9 +11,8 @@ import yaml
 import torch
 import os
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from peft import PeftModel
 from igbundle.integrations.hf_patch import wrap_hf_candidate, StateCollector
-from igbundle.integrations.checkpoint import load_weights, require_checkpoint_file
+from igbundle.integrations.checkpoint import load_weights, require_checkpoint_file, load_peft_checked
 from igbundle.modules.losses import SheafLoss
 
 def evaluate():
@@ -53,7 +52,7 @@ def evaluate():
     # Load Weights
     # 1. LoRA
     print("Loading LoRA...")
-    model = PeftModel.from_pretrained(model, args.checkpoint)
+    model = load_peft_checked(model, args.checkpoint)
         
     # 2. IGBundle Weights
     # If they were saved separately or in the checkpoint

@@ -91,6 +91,9 @@ class ExportPreflightTests(unittest.TestCase):
         base, tokenizer, peft, merged = Mock(), Mock(), Mock(), Mock()
         peft.merge_and_unload.return_value = merged
         modules = {
+            "igbundle.integrations.checkpoint": SimpleNamespace(
+                load_peft_checked=Mock(return_value=peft),
+            ),
             "torch": SimpleNamespace(float16="float16"),
             "transformers": SimpleNamespace(
                 AutoModelForCausalLM=SimpleNamespace(from_pretrained=Mock(return_value=base)),

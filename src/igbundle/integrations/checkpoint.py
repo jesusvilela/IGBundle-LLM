@@ -82,3 +82,62 @@ def load_weights(model, path, *, full_state=False):
     path = require_checkpoint_file(path)
     state = torch.load(path, map_location="cpu", weights_only=True)
     return restore_adapter_state(model, state, full_state=full_state)
+
+
+def _read_peft_state(directory):
+    directory = Path(directory)
+    require_checkpoint_file(directory / "adapter_config.json")
+    safe = directory / "adapter_model.safetensors"
+    if safe.is_file():
+        from safetensors.torch import load_file
+        return load_file(str(safe), device="cpu")
+    binary = require_checkpoint_file(directory / "adapter_model.bin")
+    return torch.load(binary, map_location="cpu", weights_only=True)
+
+
+def verify_peft_state(model, state):
+    """Verify exact default LoRA serialization keys and restored values.
+
+    This is a post-load check, not an atomic rollback or base-identity proof.
+    No wrapper-prefix remapping is permitted.
+    """
+    from peft import get_peft_model_state_dict
+
+    configs = getattr(model, "peft_config", {})
+    if set(configs) != {"default"} or configs["default"].peft_type != "LORA":
+        raise ValueError("Only one default LoRA adapter is supported")
+    if not isinstance(state, Mapping) or not all(isinstance(k, str) for k in state):
+        raise ValueError("PEFT checkpoint must be a string-keyed tensor mapping")
+    actual = get_peft_model_state_dict(model, adapter_name="default")
+    if not actual:
+        raise ValueError("No LoRA tensors found")
+    missing, extra = actual.keys() - state.keys(), state.keys() - actual.keys()
+    if missing or extra:
+        raise ValueError(f"LoRA coverage mismatch: missing={sorted(missing)}, unexpected={sorted(extra)}")
+    for key, target in actual.items():
+        value = state[key]
+        if (not isinstance(value, torch.Tensor) or value.is_meta or value.is_quantized
+                or value.layout != torch.strided or value.shape != target.shape
+                or not value.is_floating_point()):
+            raise ValueError(f"{key}: invalid LoRA tensor")
+        if not torch.isfinite(value).all():
+            raise ValueError(f"{key}: nonfinite LoRA checkpoint values")
+        converted = value.detach().to(device="cpu", dtype=target.dtype)
+        if not torch.isfinite(converted).all():
+            raise ValueError(f"{key}: LoRA conversion overflow")
+        if target.is_meta or not torch.equal(target.detach().cpu(), converted):
+            raise ValueError(f"{key}: restored LoRA values do not match checkpoint")
+    return len(actual)
+
+
+def verify_peft_checkpoint(model, directory):
+    return verify_peft_state(model, _read_peft_state(directory))
+
+
+def load_peft_checked(model, directory, **kwargs):
+    from peft import PeftModel
+
+    state = _read_peft_state(directory)
+    loaded = PeftModel.from_pretrained(model, directory, **kwargs)
+    verify_peft_state(loaded, state)
+    return loaded

@@ -196,7 +196,7 @@ class CheckpointTests(unittest.TestCase):
                 namespace = {
                     "os": os, "require_checkpoint_file": require_checkpoint_file,
                     "wrap_hf_candidate": lambda model, config: model,
-                    "load_weights": restore, "PeftModel": peft,
+                    "load_weights": restore,                     "load_peft_checked": peft.from_pretrained,
                 }
                 exec(compile(ast.Module(body=[node], type_ignores=[]),
                              "validate_effects.py", "exec"), namespace)

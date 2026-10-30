@@ -11,9 +11,8 @@ import argparse
 import yaml
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
-from peft import PeftModel
 from igbundle.integrations.hf_patch import wrap_hf_candidate, StateCollector
-from igbundle.integrations.checkpoint import load_weights, require_checkpoint_file
+from igbundle.integrations.checkpoint import load_weights, require_checkpoint_file, load_peft_checked
 
 def load_base_model(config_path):
     with open(config_path, 'r') as f:
@@ -60,7 +59,7 @@ def inject_adapter(model, cfg, checkpoint_path):
     
     print(f"Loading Weights from {checkpoint_path}")
     if os.path.isfile(os.path.join(checkpoint_path, "adapter_config.json")):
-        model = PeftModel.from_pretrained(model, checkpoint_path)
+        model = load_peft_checked(model, checkpoint_path)
     load_weights(model, ig_path)
     print("Complete default adapter state restored.")
             

@@ -13,12 +13,13 @@ os.environ["HF_HUB_OFFLINE"] = "1"
 sys.modules["torchao"] = None
 
 import torch
-from peft import LoraConfig, PeftModel, get_peft_model
+from peft import LoraConfig, PeftModel, get_peft_model, get_peft_model_state_dict
+from safetensors.torch import load_file, save_file
 from transformers import Qwen2Config, Qwen2ForCausalLM
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
-from igbundle.integrations.checkpoint import load_weights
+from igbundle.integrations.checkpoint import load_weights, load_peft_checked, verify_peft_state
 from igbundle.integrations.hf_patch import IGBundleBlockWrapper, wrap_hf_candidate
 from igbundle.modules.adapter import IGBundleAdapter
 
@@ -74,7 +75,7 @@ class TinyHFTests(unittest.TestCase):
                     with torch.no_grad():
                         value.fill_(.02)
             source.save_pretrained(directory)
-            restored = PeftModel.from_pretrained(base_model(), directory).eval()
+            restored = load_peft_checked(base_model(), directory).eval()
             source = wrap_hf_candidate(source, adapter_config()).eval()
             restored = wrap_hf_candidate(restored, adapter_config()).eval()
             with torch.no_grad():
@@ -141,6 +142,52 @@ class TinyHFTests(unittest.TestCase):
         for module in model.modules():
             if isinstance(module, IGBundleAdapter):
                 self.assertEqual(next(module.parameters()).dtype, torch.float32)
+
+    def test_partial_and_extra_lora_state_fail_closed(self):
+        source = peft_model()
+        with tempfile.TemporaryDirectory() as directory:
+            source.save_pretrained(directory)
+            path = str(Path(directory) / "adapter_model.safetensors")
+            state = load_file(path)
+            first = next(iter(state))
+            for bad in (
+                {k: v for k, v in state.items() if k != first},
+                {**state, "unexpected.weight": torch.ones(1)},
+            ):
+                save_file(bad, path)
+                with self.assertRaisesRegex(ValueError, "LoRA coverage"):
+                    load_peft_checked(base_model(), directory)
+
+    def test_wrapped_lora_names_require_matching_wrapper_structure(self):
+        source = wrap_hf_candidate(peft_model(), adapter_config()).eval()
+        with tempfile.TemporaryDirectory() as directory:
+            source.save_pretrained(directory)
+            with self.assertRaisesRegex(ValueError, "LoRA coverage"):
+                load_peft_checked(base_model(), directory)
+            restored = load_peft_checked(
+                wrap_hf_candidate(base_model(), adapter_config()), directory,
+            )
+            expected = get_peft_model_state_dict(source)
+            self.assertEqual(verify_peft_state(restored, expected), len(expected))
+
+    def test_nonfinite_and_nonmatching_values_are_rejected(self):
+        model = peft_model()
+        state = get_peft_model_state_dict(model)
+        first = next(iter(state))
+        for value in (torch.full_like(state[first], float("nan")), state[first] + 1):
+            with self.assertRaises(ValueError):
+                verify_peft_state(model, {**state, first: value})
+
+    def test_public_loader_and_export_paths_use_checked_lora(self):
+        import ast
+        for filename in ("app.py", "evaluate.py", "benchmark.py",
+                         "bench_arena.py", "validate_effects.py", "export_gguf.py"):
+            tree = ast.parse((ROOT / filename).read_text(encoding="utf-8"))
+            calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call)]
+            self.assertTrue(any(isinstance(n.func, ast.Name)
+                                and n.func.id == "load_peft_checked" for n in calls), filename)
+        app = (ROOT / "app.py").read_text(encoding="utf-8")
+        self.assertIn("verify_peft_checkpoint(model, checkpoint_path)", app)
 
 
 if __name__ == "__main__":
