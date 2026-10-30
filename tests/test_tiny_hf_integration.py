@@ -57,6 +57,7 @@ class TinyHFTests(unittest.TestCase):
 
     def test_identity_wrapper_preserves_real_qwen_logits(self):
         model = base_model()
+        self.assertLess(sum(p.numel() for p in model.parameters()), 100_000)
         with torch.no_grad():
             before = model(self.tokens).logits
             wrapped = wrap_hf_candidate(model, adapter_config())

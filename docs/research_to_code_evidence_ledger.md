@@ -21,6 +21,11 @@ Research documents generate hypotheses; implementation and operator tests establ
 
 ## Published data
 
+**Tiny real backend:** random Qwen2 plus PEFT and the default adapter is now
+exercised on hosted CPU, including restoration, gradients and cached generation.
+Versions and scope are pinned; PEFT is saved before wrapper insertion.
+This narrows the integration gap, not the historical provenance or efficacy gap.
+
 **Exact algebra reference:** finite coefficient certificates for an explicitly
 defined Cayley-Dickson product distinguish quaternion/octonion laws from vector
 dimension or Hamiltonian terminology.

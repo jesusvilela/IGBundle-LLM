@@ -136,7 +136,18 @@
                 certification or task result.
             </p>
 
-            <h2>10. What a stronger test needs</h2>
+            <h2 id="tiny-hf">10. Tiny real-backend composition</h2>
+            <p>Hosted CPU checks use a random two-layer, width-16 Qwen2
+                with PyTorch 2.6.0, Transformers 4.48.3, PEFT 0.14.0 and Accelerate 1.2.1.
+                Identity wrapping, separate PEFT save/reload, strict adapter restoration,
+                gradients and cached generation are exercised without pretrained downloads.
+            </p>
+            <p>Restored nonzero adapter state affects logits without changing base/LoRA
+                tensors. This is not a historical-checkpoint, accuracy, quantized-backend,
+                full-app or GGUF certificate.
+            </p>
+
+            <h2>11. What a stronger test needs</h2>
             <p>
                 A causal evaluation should match parameter budget and layer placement; compare against a vanilla adapter under the same data, objective, optimizer budget, decoding, and hardware; isolate the geometric operator; use multiple seeds and fixed task splits; and publish exact checkpoint provenance with per-task outputs. Operator diagnostics should remain distinct from downstream outcomes.
             </p>

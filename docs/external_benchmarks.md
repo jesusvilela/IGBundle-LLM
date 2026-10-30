@@ -20,7 +20,7 @@ A common approach is to serve a model behind an OpenAI-compatible endpoint (for 
 
 ## ARC-AGI in this repository
 
-`eval_arc_gguf.py` and `eval_arc.py` use the shared exact scorer in `arc_eval.py` (all test pairs, no substring matching, backend failures counted in the denominator). Real backend inference is not covered by the repository's tests. Defaults are deliberately light (`--gpu-layers 0`, `--threads 1`):
+`eval_arc_gguf.py` and `eval_arc.py` use the shared exact scorer in `arc_eval.py` (all test pairs, no substring matching, backend failures counted in the denominator). These benchmark entry points are not tested end-to-end with pretrained models. Separate tiny random-model checks exercise real Transformers/PEFT composition, not benchmark validity. Defaults are deliberately light (`--gpu-layers 0`, `--threads 1`):
 
 ```powershell
 python eval_arc_gguf.py --model path\to\model.gguf --data-path ARC-AGI-master\data\evaluation --limit 10 --output arc_gguf_results.json

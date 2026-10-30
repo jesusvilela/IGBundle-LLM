@@ -274,6 +274,28 @@ provenance. No new hyperbolicity, hypercomplexity or task result is claimed.
 
 ## Coverage and remaining blockers
 
+### Tiny real Transformers/PEFT integration
+
+Five hosted CPU checks use PyTorch 2.6.0, Transformers 4.48.3, PEFT 0.14.0 and
+Accelerate 1.2.1. The randomly initialized Qwen2 has two layers, hidden width 16,
+vocabulary 32 and fewer than 100,000 base parameters. No pretrained model or
+dataset is downloaded.
+
+The checks cover exact identity logits at initialization; real PEFT save/reload
+before wrapper insertion; strict serialized adapter restoration with an observable
+logit effect and unchanged base/LoRA tensors; finite gradients reaching both
+adapter and LoRA; and two-token greedy generation. Cached final-token logits
+match full-prefix logits at `rtol=1e-5, atol=1e-6`, with nonzero adapter values.
+
+Two coupled wrapper defects were repaired: registered modules are retrieved through
+`nn.Module` lookup, and CPU adapters remain float32 even on a host with a
+BF16-capable GPU. The latter is checked with a mocked capability probe.
+
+This validates a narrow, real backend composition, not the five public loader
+entry points end-to-end. PEFT serialization **after** wrapper insertion is not
+covered. No historical weights, quantization, pretrained scores, training
+convergence, full server workflow or geometry-aware GGUF inference is certified.
+
 Inventory visited 1,577 workspace directories while excluding dependencies, Git internals, reparse-point directories and duplicate audit checkouts. Vendored llama.cpp model folders were checked separately and contained tokenizer fixtures. Dataset pictures and UI/vendor graphics were not treated as scientific evidence. Only the nine selected PNGs above received visual review; this is not a certification of every image or document in the archive.
 
-No historical model payload, adapter pickle, full multi-gigabyte hash, model inference, training job, or GPU workload was used. Only tiny synthetic tensor checkpoints were deserialized for restoration and display tests. No private cross-repository content was republished. The blockers to stronger claims are concrete: exact checkpoint/runtime bindings, restoration of the actual historical companion, implemented and tested hypercomplex operations in that path, and a resource-approved matched model experiment. The new default-adapter contract does not manufacture those missing results.
+No historical model payload, historical adapter pickle, full multi-gigabyte hash, pretrained-model inference, training job, or GPU workload was used. Tiny synthetic checkpoints and random-model CPU execution were checked on the hosted runner. No private cross-repository content was republished. The blockers to stronger claims remain exact checkpoint/runtime bindings, restoration of the actual historical companion, tested hypercomplex integration, and a resource-approved matched model experiment.

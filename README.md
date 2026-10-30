@@ -221,6 +221,24 @@ The [certificate](docs/benchmark-results/algebra-reference.json) is a mathematic
 reference, **not an adapter integration, learned geometry or model result**.
 It supplies no hypercomplex hyperbolic metric or GGUF implementation.
 
+### Tiny real-backend integration
+
+Hosted CPU checks now exercise a randomly initialized Qwen2 with two layers,
+hidden width 16 and fewer than 100,000 base parameters, using PyTorch 2.6.0,
+Transformers 4.48.3, PEFT 0.14.0 and Accelerate 1.2.1.
+They check identity wrapping, real PEFT save/reload before wrapper insertion,
+strict adapter restoration, gradients and cached generation.
+
+Nonzero restored adapter values affect logits; restoration leaves base and LoRA
+tensors unchanged. Cached and full-prefix logits agree within declared tolerance.
+No pretrained model or dataset is downloaded. These are execution contracts,
+not accuracy, training convergence, historical checkpoint or GGUF certification.
+The full app/server and quantized backends remain outside this check.
+
+Pinned optional dependencies are in `requirements-test-hf.txt`.
+Run `python -m unittest discover -b -s tests -p test_tiny_hf_integration.py`
+in a compatible CPU environment.
+
 ## Research standard
 
 The hypothesis remains open. A stronger causal test should match parameter budget and layer placement, isolate the geometric operator/objective, use a shared split and training budget with multiple seeds, and publish exact checkpoint provenance and task-level outputs. Geometry diagnostics alone cannot establish language-model benefit.
