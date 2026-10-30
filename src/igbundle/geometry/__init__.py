@@ -1,11 +1,9 @@
 """
 Geometric operations for IGBundle.
 
-This package provides mathematically rigorous implementations of:
-- Riemannian manifold geometry
-- Fiber bundle operations
-- Lambda calculus in bundle context
-- Information geometry
+The default Poincare affinity lives in modules.ops. The opt-in
+geometry.poincare transport reference has bounded numerical checks.
+Exports below are legacy prototypes, not certified geometry or calculus.
 """
 
 from .riemannian import (
