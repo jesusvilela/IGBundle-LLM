@@ -23,6 +23,8 @@ The [inspected audit source snapshot](benchmark-results/historical-audit-source.
 
 ## Later comparisons
 
+The [expanded export/image audit](export-image-audit.md) also withdraws empirical interpretations of the synthetic thesis loss, affinity and spectrum plots, the image's “50–75% step reduction,” and the negative-curvature label on a downward paraboloid. Public synthetic PNGs now carry visible labels. Imposed topology layouts and the inspected standard-Qwen2 GGUF directories do not establish learned hyperbolicity or hypercomplex execution. The two inspected GGUFs are separate from the October cp300 benchmark artifacts.
+
 The 20 September 2026 paired token-NLL probe found lower NLL for a vanilla-LoRA control than for the geometric arm on all 24 paired examples. Its small sample, unequal parameter counts, and different layer coverage prevent causal attribution to geometry.
 
 The 27 October 2026 local multi-benchmark run found no statistically significant individual paired task differences. Its custom weighted index was 61.1 for the base, 60.0 for the exported cp300 checkpoint, and 64.7 for a reconstructed adapter composite. The cp300 export did not include the runtime geometric adapter; the reconstructed arm grafted a surviving base-trained adapter onto cp300 and used a different loading/quantization path. This exploratory reconstruction is not an independent or parameter-matched confirmation of benefit.

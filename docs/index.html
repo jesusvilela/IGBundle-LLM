@@ -48,6 +48,23 @@
             Arithmetic is reproducible from the published records; the original model runs and graders have not been independently reproduced. Neither probe establishes a general performance effect.
         </p>
 
+        <section class="section" id="export-audit">
+            <h2 class="section-title">Expanded archive audit · GGUFs and images</h2>
+            <p class="section-subtitle">
+                Two surviving model exports have standard Qwen2 tensor directories (339 and 290 tensors).
+                Their inspected fast path does not restore the separate geometric adapter.
+                Metadata is not a full checkpoint fingerprint or evidence of hypercomplex execution.
+            </p>
+            <img src="assets/geometry-reference.svg" alt="Analytic reference: a downward paraboloid has positive curvature, a saddle has variable negative curvature, and the prescribed Poincare disk metric has curvature minus one. No checkpoint data." style="width: 100%; height: auto;">
+            <p class="card-text" style="max-width: 900px; margin: 1rem auto;">
+                Nine research images were reviewed against generators. The archived thesis loss, affinity and spectrum plots are synthetic; their published PNGs now carry explicit labels.
+                One “negative curvature” drawing actually depicts a positive-curvature paraboloid.
+                Hyperbolic metrics, learned organization and hypercomplex algebra require different evidence.
+                <a href="wiki.html#export-audit">Read the findings</a> ·
+                <a href="https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/export-image-audit.md">Derivations and reproduction</a>.
+            </p>
+        </section>
+
         <section class="section">
             <h2 class="section-title">Research design</h2>
             <div class="cards-grid">

@@ -13,6 +13,10 @@
 - The current default Poincare kernel and small-adapter forward/backward path have bounded regression checks. Legacy learned-connection geometry and model training are not certified.
 - The published 252 paired recorded grades permit offline recomputation of October indices and exact McNemar tests. This is arithmetic verification, not new inference or independent grading.
 
+- Expanded archive audit: two surviving local GGUFs (cp600-named Q8_0, 339 tensors; 0.5B F16, 290 tensors) expose standard Qwen2 tensor-name sets. These are not the October cp300 benchmark artifacts. Prefix hashes exclude weights. The inspected packaged fast path does not restore the separate adapter.
+- Nine generated research PNGs were reviewed against sources. Thesis loss/affinity/spectrum plots are synthetic, now labeled within the public images. The archived downward paraboloid has positive, not negative, induced Gaussian curvature. Prescribed layouts do not establish learned hyperbolicity.
+- Hypercomplex algebra and hyperbolic geometry are distinct. No hypercomplex runtime integration is established by the inspected IGBundle source/export paths; bounded name scans do not prove absence elsewhere.
+
 ## Pages
 
 - [Project overview and results](https://jesusvilela.github.io/IGBundle-LLM/)
@@ -20,6 +24,7 @@
 - [Research access](https://jesusvilela.github.io/IGBundle-LLM/demo.html)
 - [Correction notice](https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/correction-notice.md)
 - [Evidence ledger](https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/research_to_code_evidence_ledger.md)
+- [Export/image audit and analytic geometry reference](https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/export-image-audit.md)
 - [Source repository](https://github.com/jesusvilela/IGBundle-LLM)
 
 ## Evidence files
@@ -31,5 +36,8 @@
 - [Paired recorded outcomes](https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/benchmark-results/aa-paired-outcomes-2026-10-27.csv)
 - [Offline verification](https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/benchmark-results/verification.json)
 - [Provenance and limitations](https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/benchmark-results/provenance.json)
+- [cp600-named GGUF directory](https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/benchmark-results/gguf-dist-directory.json)
+- [0.5B GGUF directory](https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/benchmark-results/gguf-arc-directory.json)
+- [Image/source fingerprints and excerpts](https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/benchmark-results/artifact-audit.json)
 
 Older claims of accuracy gains, “MFR,” learned curvature, ablation effects, or efficiency are withdrawn or unsupported. Read archived thesis PDFs with the correction notice. The repository is experimental code, not a supported inference product; its license is all rights reserved.

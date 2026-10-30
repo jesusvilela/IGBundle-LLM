@@ -44,6 +44,7 @@ cd IGBundle-LLM</code></pre>
                 <li><a href="benchmark-results/faithfulness-audit-A.json">Historical audit record (not a certification)</a></li>
                 <li><a href="benchmark-results/aa-paired-outcomes-2026-10-27.csv">October prompt-free paired recorded grades</a></li>
                 <li><a href="benchmark-results/provenance.json">Provenance and known limitations</a></li>
+                <li><a href="wiki.html#export-audit">GGUF directory inspection and generated-image audit</a></li>
                 <li><a href="https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/research_to_code_evidence_ledger.md">Research-to-code evidence ledger</a></li>
             </ul>
 
@@ -51,6 +52,7 @@ cd IGBundle-LLM</code></pre>
             <p>The evidence arithmetic runs offline with the Python standard library, without installing ML dependencies or loading models:</p>
             <pre><code>python scripts/verify_evidence.py</code></pre>
             <p>This recomputes stored measurements and checks site links. It does not repeat model inference or verify the historical graders. The README lists the separately bounded CPU operator checks and legacy implementation limitations.</p>
+            <p><code>scripts/inspect_gguf.py</code> can inspect a local GGUF's metadata and tensor directory with a 32 MiB read cap, without loading its weights. Its prefix digest is not a full-model checksum. Do not equate a nearby adapter file or a generated topology image with a verified geometry-aware runtime.</p>
             <p>For a meaningful comparison, keep data splits, model loading, decoding, parameter budget, layer coverage, and training budget matched; isolate the geometric component; use multiple seeds; and publish exact checkpoint provenance and task-level outputs. Geometry checks alone are not a substitute for downstream evaluation.</p>
         </div>
 

@@ -66,6 +66,7 @@ AI_SCIENTIST_*.md
 !fix_environment.ps1
 !setup_env.ps1
 !Activate.ps1
+!scripts/label_archived_figures.ps1
 NUL
 
 # External tools

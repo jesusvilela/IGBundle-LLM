@@ -132,7 +132,7 @@ def verify(root=ROOT):
         require(record["n-samples"]["arc_challenge"]["effective"] == 1172, "Historical ARC-Challenge sample count")
         arc_challenge[arm] = score
     return {
-        "scope": "Offline arithmetic and link checks only; not a new model benchmark.",
+        "scope": "Offline arithmetic, link checks and artifact fingerprints only; not a new model benchmark.",
         "september": {"n": 24, "means": means, "control_wins": wins, "mean_A_minus_B": delta_mean,
                       "paired_t_95_interval": [delta_mean - half_width, delta_mean + half_width],
                       "paired_t_statistic": delta_mean / se, "two_sided_sign_p": sign_p},
@@ -148,6 +148,16 @@ def verify(root=ROOT):
         "artifact_sha256": {path.name: hashlib.sha256(path.read_bytes()).hexdigest()
                             for path in sorted(data.iterdir()) if path.suffix in (".csv", ".json", ".txt")
                             and path.name != "verification.json"},
+        "publication_asset_sha256": {
+            relative: hashlib.sha256((root / relative).read_bytes()).hexdigest()
+            for relative in (
+                "docs/assets/geometry-reference.svg",
+                "assets/readme_visuals/riemannian_geometry.svg",
+                "thesis/figures/figure_4_dynamics.png",
+                "thesis/figures/figure_5_affinity.png",
+                "thesis/figures/figure_7_svd.png",
+            )
+        },
     }
 
 

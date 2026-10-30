@@ -22,6 +22,8 @@ The original accompanying notes identify Qwen2.5-7B-Instruct as the base model a
 
 ## Evaluation status
 
+The [expanded export/image audit](https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/export-image-audit.md) inspected two distinct local GGUFs, not necessarily this card's checkpoint. Both expose standard Qwen2 tensor names; their inspected fast runner does not restore the separate geometric adapter. Neither the file names nor the archived visualizations establish a hyperbolic or hypercomplex inference architecture.
+
 No task-performance claim is made for this model card:
 
 - A historical audit reports 6/6 checks, but lacks immutable source/weight binding and uses heuristic proxy criteria. It is not an operator certification or evidence about this checkpoint.

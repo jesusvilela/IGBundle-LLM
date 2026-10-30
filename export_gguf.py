@@ -1,3 +1,10 @@
+"""Legacy PEFT/LoRA merge and GGUF conversion, NOT geometric-adapter export.
+
+Nonlinear IGBundle modules are separate runtime components. Merging PEFT weights
+does not serialize their operators into a standard Qwen2 GGUF execution graph.
+See docs/export-image-audit.md; this heavyweight path is not a validation command.
+"""
+
 import sys
 import os as _os
 

@@ -3,3 +3,5 @@
 docs/benchmark-results/*.csv text eol=lf
 docs/benchmark-results/*.json text eol=lf
 docs/benchmark-results/*.txt text eol=lf
+docs/assets/*.svg text eol=lf
+assets/readme_visuals/*.svg text eol=lf

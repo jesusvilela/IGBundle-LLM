@@ -84,7 +84,22 @@
                 <li><a href="benchmark-results/arc-agi-rescore.json">Prompt-free strict rescoring of saved first-pair answers</a></li>
             </ul>
 
-            <h2>5. What a stronger test needs</h2>
+            <h2 id="export-audit">5. GGUF exports and generated research images</h2>
+            <table>
+                <thead><tr><th>Surviving local export</th><th>Inspected directory</th><th>Scope</th></tr></thead>
+                <tbody>
+                    <tr><td>cp600-named base_model.gguf</td><td>339 tensors: 198 Q8_0, 141 F32; width 3584, 28 blocks</td><td>Standard Qwen2 names; distinct from October cp300</td></tr>
+                    <tr><td>qwen_arc_base_0.5B.gguf</td><td>290 tensors: 169 F16, 121 F32; width 896, 24 blocks</td><td>Standard Qwen2 names; package README's 7B description does not match this file</td></tr>
+                </tbody>
+            </table>
+            <p>The bounded inspector read 11,900,726 metadata/directory bytes across both files and zero tensor-payload bytes. Its prefix hashes do not identify the full weights. The packaged fast runner uses llama.cpp without the companion adapter. Effects of training in ordinary weights are not ruled out; a geometric or hypercomplex inference path is not established.</p>
+            <p><a href="benchmark-results/gguf-dist-directory.json">cp600-named tensor directory</a> · <a href="benchmark-results/gguf-arc-directory.json">0.5B tensor directory</a> · <a href="benchmark-results/artifact-audit.json">Nine image fingerprints, source excerpts and bounded algebra-name scans</a>.</p>
+            <p>The thesis loss curve, affinity matrix and singular-value spectrum are constructed from simulated formulas. They are now labeled within the published PNGs. Other inspected generators prescribe curvature, hand-rotate vectors or supply convergence curves; these are not measurements of learned geometry. The historical benchmark chart also compares different tasks and uses heuristic fallbacks.</p>
+            <img src="assets/geometry-reference.svg" alt="Corrected analytic geometry reference, independent of all checkpoints" style="width: 100%; height: auto;">
+            <p>For the drawn downward paraboloid z = −(x²+y²)/4 with its induced Euclidean metric, K = 1/[4(1+r²/4)²] is positive. A saddle has variable negative curvature; the Poincare disk has constant K = −1 by its prescribed metric. None of these analytic facts establishes learned hyperbolicity. Hypercomplex claims additionally require a specified product, applicable algebraic laws, and a verified model integration path.</p>
+            <p><a href="https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/export-image-audit.md">Read the complete audit, analytic derivations, coverage, exclusions and reproduction commands.</a> These checks used no model loading, training or GPU work.</p>
+
+            <h2>6. What a stronger test needs</h2>
             <p>
                 A causal evaluation should match parameter budget and layer placement; compare against a vanilla adapter under the same data, objective, optimizer budget, decoding, and hardware; isolate the geometric operator; use multiple seeds and fixed task splits; and publish exact checkpoint provenance with per-task outputs. Operator diagnostics should remain distinct from downstream outcomes.
             </p>

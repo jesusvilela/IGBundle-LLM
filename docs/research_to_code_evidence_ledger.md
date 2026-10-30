@@ -14,6 +14,10 @@ Research documents generate hypotheses; implementation and operator tests establ
 | The current default Poincare affinity is numerically checked | Analytic origin-distance, exact diagonal, symmetry, sampled triangle, gradient, and mixed-precision small-adapter regressions. | Bounded unit-tested implementation, not a trained-model result. |
 | The October statistics can be recomputed | 252 paired recorded grades reproduce custom indices and exact McNemar tests with a standard-library script. | Arithmetic reproduced; historical graders and provenance remain limited. |
 | The ARC runners measure exact task success | Shared parser, all test pairs, deterministic selection and failure accounting are covered with synthetic generators. | Scoring protocol checked; no model/backend inference rerun. |
+| Surviving GGUF exports execute hyperbolic/hypercomplex operations | Two inspected directories have standard Qwen2 tensor names; the packaged fast path omits its separate adapter. Prefix hashes and full tensor descriptors are published. | No such runtime integration established; effects of training in ordinary weights are not ruled out. |
+| Thesis training/affinity/SVD images are measurements | Inspected generator uses exponentials plus noise, random block affinities and power-law spectra. | Synthetic illustrations; the public PNGs now have embedded warnings. |
+| The archived downward paraboloid illustrates negative curvature | Its induced Gaussian curvature is analytically positive; the assigned negative heatmap is unrelated. | Incorrect label, corrected by an independent analytic reference. |
+| Hyperbolic and hypercomplex are interchangeable | A metric and an algebra product are different structures; inspected source-name scans and runtime trace establish no hypercomplex integration. | Do not transfer claims between structures or from separate repositories. |
 
 ## Published data
 
@@ -26,5 +30,8 @@ Research documents generate hypotheses; implementation and operator tests establ
 - [Strict historical first-pair rescoring](benchmark-results/arc-agi-rescore.json)
 - [Provenance manifest](benchmark-results/provenance.json)
 - [Offline verification](benchmark-results/verification.json)
+- [Expanded export/image audit](export-image-audit.md)
+- [GGUF cp600-named directory](benchmark-results/gguf-dist-directory.json) and [0.5B directory](benchmark-results/gguf-arc-directory.json)
+- [Image/source fingerprints and excerpts](benchmark-results/artifact-audit.json)
 
 The October and September raw prompt/generation logs are not included here. The published files contain aggregate scores or prompt-free paired measurements and recorded grades. Source hashes do not replace absent artifacts. The September historical source commit is local-only; its dataset revision and complete loader are not bundled. Reproduce claims only within the stated limitations; this is not full end-to-end reproducibility from a fresh clone.

@@ -1,0 +1,1398 @@
+{
+  "algebra_name_scans": [
+    {
+      "files": [
+        {
+          "bytes": 307,
+          "path": "igbundle-llm/src/igbundle/__init__.py",
+          "sha256": "55d62440ddd4f49f317eb8d1247db37c7fc7fef19fb08203273e6f6492893d4d"
+        },
+        {
+          "bytes": 112,
+          "path": "igbundle-llm/src/igbundle/cognition/__init__.py",
+          "sha256": "487ce9e4ab93ca79833306256bb3f1a51b6a9e03d6dda1d804769560fd1c1936"
+        },
+        {
+          "bytes": 4203,
+          "path": "igbundle-llm/src/igbundle/cognition/meta.py",
+          "sha256": "8adb7f30e076b807f31a9818636eb8d2ce677417babe63426b744de698d13d8a"
+        },
+        {
+          "bytes": 3935,
+          "path": "igbundle-llm/src/igbundle/core/config.py",
+          "sha256": "e39545a2408770074c67a71b0dda8048d5ed925fa83515cdbd388a74efe51c9e"
+        },
+        {
+          "bytes": 472,
+          "path": "igbundle-llm/src/igbundle/dynamics/__init__.py",
+          "sha256": "47374f5d5f8811bb915b7e27d98f94954a6733850fb22771d885fbeeb01672a8"
+        },
+        {
+          "bytes": 5849,
+          "path": "igbundle-llm/src/igbundle/dynamics/eq_prop.py",
+          "sha256": "d7a7aef1f582b8f64acdf23b44b5e7a9c342efd88f0d8028923dc2ee64274caf"
+        },
+        {
+          "bytes": 4331,
+          "path": "igbundle-llm/src/igbundle/dynamics/fhn.py",
+          "sha256": "e2dbb57393e471bd015e10338100d4fb21c0829bf404dbf48df3bef221b54d50"
+        },
+        {
+          "bytes": 5887,
+          "path": "igbundle-llm/src/igbundle/dynamics/hamiltonian.py",
+          "sha256": "64d049e0b95cf3fbd3f5f3208a5ee65b86641ad92d612448375777e60f966f4a"
+        },
+        {
+          "bytes": 2105,
+          "path": "igbundle-llm/src/igbundle/dynamics/potential.py",
+          "sha256": "996a6f671d7ea3a86a46134709920293fdb7355b5422f06240f187169e4f5d8d"
+        },
+        {
+          "bytes": 3842,
+          "path": "igbundle-llm/src/igbundle/dynamics/retrospection.py",
+          "sha256": "c4f10e1c80efd4a8d69b490273a1aacb7c3eb09b03f46b0aa770a5f44475b57f"
+        },
+        {
+          "bytes": 3889,
+          "path": "igbundle-llm/src/igbundle/dynamics/train_eq_prop.py",
+          "sha256": "33eabfe694619ff8b46f1ed09532153b57b1fd08ef01aabbbdc548c4983e84e9"
+        },
+        {
+          "bytes": 569,
+          "path": "igbundle-llm/src/igbundle/fibers/__init__.py",
+          "sha256": "632d43d8811a69c64b36bcd8e169c1afed6f15cf96cdecebf2c131d8a9b0a3b0"
+        },
+        {
+          "bytes": 1250,
+          "path": "igbundle-llm/src/igbundle/fibers/closure.py",
+          "sha256": "130266704ae2008397aca5467c2bb1b94a17abdc2bef1651bf9a5e4fb95e9de2"
+        },
+        {
+          "bytes": 5185,
+          "path": "igbundle-llm/src/igbundle/fibers/constraint.py",
+          "sha256": "dac617bb34a999514b88037cbce365fb729d7f67ffafbed4b67ed9cf7397deb5"
+        },
+        {
+          "bytes": 14234,
+          "path": "igbundle-llm/src/igbundle/fibers/executor.py",
+          "sha256": "c1d1e8f3377212776f43cd59134fb4b83a7e5738fe735c16a72fc75c9c6dedd3"
+        },
+        {
+          "bytes": 2052,
+          "path": "igbundle-llm/src/igbundle/fibers/latent_store.py",
+          "sha256": "aad56c33c993a70eeab58a8f302fb9329d06919d81b8601b1ebb3a0891503e1e"
+        },
+        {
+          "bytes": 898,
+          "path": "igbundle-llm/src/igbundle/fibers/state.py",
+          "sha256": "57d0c455ab925d0db639012670682e258f2fc10d161e61870d1bc8796099c99f"
+        },
+        {
+          "bytes": 5625,
+          "path": "igbundle-llm/src/igbundle/fibers/swarm.py",
+          "sha256": "a68eefcd3f38ee6e56e532c171a834766a11e9b6161fa0d5f4adcb2a34dd2172"
+        },
+        {
+          "bytes": 483,
+          "path": "igbundle-llm/src/igbundle/geometry/__init__.py",
+          "sha256": "d18197079af8554dd36b2fd06b952c72225ce7a27f9c1e91fd5bdcdb25ad4365"
+        },
+        {
+          "bytes": 12320,
+          "path": "igbundle-llm/src/igbundle/geometry/adaptive_curvature.py",
+          "sha256": "e6aba190334daf13d604a8c3e2ab70cbbec049ce2f5d3b43737f2b328094b0bc"
+        },
+        {
+          "bytes": 11044,
+          "path": "igbundle-llm/src/igbundle/geometry/hyperbolic.py",
+          "sha256": "7943429c2e5d7bba0ca857d8b9603e15e1f8d1137f48c66cc0b3803f69d74fcc"
+        },
+        {
+          "bytes": 3897,
+          "path": "igbundle-llm/src/igbundle/geometry/kan_manifold.py",
+          "sha256": "8b58382f726bc96db9ab3e1e0e47edf2ac39138bc58e3c8c4f9f32ffb46da750"
+        },
+        {
+          "bytes": 15015,
+          "path": "igbundle-llm/src/igbundle/geometry/multiscale_attention.py",
+          "sha256": "df0b28bf3b2077e66587c1208a2fe7e1012b9be6fd4e57c50a2c5909166f48f4"
+        },
+        {
+          "bytes": 4373,
+          "path": "igbundle-llm/src/igbundle/geometry/poincare.py",
+          "sha256": "2bb9e137911eb84e8a628df7b46baef5b7009103af2f6022d6b750cbd2d28638"
+        },
+        {
+          "bytes": 25871,
+          "path": "igbundle-llm/src/igbundle/geometry/riemannian.py",
+          "sha256": "7aec9ff6d56300d44bef49bf14da51b1939e03261163cb43c263b4d2cfa61a4c"
+        },
+        {
+          "bytes": 0,
+          "path": "igbundle-llm/src/igbundle/integrations/__init__.py",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "bytes": 8401,
+          "path": "igbundle-llm/src/igbundle/integrations/hf_patch.py",
+          "sha256": "4625f94711a29688fcc11e53bff9dcb597b9061318f986d0b39f378d41112dc8"
+        },
+        {
+          "bytes": 1236,
+          "path": "igbundle-llm/src/igbundle/modules/__init__.py",
+          "sha256": "08986d87427d90bedc20817d74ace175d8683a2c4fe306faa41e351ad33a43a8"
+        },
+        {
+          "bytes": 6280,
+          "path": "igbundle-llm/src/igbundle/modules/adapter.py",
+          "sha256": "9391efa28973a0b4db1d1425ce2133ee074ac3bf6be6465ddad44962df49b865"
+        },
+        {
+          "bytes": 6398,
+          "path": "igbundle-llm/src/igbundle/modules/attention.py",
+          "sha256": "19c153244a386c50e92f9ea4db796a32452c3ebbeeb95e22b0fcfa13cd9268e8"
+        },
+        {
+          "bytes": 1068,
+          "path": "igbundle-llm/src/igbundle/modules/compiler.py",
+          "sha256": "de634d51453e34d2e2de5ac37135334e7292dde28f1005373f288f79b1926dd0"
+        },
+        {
+          "bytes": 2713,
+          "path": "igbundle-llm/src/igbundle/modules/consensus.py",
+          "sha256": "e2aea3dcb8c8b6da3245d2853ac0ee7c95cff5a1744f1123592899d8db7f01af"
+        },
+        {
+          "bytes": 12892,
+          "path": "igbundle-llm/src/igbundle/modules/delta_fiber.py",
+          "sha256": "508d7f785129cdc6a12434b37ec3f62ed029832bdd05e6ae91af0aa67027a8a7"
+        },
+        {
+          "bytes": 2121,
+          "path": "igbundle-llm/src/igbundle/modules/equivariance.py",
+          "sha256": "b437818bee1807df41aaa445ad578e2641c9704780d2e9d793dc3aa83a18ace1"
+        },
+        {
+          "bytes": 57599,
+          "path": "igbundle-llm/src/igbundle/modules/geometric_adapter.py",
+          "sha256": "4e9e52d52f10389ca2074f34fa0f0ebb6ef878da2dde639a8f08ef629af5834d"
+        },
+        {
+          "bytes": 7235,
+          "path": "igbundle-llm/src/igbundle/modules/geometric_cache.py",
+          "sha256": "0ffbe7b6e017a3206e7e1bedb3bf939584850720ae06873613cf28c4afd6e6a0"
+        },
+        {
+          "bytes": 3259,
+          "path": "igbundle-llm/src/igbundle/modules/hybrid_gating.py",
+          "sha256": "56538d7a442a0b4f427b0da789279a43fa8214b6507713342a473b7d7fb86948"
+        },
+        {
+          "bytes": 2026,
+          "path": "igbundle-llm/src/igbundle/modules/kl.py",
+          "sha256": "07d6922304f92e353102da85ea4f317121f239c778b240ab6a6f043b1555409c"
+        },
+        {
+          "bytes": 3828,
+          "path": "igbundle-llm/src/igbundle/modules/losses.py",
+          "sha256": "29551d6ab2e0f7b1c51dbd703d023fd9db84a0fa82b6f294066a4344ef5c46d0"
+        },
+        {
+          "bytes": 25155,
+          "path": "igbundle-llm/src/igbundle/modules/manifold_gl_fiber_bundle_v1.py",
+          "sha256": "11ed5639fe5232b8fb159b6c78d1a8451b8fadc9d8811b4ea05bf299cff74712"
+        },
+        {
+          "bytes": 7140,
+          "path": "igbundle-llm/src/igbundle/modules/memory.py",
+          "sha256": "18ce0063d241c2b0c23be5bf5eebd5e9d536aa3c06f1ea4e53e575e226518964"
+        },
+        {
+          "bytes": 6910,
+          "path": "igbundle-llm/src/igbundle/modules/ops.py",
+          "sha256": "8eb78022df07993ec7900efb5dc123b7dbcc67a3ef36b29eb31cf39ec044e2d4"
+        },
+        {
+          "bytes": 2722,
+          "path": "igbundle-llm/src/igbundle/modules/projectors.py",
+          "sha256": "38ea385a99d306e1e12967bf136f1367800f8354854019e36094e3e917b11d34"
+        },
+        {
+          "bytes": 4214,
+          "path": "igbundle-llm/src/igbundle/modules/regularization.py",
+          "sha256": "ce7348de3b075eac52f1f0ae146b4ae31aa25d4dab710474c3a5e6ad05452e35"
+        },
+        {
+          "bytes": 2796,
+          "path": "igbundle-llm/src/igbundle/modules/riemannian_attention.py",
+          "sha256": "3a2566645b646fc3715aa83c23d455c96bda290c4f5957966f65784354397d9f"
+        },
+        {
+          "bytes": 1524,
+          "path": "igbundle-llm/src/igbundle/modules/spectral.py",
+          "sha256": "1c8dec6001c3af94b7bcb2ebaf998d9966d233c0b5f9db8bb92a0426cb249f17"
+        },
+        {
+          "bytes": 2431,
+          "path": "igbundle-llm/src/igbundle/modules/state.py",
+          "sha256": "b2194cc3de2457c13adc7657db6d0da7cc4e669ba5aa601aeb3a78f580e48c46"
+        },
+        {
+          "bytes": 2294,
+          "path": "igbundle-llm/src/igbundle/modules/vision.py",
+          "sha256": "bc83c956436d12618b92bc59ef73e739fd8e50481ffca7b1fee108eba939765e"
+        },
+        {
+          "bytes": 3931,
+          "path": "igbundle-llm/src/igbundle/nn/kan.py",
+          "sha256": "335a181e7e64dcea9d05c09233e09493cfc27caca0a81ba7afd10de6b4663e73"
+        },
+        {
+          "bytes": 39,
+          "path": "igbundle-llm/src/igbundle/optimization/__init__.py",
+          "sha256": "6d2a4063f5225e7a8537d250a2d2a23043684101162f099feca668eee481a0a9"
+        },
+        {
+          "bytes": 7579,
+          "path": "igbundle-llm/src/igbundle/optimization/spider.py",
+          "sha256": "255e3420a2cbe4f109c518ff25977b32cf2d45a515b6dc9794b00dad9200e722"
+        },
+        {
+          "bytes": 1798,
+          "path": "igbundle-llm/src/igbundle/optimization/symplectic.py",
+          "sha256": "9042356468ca16870b9f3ca34f4f04d59424ee88aca4d08dfc6b3000bb13ba60"
+        },
+        {
+          "bytes": 1025,
+          "path": "igbundle-llm/src/igbundle/optimization/transport.py",
+          "sha256": "3fd884d78dd37dc5c247f5a39b4079f9563cc8b716eba7b92badaaabc627f560"
+        },
+        {
+          "bytes": 3854,
+          "path": "igbundle-llm/src/igbundle/quantum/gibbs.py",
+          "sha256": "7c624894ccf68df0ecf00bddfb6472a347bb15eeb18166f492f56195c617b21a"
+        },
+        {
+          "bytes": 15111,
+          "path": "igbundle-llm/src/igbundle/quantum/scrambling.py",
+          "sha256": "6239c017213c80dc39498c38011a745b78586f28bbc12cfa18412247586f6733"
+        },
+        {
+          "bytes": 3345,
+          "path": "igbundle-llm/src/igbundle/rewards/verifiers.py",
+          "sha256": "893654af96febaaa856ba4640eba81839409953829920d42620dc8de08061c26"
+        },
+        {
+          "bytes": 6838,
+          "path": "igbundle-llm/src/igbundle/scripts/run_inference_integrated.py",
+          "sha256": "c575be767d87c71a34e56335dd003131d125544c096245eab7c9a64c6958e1bb"
+        },
+        {
+          "bytes": 390,
+          "path": "igbundle-llm/src/igbundle/steering/__init__.py",
+          "sha256": "b5784e00d7183c54bc9944b9543b3777fea7fe26f6d47d6b70294d6771abb27d"
+        },
+        {
+          "bytes": 23011,
+          "path": "igbundle-llm/src/igbundle/steering/gsp.py",
+          "sha256": "6e1d1c3bf32e5fcadbdf6cd28685e6ca8c6bba548a2b1c618c5398a25c9623b1"
+        },
+        {
+          "bytes": 321,
+          "path": "igbundle-llm/src/igbundle/telemetry/__init__.py",
+          "sha256": "293419463290baaeb9286fee7396bbb6253ad107e1b2db759797848ef1ad2079"
+        },
+        {
+          "bytes": 7203,
+          "path": "igbundle-llm/src/igbundle/telemetry/epic_stack.py",
+          "sha256": "7219e510cbe117ccf088cea5f743302b4a75eb6128a764e82a95d86eae989448"
+        },
+        {
+          "bytes": 13612,
+          "path": "igbundle-llm/src/igbundle/telemetry/manifold_stack.py",
+          "sha256": "b1e540e899ce3b5f0fc4b63e6447056c73ababb55449f50ad0718c9babac7f1d"
+        },
+        {
+          "bytes": 431,
+          "path": "igbundle-llm/src/igbundle/training/__init__.py",
+          "sha256": "d400fb18511cf9b1623f18a13fd3301e5c070070ee8056de024854893622d240"
+        },
+        {
+          "bytes": 6355,
+          "path": "igbundle-llm/src/igbundle/training/geometric_trainer.py",
+          "sha256": "89447f3dcf23cdc9fb0835c85c2287a691f406302372612c4bff130bc4f4d3a2"
+        },
+        {
+          "bytes": 17680,
+          "path": "igbundle-llm/src/igbundle/training/geometric_training.py",
+          "sha256": "882849fc68086585c77dac064abd291cb73afc230d67ac961069e2be5a48402d"
+        },
+        {
+          "bytes": 6162,
+          "path": "igbundle-llm/src/igbundle/training/grpo_geometric.py",
+          "sha256": "17a23db943da615d2b0b53420f3c99a9d394495f226c5f2ac37953ca15053163"
+        },
+        {
+          "bytes": 1864,
+          "path": "igbundle-llm/src/igbundle/training/losses.py",
+          "sha256": "1ac6726bdcc6b36a0af71893ac06113246b7531ccb3a3b8c33d20740c317400f"
+        },
+        {
+          "bytes": 18156,
+          "path": "igbundle-llm/src/igbundle/training/meta_geometric_optimization.py",
+          "sha256": "8d81859b804953e7f706d4e0d9eee8ab0ec0bd54fb390b95e90b22acf81604b5"
+        },
+        {
+          "bytes": 42,
+          "path": "igbundle-llm/src/igbundle/utils/__init__.py",
+          "sha256": "013ad950f071b87c2d74395170f4b8569a8f7756e928561c811912d1de249ccc"
+        },
+        {
+          "bytes": 5237,
+          "path": "igbundle-llm/src/igbundle/utils/triton_fix.py",
+          "sha256": "5de4d51db2c6dd84c908638783a6f8c53b8345940aa06ceff5cb35400d9ec2fe"
+        }
+      ],
+      "matches": [],
+      "pattern": "hypercomplex|quaternion|octonion|sedenion|cayley|clifford|complex64|complex128|torch\\.complex",
+      "root": "igbundle-llm/src/igbundle"
+    },
+    {
+      "files": [
+        {
+          "bytes": 0,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/__init__.py",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "bytes": 4203,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/cognition/meta.py",
+          "sha256": "8adb7f30e076b807f31a9818636eb8d2ce677417babe63426b744de698d13d8a"
+        },
+        {
+          "bytes": 2307,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/core/config.py",
+          "sha256": "772abf538a7bedbc9d4b6aa3a36492065d232642cad6872265d4b7e708106803"
+        },
+        {
+          "bytes": 5849,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/dynamics/eq_prop.py",
+          "sha256": "d7a7aef1f582b8f64acdf23b44b5e7a9c342efd88f0d8028923dc2ee64274caf"
+        },
+        {
+          "bytes": 4037,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/dynamics/fhn.py",
+          "sha256": "3f633d785e9c1032bd3415478137f572bb4a21dd5c1fc010fa79cf1406a46642"
+        },
+        {
+          "bytes": 5887,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/dynamics/hamiltonian.py",
+          "sha256": "64d049e0b95cf3fbd3f5f3208a5ee65b86641ad92d612448375777e60f966f4a"
+        },
+        {
+          "bytes": 2105,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/dynamics/potential.py",
+          "sha256": "996a6f671d7ea3a86a46134709920293fdb7355b5422f06240f187169e4f5d8d"
+        },
+        {
+          "bytes": 3842,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/dynamics/retrospection.py",
+          "sha256": "c4f10e1c80efd4a8d69b490273a1aacb7c3eb09b03f46b0aa770a5f44475b57f"
+        },
+        {
+          "bytes": 3889,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/dynamics/train_eq_prop.py",
+          "sha256": "33eabfe694619ff8b46f1ed09532153b57b1fd08ef01aabbbdc548c4983e84e9"
+        },
+        {
+          "bytes": 1250,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/fibers/closure.py",
+          "sha256": "130266704ae2008397aca5467c2bb1b94a17abdc2bef1651bf9a5e4fb95e9de2"
+        },
+        {
+          "bytes": 5185,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/fibers/constraint.py",
+          "sha256": "dac617bb34a999514b88037cbce365fb729d7f67ffafbed4b67ed9cf7397deb5"
+        },
+        {
+          "bytes": 14234,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/fibers/executor.py",
+          "sha256": "c1d1e8f3377212776f43cd59134fb4b83a7e5738fe735c16a72fc75c9c6dedd3"
+        },
+        {
+          "bytes": 2052,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/fibers/latent_store.py",
+          "sha256": "aad56c33c993a70eeab58a8f302fb9329d06919d81b8601b1ebb3a0891503e1e"
+        },
+        {
+          "bytes": 898,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/fibers/state.py",
+          "sha256": "57d0c455ab925d0db639012670682e258f2fc10d161e61870d1bc8796099c99f"
+        },
+        {
+          "bytes": 483,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/geometry/__init__.py",
+          "sha256": "d18197079af8554dd36b2fd06b952c72225ce7a27f9c1e91fd5bdcdb25ad4365"
+        },
+        {
+          "bytes": 12320,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/geometry/adaptive_curvature.py",
+          "sha256": "e6aba190334daf13d604a8c3e2ab70cbbec049ce2f5d3b43737f2b328094b0bc"
+        },
+        {
+          "bytes": 3897,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/geometry/kan_manifold.py",
+          "sha256": "8b58382f726bc96db9ab3e1e0e47edf2ac39138bc58e3c8c4f9f32ffb46da750"
+        },
+        {
+          "bytes": 15015,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/geometry/multiscale_attention.py",
+          "sha256": "df0b28bf3b2077e66587c1208a2fe7e1012b9be6fd4e57c50a2c5909166f48f4"
+        },
+        {
+          "bytes": 3963,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/geometry/poincare.py",
+          "sha256": "7490cf755a6db42b524107d7ffe6b4a896bdb11dbdac45050092ae13e9a30c89"
+        },
+        {
+          "bytes": 18590,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/geometry/riemannian.py",
+          "sha256": "08ad47b1cc07a31941a74c283cd0bfda610d5e93114b84e0a95f2d8b9e2d6474"
+        },
+        {
+          "bytes": 0,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/integrations/__init__.py",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "bytes": 8401,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/integrations/hf_patch.py",
+          "sha256": "4625f94711a29688fcc11e53bff9dcb597b9061318f986d0b39f378d41112dc8"
+        },
+        {
+          "bytes": 0,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/modules/__init__.py",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "bytes": 6280,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/modules/adapter.py",
+          "sha256": "9391efa28973a0b4db1d1425ce2133ee074ac3bf6be6465ddad44962df49b865"
+        },
+        {
+          "bytes": 6398,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/modules/attention.py",
+          "sha256": "19c153244a386c50e92f9ea4db796a32452c3ebbeeb95e22b0fcfa13cd9268e8"
+        },
+        {
+          "bytes": 1068,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/modules/compiler.py",
+          "sha256": "de634d51453e34d2e2de5ac37135334e7292dde28f1005373f288f79b1926dd0"
+        },
+        {
+          "bytes": 2713,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/modules/consensus.py",
+          "sha256": "e2aea3dcb8c8b6da3245d2853ac0ee7c95cff5a1744f1123592899d8db7f01af"
+        },
+        {
+          "bytes": 44213,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/modules/geometric_adapter.py",
+          "sha256": "daf49ffc9273357dd2abee0c6df61324fe0410be9ca734541ec25236827ae03d"
+        },
+        {
+          "bytes": 2026,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/modules/kl.py",
+          "sha256": "07d6922304f92e353102da85ea4f317121f239c778b240ab6a6f043b1555409c"
+        },
+        {
+          "bytes": 3828,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/modules/losses.py",
+          "sha256": "29551d6ab2e0f7b1c51dbd703d023fd9db84a0fa82b6f294066a4344ef5c46d0"
+        },
+        {
+          "bytes": 24869,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/modules/manifold_gl_fiber_bundle_v1.py",
+          "sha256": "9dc32dd45a2026331eea272643c5b59a6638138e985b711a365ac9d56f43373e"
+        },
+        {
+          "bytes": 7140,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/modules/memory.py",
+          "sha256": "18ce0063d241c2b0c23be5bf5eebd5e9d536aa3c06f1ea4e53e575e226518964"
+        },
+        {
+          "bytes": 6333,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/modules/ops.py",
+          "sha256": "b29fc50d0dd4c8800f092e9d337f7ad6eef73c5615d4476dbf711c7bbf8e553b"
+        },
+        {
+          "bytes": 2722,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/modules/projectors.py",
+          "sha256": "38ea385a99d306e1e12967bf136f1367800f8354854019e36094e3e917b11d34"
+        },
+        {
+          "bytes": 2431,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/modules/state.py",
+          "sha256": "b2194cc3de2457c13adc7657db6d0da7cc4e669ba5aa601aeb3a78f580e48c46"
+        },
+        {
+          "bytes": 2294,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/modules/vision.py",
+          "sha256": "bc83c956436d12618b92bc59ef73e739fd8e50481ffca7b1fee108eba939765e"
+        },
+        {
+          "bytes": 3931,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/nn/kan.py",
+          "sha256": "335a181e7e64dcea9d05c09233e09493cfc27caca0a81ba7afd10de6b4663e73"
+        },
+        {
+          "bytes": 3854,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/quantum/gibbs.py",
+          "sha256": "7c624894ccf68df0ecf00bddfb6472a347bb15eeb18166f492f56195c617b21a"
+        },
+        {
+          "bytes": 3345,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/rewards/verifiers.py",
+          "sha256": "893654af96febaaa856ba4640eba81839409953829920d42620dc8de08061c26"
+        },
+        {
+          "bytes": 6437,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/scripts/run_inference_integrated.py",
+          "sha256": "56d67f14d3fc842efd696c9c8f4ab0ec9f675a36ed4c3ead9e651ff066fd8aaa"
+        },
+        {
+          "bytes": 431,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/training/__init__.py",
+          "sha256": "d400fb18511cf9b1623f18a13fd3301e5c070070ee8056de024854893622d240"
+        },
+        {
+          "bytes": 5227,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/training/geometric_trainer.py",
+          "sha256": "fd1e813ebc85ec5988d89a90ca4f0e06c0149de3facfa6cefb40033a077f9f62"
+        },
+        {
+          "bytes": 15437,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/training/geometric_training.py",
+          "sha256": "53b8973f506aeb22f01c073618c787aef41359a3f078ef1d79d5f64840eb54ed"
+        },
+        {
+          "bytes": 6162,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/training/grpo_geometric.py",
+          "sha256": "17a23db943da615d2b0b53420f3c99a9d394495f226c5f2ac37953ca15053163"
+        },
+        {
+          "bytes": 1864,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/training/losses.py",
+          "sha256": "1ac6726bdcc6b36a0af71893ac06113246b7531ccb3a3b8c33d20740c317400f"
+        },
+        {
+          "bytes": 18156,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/training/meta_geometric_optimization.py",
+          "sha256": "8d81859b804953e7f706d4e0d9eee8ab0ec0bd54fb390b95e90b22acf81604b5"
+        },
+        {
+          "bytes": 42,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/utils/__init__.py",
+          "sha256": "013ad950f071b87c2d74395170f4b8569a8f7756e928561c811912d1de249ccc"
+        },
+        {
+          "bytes": 5237,
+          "path": "igbundle-llm/dist/igbundle_lib/igbundle/utils/triton_fix.py",
+          "sha256": "5de4d51db2c6dd84c908638783a6f8c53b8345940aa06ceff5cb35400d9ec2fe"
+        }
+      ],
+      "matches": [],
+      "pattern": "hypercomplex|quaternion|octonion|sedenion|cayley|clifford|complex64|complex128|torch\\.complex",
+      "root": "igbundle-llm/dist/igbundle_lib/igbundle"
+    }
+  ],
+  "images": [
+    {
+      "bytes": 142172,
+      "classification": "synthetic",
+      "finding": "Loss and sigma are exponentials plus random noise, not recorded training telemetry.",
+      "height": 1200,
+      "path": "igbundle-llm/thesis/figures/figure_4_dynamics.png",
+      "sha256": "d07c1ae46f6845844f7efc4916a8cc304c310880d62041ad9209460103df620b",
+      "width": 2100
+    },
+    {
+      "bytes": 57820,
+      "classification": "synthetic",
+      "finding": "Block affinities are assigned random values, not extracted from a checkpoint.",
+      "height": 1200,
+      "path": "igbundle-llm/thesis/figures/figure_5_affinity.png",
+      "sha256": "b58f19f836f20552b4283a101958f4d8ea7e0e142f0de036ace7a01ea14be83b",
+      "width": 1500
+    },
+    {
+      "bytes": 107136,
+      "classification": "synthetic",
+      "finding": "The two spectra are explicit power laws with an imposed cutoff, not an SVD.",
+      "height": 1200,
+      "path": "igbundle-llm/thesis/figures/figure_7_svd.png",
+      "sha256": "4f246e5f49bf5f59a3bcff11239cf9c1f14c2cbb45b9b3b05842fb0aeaad6e7c",
+      "width": 1800
+    },
+    {
+      "bytes": 1117383,
+      "classification": "mathematically_mislabeled",
+      "finding": "The drawn downward paraboloid has positive induced Gaussian curvature. The negative heatmap and transport rotations are assigned independently.",
+      "height": 2959,
+      "path": "igbundle-llm/output/readme_visuals/riemannian_geometry.png",
+      "sha256": "fce536207b243ba4300b641211804584139aca683a914247d88514a81fd40ae0",
+      "width": 4173
+    },
+    {
+      "bytes": 741455,
+      "classification": "synthetic",
+      "finding": "Random A A^T, hand-specified paths and exponential curves do not measure Fisher geometry or speedup.",
+      "height": 3570,
+      "path": "igbundle-llm/output/readme_visuals/information_geometry.png",
+      "sha256": "ae7d404012c0d1e3fec2ac5bd4f690b95c13eef298d7826be0577dc3cb6c55bd",
+      "width": 4770
+    },
+    {
+      "bytes": 286418,
+      "classification": "schematic_not_validation",
+      "finding": "The 'corrected mathematical rigor' side is an illustration, not verification of the listed laws.",
+      "height": 2973,
+      "path": "igbundle-llm/output/readme_visuals/before_after_comparison.png",
+      "sha256": "7f8dcccb5069efef580fef9d647f79d8074c97fb666aebddda3fb7d0dd70a13c",
+      "width": 5370
+    },
+    {
+      "bytes": 198238,
+      "classification": "unmatched_comparison",
+      "finding": "Generator compares AIME to MATH, labels ARC-Challenge as ARC-AGI, and has heuristic fallbacks.",
+      "height": 2080,
+      "path": "igbundle-llm/benchmark_graphical_report.png",
+      "sha256": "fa4f1ec0840c6ecfed2294d3d2840cfbf7197e6c2ae4b6ab9708c24ccd1ed6cf",
+      "width": 3564
+    },
+    {
+      "bytes": 214248,
+      "classification": "checkpoint_binding_unresolved",
+      "finding": "A graph layout does not determine intrinsic curvature. Inspected renderer imposes curvature=-1 and permits random embeddings when weights/projection are missing; not proof this image used that fallback.",
+      "height": 800,
+      "path": "igbundle-llm/output/igbundle_topology_riemannian_final.png",
+      "sha256": "de03b0f6c35e8fdd7555c6a44b3d5389565bb4c265ed9a99008eb8664ec5f699",
+      "width": 1200
+    },
+    {
+      "bytes": 615112,
+      "classification": "toy_experiment_not_llm_evidence",
+      "finding": "Associated source uses a small MLP and synthetic data; its log cross-ratio is not sectional curvature.",
+      "height": 3541,
+      "path": "llmos/research/neural_info_geometry/experiments/neural_info_geometry_results.png",
+      "sha256": "480d6fbf1c5ccd783a259970f65e3aa5efc7945d0351dc23ae2b01825d62d32f",
+      "width": 5370
+    }
+  ],
+  "inspection_date": "2026-10-30",
+  "limitations": [
+    "Source and image hashes identify inspected files, not immutable source-to-generation bindings.",
+    "Unseeded synthetic images were not reproduced pixel-for-pixel.",
+    "Name searches are bounded evidence, not proof no algebra exists under other names or in other repos.",
+    "No new model-performance, learned-hyperbolicity or hypercomplex-runtime result is asserted."
+  ],
+  "protocol": "archive-artifact-audit-v1",
+  "scope": {
+    "excluded": [
+      "Git internals, environments, dependencies, caches, reparse-point directories",
+      "Duplicate audit/falsification/publication worktrees",
+      "Vendored llama.cpp trees (their model folders contain tokenizer fixtures)",
+      "Multimodal dataset pictures and UI/vendor graphics from scientific-image review",
+      "Model tensor payloads, pickle deserialization, full multi-GB checksums, inference/training",
+      "Private cross-repository contents from public publication"
+    ],
+    "ggufs": [
+      "igbundle-llm/dist/base_model.gguf",
+      "igbundle_arc_deployment/qwen_arc_base_0.5B.gguf"
+    ],
+    "inventory": "1577 directories visited in the workspace; nine selected research PNGs visually inspected."
+  },
+  "sources": [
+    {
+      "bytes": 24270,
+      "excerpts": [
+        {
+          "end": 211,
+          "lines": [
+            "    fig = plt.figure(figsize=(16, 10))",
+            "",
+            "    # 3D surface for manifold",
+            "    ax1 = fig.add_subplot(221, projection='3d')",
+            "",
+            "    # Create a curved surface (hyperboloid for negative curvature)",
+            "    u = np.linspace(-2, 2, 30)",
+            "    v = np.linspace(-2, 2, 30)",
+            "    U, V = np.meshgrid(u, v)",
+            "    X = U",
+            "    Y = V",
+            "    Z = -(U**2 + V**2) / 4  # Negative curvature surface",
+            "",
+            "    surf = ax1.plot_surface(X, Y, Z, alpha=0.7, cmap='viridis')",
+            "    ax1.set_title('Riemannian Manifold\\n(Negative Curvature)', fontweight='bold')",
+            "    ax1.set_xlabel('x')",
+            "    ax1.set_ylabel('y')"
+          ],
+          "start": 195
+        },
+        {
+          "end": 294,
+          "lines": [
+            "    ax2.grid(True, alpha=0.3)",
+            "    ax2.set_aspect('equal')",
+            "",
+            "    # Christoffel symbols",
+            "    ax3 = fig.add_subplot(223)",
+            "",
+            "    # Visualization of connection (parallel transport)",
+            "    theta = np.linspace(0, 2*np.pi, 8)",
+            "    center = (0, 0)",
+            "    radius = 1.5",
+            "",
+            "    for i, t in enumerate(theta):",
+            "        x_start = center[0] + radius * np.cos(t)",
+            "        y_start = center[1] + radius * np.sin(t)",
+            "",
+            "        # Tangent vector",
+            "        dx = -np.sin(t) * 0.5",
+            "        dy = np.cos(t) * 0.5",
+            "",
+            "        # Parallel transported vector (slightly rotated due to curvature)",
+            "        rotation = t * 0.1  # Curvature effect",
+            "        dx_transport = dx * np.cos(rotation) - dy * np.sin(rotation)",
+            "        dy_transport = dx * np.sin(rotation) + dy * np.cos(rotation)",
+            "",
+            "        ax3.arrow(x_start, y_start, dx, dy,",
+            "                 head_width=0.1, head_length=0.1, fc='red', ec='red', alpha=0.7)",
+            "        ax3.arrow(x_start, y_start, dx_transport, dy_transport,",
+            "                 head_width=0.1, head_length=0.1, fc='blue', ec='blue', alpha=0.7)",
+            "",
+            "    # Draw manifold boundary",
+            "    circle = Circle(center, radius, fill=False, edgecolor='black', linewidth=2)",
+            "    ax3.add_patch(circle)",
+            "",
+            "    ax3.set_title('Parallel Transport\\n(Christoffel Symbols \u0393^k_{ij})', fontweight='bold')",
+            "    ax3.set_xlim(-3, 3)",
+            "    ax3.set_ylim(-3, 3)",
+            "    ax3.set_aspect('equal')",
+            "    ax3.grid(True, alpha=0.3)",
+            "",
+            "    # Curvature tensor",
+            "    ax4 = fig.add_subplot(224)",
+            "",
+            "    # Create a heatmap showing sectional curvature",
+            "    x_curv = np.linspace(-2, 2, 50)",
+            "    y_curv = np.linspace(-2, 2, 50)",
+            "    X_curv, Y_curv = np.meshgrid(x_curv, y_curv)",
+            "",
+            "    # Sectional curvature (negative for hyperbolic geometry)",
+            "    K = -(X_curv**2 + Y_curv**2) / (4 + X_curv**2 + Y_curv**2)",
+            "",
+            "    im = ax4.contourf(X_curv, Y_curv, K, levels=20, cmap='RdYlBu_r')",
+            "    ax4.contour(X_curv, Y_curv, K, levels=10, colors='black', alpha=0.4, linewidths=0.5)",
+            "",
+            "    cbar = plt.colorbar(im, ax=ax4)",
+            "    cbar.set_label('Sectional Curvature K(u,v)', fontsize=10)"
+          ],
+          "start": 240
+        },
+        {
+          "end": 320,
+          "lines": [
+            "    n = 10",
+            "    np.random.seed(42)",
+            "    A = np.random.randn(n, n)",
+            "    F = A @ A.T  # Positive semi-definite",
+            "",
+            "    im1 = ax1.imshow(F, cmap='viridis', aspect='auto')",
+            "    ax1.set_xlabel('Parameter i')",
+            "    ax1.set_ylabel('Parameter j')"
+          ],
+          "start": 313
+        },
+        {
+          "end": 423,
+          "lines": [
+            "                 head_width=0.05, head_length=0.05, fc='red', ec='red')",
+            "",
+            "    ax3.set_aspect('equal')",
+            "    ax3.grid(True, alpha=0.3)",
+            "    ax3.legend()",
+            "",
+            "    # Convergence comparison",
+            "    ax4.set_title('Convergence Rate Comparison', fontsize=14, fontweight='bold')",
+            "",
+            "    steps = np.arange(0, 50)",
+            "",
+            "    # Euclidean gradient convergence (slower)",
+            "    euclidean_loss = np.exp(-0.1 * steps) + 0.1 * np.random.randn(len(steps)) * 0.01",
+            "",
+            "    # Natural gradient convergence (faster)",
+            "    natural_loss = np.exp(-0.3 * steps) + 0.05 * np.random.randn(len(steps)) * 0.01",
+            "",
+            "    ax4.semilogy(steps, euclidean_loss, 'r-', linewidth=2,",
+            "                label='Euclidean Gradient', alpha=0.8)",
+            "    ax4.semilogy(steps, natural_loss, 'b-', linewidth=2,",
+            "                label='Natural Gradient F^{-1}\u2207', alpha=0.8)",
+            "",
+            "    ax4.set_xlabel('Training Steps')",
+            "    ax4.set_ylabel('Loss (log scale)')",
+            "    ax4.legend()",
+            "    ax4.grid(True, alpha=0.3)",
+            "",
+            "    # Add annotation",
+            "    ax4.text(0.6, 0.8, '50-75% Step Reduction\\nwith Natural Gradients',",
+            "            transform=ax4.transAxes, fontsize=10, fontweight='bold',",
+            "            bbox=dict(boxstyle=\"round,pad=0.3\", facecolor=\"lightblue\", alpha=0.8))",
+            "",
+            "    plt.tight_layout()",
+            "    plt.savefig(_output_path(output_dir, \"information_geometry.png\"),"
+          ],
+          "start": 390
+        }
+      ],
+      "path": "igbundle-llm/generate_readme_visualizations.py",
+      "sha256": "5d1b00ff69b33e799e29f2415d572c7b778342958c165ca323b0186026d594e1"
+    },
+    {
+      "bytes": 6411,
+      "excerpts": [
+        {
+          "end": 174,
+          "lines": [
+            "    ",
+            "    # Simulated Data matching text",
+            "    # Loss: Exponential decay 8 -> 5.9",
+            "    loss = 5.9 + 2.1 * np.exp(-steps/20) + np.random.normal(0, 0.05, len(steps))",
+            "    ",
+            "    # Sigma: Starts near 0, rises to 2.2",
+            "    sigma = 2.2 * (1 - np.exp(-steps/15)) + np.random.normal(0, 0.05, len(steps))",
+            "",
+            "    fig, ax1 = plt.subplots(figsize=(7, 4))",
+            "",
+            "    color = 'tab:blue'",
+            "    ax1.set_xlabel('Training Steps')",
+            "    ax1.set_ylabel('LM Loss', color=color)",
+            "    ax1.plot(steps, loss, color=color, label='Loss')",
+            "    ax1.tick_params(axis='y', labelcolor=color)",
+            "    ax1.grid(True, alpha=0.3)",
+            "",
+            "    ax2 = ax1.twinx()  ",
+            "    color = 'tab:orange'",
+            "    ax2.set_ylabel('Dispersion $\\\\sigma$', color=color)",
+            "    ax2.plot(steps, sigma, color=color, linestyle='--', label='Sigma')",
+            "    ax2.tick_params(axis='y', labelcolor=color)",
+            "    ax2.set_ylim(0, 3.0)",
+            "",
+            "    plt.title(\"Figure 4: Training Dynamics (Loss vs Dispersion)\")",
+            "    plt.tight_layout()",
+            "    plt.savefig(_output_path(output_dir, \"figure_4_dynamics.png\"), dpi=300)",
+            "    plt.close()",
+            "",
+            "def generate_fig5_affinity(output_dir: Path):",
+            "    \"\"\"Affinity Matrix Heatmap.\"\"\"",
+            "    # Simulate block diagonal structure (clustering)",
+            "    P = 16",
+            "    data = np.zeros((P, P))",
+            "    # Block 1",
+            "    data[0:4, 0:4] = 0.8 + 0.2*np.random.rand(4,4)",
+            "    # Block 2",
+            "    data[4:10, 4:10] = 0.7 + 0.3*np.random.rand(6,6)",
+            "    # Block 3",
+            "    data[10:, 10:] = 0.9 + 0.1*np.random.rand(6,6)",
+            "    ",
+            "    # Noise",
+            "    data += 0.1 * np.random.rand(P, P)",
+            "    data = np.clip(data, 0, 1)",
+            "    ",
+            "    # Symmetrize",
+            "    data = (data + data.T)/2",
+            "",
+            "    plt.figure(figsize=(5, 4))",
+            "    sns.heatmap(data, cmap=\"viridis\", square=True, vmin=0, vmax=1)",
+            "    plt.title(\"Figure 5: Bundle Affinity Matrix\")",
+            "    plt.tight_layout()",
+            "    plt.savefig(_output_path(output_dir, \"figure_5_affinity.png\"), dpi=300)",
+            "    plt.close()",
+            "",
+            "def generate_fig7_svd(output_dir: Path):",
+            "    \"\"\"Singular Value Spectrum.\"\"\"",
+            "    k = np.arange(1, 257)",
+            "    ",
+            "    # Distributed representation: Smooth decay (Power law)",
+            "    sv_dist = 100 * (1 / k**0.8)",
+            "    ",
+            "    # Rank deficient: Sharp cutoff",
+            "    sv_rank = 100 * (1 / k[:50]**0.5)",
+            "    sv_rank = np.concatenate([sv_rank, np.zeros(206)])",
+            "",
+            "    plt.figure(figsize=(6, 4))",
+            "    plt.plot(k, sv_dist, label='IGBundle (Distributed)', linewidth=2)",
+            "    plt.plot(k, sv_rank, label='Low-Rank Collapse', linestyle='--', alpha=0.6)",
+            "    plt.yscale('log')",
+            "    plt.xlabel('Singular Value Index')",
+            "    plt.ylabel('Magnitude (Log Scale)')",
+            "    plt.legend()",
+            "    plt.title(\"Figure 7: Singular Value Spectrum\")",
+            "    plt.grid(True, alpha=0.3)",
+            "    plt.tight_layout()",
+            "    plt.savefig(_output_path(output_dir, \"figure_7_svd.png\"), dpi=300)",
+            "    plt.close()",
+            "",
+            "if __name__ == \"__main__\":",
+            "    parser = argparse.ArgumentParser(description=\"Generate thesis figures.\")",
+            "    parser.add_argument(",
+            "        \"--output-dir\",",
+            "        default=\"output/thesis/figures\","
+          ],
+          "start": 91
+        }
+      ],
+      "path": "igbundle-llm/thesis_figures.py",
+      "sha256": "5e3968d9736873f39126aed557ac89a106ed73f19cde674daf63412b9d468f90"
+    },
+    {
+      "bytes": 3014,
+      "excerpts": [
+        {
+          "end": 16,
+          "lines": [
+            "    for f in files:",
+            "        with open(f, 'r') as file:",
+            "            data = json.load(file)",
+            "            if 'results' in data:",
+            "                for task, metrics in data['results'].items():",
+            "                    # Prioritize acc_norm, then acc, then mc2",
+            "                    score = metrics.get('acc_norm,none') or metrics.get('acc,none') or metrics.get('mc2,none') or 0.0"
+          ],
+          "start": 10
+        },
+        {
+          "end": 68,
+          "lines": [
+            "    merged_data.update(gsm8k_data)",
+            "",
+            "    ",
+            "    # Baseline Mock Data (We can update this later with real baseline runs if needed)",
+            "    # Using 0.0 only where we truly don't know the baseline yet",
+            "    baseline_data = {",
+            "        \"arc_challenge\": 54.86,",
+            "        \"truthfulqa_mc2\": 0.0, ",
+            "        \"winogrande\": 0.0,",
+            "        \"gsm8k\": 0.0",
+            "    }",
+            "",
+            "    tasks = list(merged_data.keys())",
+            "    # Sort for consistent display",
+            "    if tasks:",
+            "        tasks.sort()",
+            "",
+            "    if not tasks:",
+            "        print(\"No results found yet. Using placeholders.\")",
+            "        tasks = [\"arc_challenge\", \"gsm8k\", \"truthfulqa_mc2\", \"winogrande\"]",
+            "        merged_scores = [0, 0, 0, 0]",
+            "    else:",
+            "        merged_scores = [merged_data.get(t, 0) for t in tasks]",
+            "        ",
+            "    baseline_scores = [baseline_data.get(t, 0) for t in tasks]",
+            "",
+            "    # Plotting",
+            "    x = np.arange(len(tasks))",
+            "    width = 0.35",
+            ""
+          ],
+          "start": 39
+        }
+      ],
+      "path": "igbundle-llm/generate_visual_report.py",
+      "sha256": "5374c593fbd043d3dd727b589a3fefeb2fb54bd0473cc5f68fbdc3bd15b6eaf5"
+    },
+    {
+      "bytes": 4820,
+      "excerpts": [
+        {
+          "end": 80,
+          "lines": [
+            "    if \"gsm8k_cot_zeroshot\" in results:",
+            "        res = results[\"gsm8k_cot_zeroshot\"]",
+            "        # Try to read calculated score",
+            "        real_score = 0.0",
+            "        if os.path.exists(\"gsm8k_real_score.txt\"):",
+            "            try:",
+            "                with open(\"gsm8k_real_score.txt\", \"r\") as f:",
+            "                    real_score = float(f.read().strip())",
+            "                print(f\"Loaded Real GSM8K Score: {real_score}%\")",
+            "            except: pass",
+            "            ",
+            "        benchmarks.append(\"GSM8K\\n(Math Logic)\")",
+            "        if real_score > 0:",
+            "            scores.append(real_score)",
+            "            annotations.append(f\"{real_score:.1f}% (Verified)\")",
+            "        else:",
+            "             scores.append(80.0) # Fallback heuristic",
+            "             annotations.append(\"80% (Est)\")",
+            "        colors.append(\"#00ff99\")",
+            "    else:",
+            "        benchmarks.append(\"GSM8K\")",
+            "        scores.append(0)",
+            "        colors.append(\"#333\")",
+            "        annotations.append(\"N/A\")",
+            "",
+            "    # AIME (Generation)",
+            "    if \"aime25\" in results:",
+            "        benchmarks.append(\"AIME 2025\\n(Olympiad)\")",
+            "        scores.append(0.5) # Symbolic non-zero for visibility or actual 0",
+            "        colors.append(\"#ffbd2e\") # Yellow for \"Hard\"",
+            "        annotations.append(\"0.0 (Capacity)\")",
+            "    else:",
+            "        benchmarks.append(\"AIME\")",
+            "        scores.append(0)",
+            "        colors.append(\"#333\")",
+            "        annotations.append(\"N/A\")",
+            "",
+            "    # ARC (Logprobs)",
+            "    if \"arc_challenge\" in results or \"arc_challenge\" in str(results.keys()):",
+            "        benchmarks.append(\"ARC-AGI\\n(Raven's Matrices)\")",
+            "        scores.append(0.0)",
+            "        colors.append(\"#ff5f56\") # Red for Blocked",
+            "        annotations.append(\"Failed\\n(No Logprobs)\")",
+            "    else:",
+            "        benchmarks.append(\"ARC-AGI\")",
+            "        scores.append(0)",
+            "        colors.append(\"#ff5f56\")",
+            "        annotations.append(\"Pending\")",
+            "",
+            "    # Baselines",
+            "    # Source: https://qwenlm.github.io/blog/qwen2.5-llm/",
+            "    # GSM8K (Instruct): 91.6",
+            "    # MATH (Instruct): 75.5 (Comparing to AIME)",
+            "    # ARC-C (Base): 63.7 (Instruct not reported in blog)",
+            "    baseline_scores = [91.6, 75.5, 63.7] ",
+            "    ",
+            "    x = np.arange(len(benchmarks))"
+          ],
+          "start": 24
+        }
+      ],
+      "path": "generate_benchmark_report.py",
+      "sha256": "f25d1091ef8f20e75fb5b7337536a4a97d8d98fdb1993bb47ee0003a10a99679"
+    },
+    {
+      "bytes": 11782,
+      "excerpts": [
+        {
+          "end": 58,
+          "lines": [
+            "        # 1. Load Weights (Simplified)",
+            "        weights_path = os.path.join(checkpoint_path, \"adapter_weights.pt\")",
+            "        if not os.path.exists(weights_path):",
+            "             weights_path = os.path.join(checkpoint_path, \"pytorch_model.bin\")",
+            "             if not os.path.exists(weights_path):",
+            "                 print(\"Warning: No weights found. Using scaffold.\")",
+            "                 state_dict = {}",
+            "             else:",
+            "                  state_dict = torch.load(weights_path, map_location=\"cpu\")",
+            "        else:",
+            "            state_dict = torch.load(weights_path, map_location=\"cpu\")",
+            "",
+            "        # Extract Projection for Structure",
+            "        proj_weight = None",
+            "        for k, v in state_dict.items():",
+            "            if \"input_proj.weight\" in k:",
+            "                proj_weight = v.float().numpy()",
+            "                break",
+            "        ",
+            "        if proj_weight is None:",
+            "            num_nodes = 512",
+            "            embeddings = np.random.randn(num_nodes, 128)",
+            "        else:",
+            "            num_nodes = proj_weight.shape[0]",
+            "            embeddings = proj_weight",
+            "",
+            "        # Downsample",
+            "        if lite_mode and num_nodes > 150:",
+            "            indices = np.random.choice(num_nodes, 150, replace=False)",
+            "            embeddings = embeddings[indices]",
+            "            num_nodes = 150",
+            "",
+            "        # 2. Build Persistent Topology",
+            "        print(f\"Building persistent topology ({num_nodes} nodes)...\")",
+            "        self.builder = TopologyBuilder(\"igbundle_realtime\", \"IGBundle Real-time\")",
+            "        "
+          ],
+          "start": 23
+        },
+        {
+          "end": 102,
+          "lines": [
+            "            n_clusters = min(12, max(4, num_nodes // 12))",
+            "            km = KMeans(n_clusters=n_clusters, n_init=10, random_state=42)",
+            "            cluster_ids = km.fit_predict(reduced)",
+            "",
+            "            # Step 3: Structural characterization per cluster",
+            "            ROLE_NAMES = [",
+            "                \"Logic\", \"Creative\", \"Integration\", \"Memory\",",
+            "                \"Attention\", \"Binding\", \"Prediction\", \"Emotion\",",
+            "                \"Abstraction\", \"Context\", \"Sensory\", \"Regulation\",",
+            "            ]"
+          ],
+          "start": 93
+        },
+        {
+          "end": 188,
+          "lines": [
+            "                    role_map[c] = f\"Module-{c}\"",
+            "",
+            "            # Apply labels \u2014 100% coverage",
+            "            for i in range(num_nodes):",
+            "                concepts[i] = f\"Fiber {i} [{role_map[cluster_ids[i]]}]\"",
+            "",
+            "            role_counts = Counter(role_map[cluster_ids[i]] for i in range(num_nodes))",
+            "            print(f\"  Labeled {num_nodes}/{num_nodes} fibers (100%) across {n_clusters} functional regions\")",
+            "            for role, cnt in sorted(role_counts.items(), key=lambda x: -x[1]):",
+            "                print(f\"    {role}: {cnt} fibers\")",
+            "",
+            "        except ImportError:",
+            "            print(\"  sklearn not available \u2014 skipping structural decomposition\")",
+            "",
+            "        self.builder.add_conceptual_layer(\"latent_basis\", num_nodes, concepts, embeddings)",
+            "        ",
+            "        # Always use hyperbolic manifold \u2014 this is a Poincar\u00e9 ball model",
+            "        # The old string-match heuristic always fell back to euclidean.",
+            "        self.builder.add_riemannian_layer(",
+            "            \"ideal_bundle\", num_nodes,",
+            "            manifold_type=\"hyperbolic\",",
+            "            radius=1.0,",
+            "            curvature=-1.0  # Negative curvature for hyperbolic space",
+            "        )",
+            "        ",
+            "        self.builder.connect_layers(\"latent_basis\", \"ideal_bundle\", \"nearest\", num_connections=3 if lite_mode else 5)",
+            "        ",
+            "        # Initial Build"
+          ],
+          "start": 161
+        }
+      ],
+      "path": "igbundle-llm/generate_braintop_viz.py",
+      "sha256": "5e487e4d5c0a7003a5c29fd770341bb6e1b39c2d39f73392f57307bf47acb0bb"
+    },
+    {
+      "bytes": 6437,
+      "excerpts": [
+        {
+          "end": 34,
+          "lines": [
+            "def run_fast_inference(model_path, prompt, max_tokens=128):",
+            "    \"\"\"Refined Mode (GGUF): Uses llama.cpp for high performance, no fiber adaptation.\"\"\"",
+            "    try:",
+            "        from llama_cpp import Llama",
+            "    except ImportError:",
+            "        print(\"Error: 'llama-cpp-python' is not installed. Required for 'fast' mode.\")",
+            "        print(\"Install via: pip install llama-cpp-python\")",
+            "        sys.exit(1)",
+            "",
+            "    print(f\"Loading GGUF model from {model_path}...\")",
+            "    llm = Llama(",
+            "        model_path=model_path,",
+            "        n_ctx=2048,",
+            "        n_gpu_layers=-1, # Offload all to GPU",
+            "        verbose=False",
+            "    )",
+            "    ",
+            "    print(f\"\\nGenerating (Fast Mode)...\\nPrompt: {prompt}\\n\")",
+            "    start = time.time()",
+            "    output = llm(",
+            "        prompt,",
+            "        max_tokens=max_tokens,",
+            "        echo=True",
+            "    )"
+          ],
+          "start": 11
+        },
+        {
+          "end": 91,
+          "lines": [
+            "        trust_remote_code=True",
+            "    )",
+            "    model.config.use_cache = False # Required for some adapter gradients, but inference? Safe to keep false for correctness.",
+            "    ",
+            "    # 2. Initialize Adapter",
+            "    print(\"Loading Geometric Fiber Adapter...\")",
+            "    config = IGBundleConfig(",
+            "        hidden_size=3584,",
+            "        num_components=8,",
+            "        latent_dim=64,",
+            "        num_categories=16,",
+            "        use_dynamics=True",
+            "    )",
+            "    adapter = create_geometric_adapter(config).to(device)",
+            "    ",
+            "    if os.path.exists(adapter_weight_path):",
+            "        adapter.load_state_dict(torch.load(adapter_weight_path), strict=False)",
+            "        print(\"Adapter weights loaded successfully.\")",
+            "    else:",
+            "        print(f\"Warning: Adapter weights not found at {adapter_weight_path}. Using random init.\")"
+          ],
+          "start": 72
+        }
+      ],
+      "path": "igbundle-llm/dist/run_inference_integrated.py",
+      "sha256": "56d67f14d3fc842efd696c9c8f4ab0ec9f675a36ed4c3ead9e651ff066fd8aaa"
+    },
+    {
+      "bytes": 3794,
+      "excerpts": [
+        {
+          "end": 17,
+          "lines": [
+            "DIST_DIR = os.path.join(BASE_DIR, \"dist\")",
+            "SRC_DIR = os.path.join(BASE_DIR, \"src\", \"igbundle\")",
+            "CHECKPOINT_DIR = os.path.join(BASE_DIR, \"igbundle_refined_training\", \"checkpoint-100\")",
+            "ADAPTER_WEIGHTS_SOURCE = os.path.join(CHECKPOINT_DIR, \"adapter_weights.pt\")",
+            "LLAMA_CPP_DIR = os.path.join(os.path.dirname(BASE_DIR), \"llama.cpp\") # h:\\LLM-MANIFOLD\\llama.cpp",
+            "MODEL_SOURCE_HF = os.path.abspath(os.path.join(BASE_DIR, \"..\", \"igbundle_qwen7b_cp600\")) # Adjust if needed",
+            "",
+            "def main():"
+          ],
+          "start": 10
+        },
+        {
+          "end": 43,
+          "lines": [
+            "        shutil.copy(ADAPTER_WEIGHTS_SOURCE, os.path.join(DIST_DIR, \"adapter_refined.pt\"))",
+            "        print(f\"Copied adapter weights from {ADAPTER_WEIGHTS_SOURCE}\")",
+            "    else:",
+            "        print(f\"WARNING: Adapter weights not found at {ADAPTER_WEIGHTS_SOURCE}. Please train first.\")",
+            "        ",
+            "    # 4. Copy Inference Script",
+            "    # We read the script we just created in src/igbundle/scripts and write it to dist"
+          ],
+          "start": 37
+        },
+        {
+          "end": 86,
+          "lines": [
+            "            except subprocess.CalledProcessError as e:",
+            "                print(f\"GGUF Conversion Failed: {e}\")",
+            "                ",
+            "    print(\"\\n-------------------------------------------\")",
+            "    print(f\"Export Complete! Package available at: {DIST_DIR}\")",
+            "    print(\"To run:\")",
+            "    print(f\"  cd {DIST_DIR}\")",
+            "    print(\"  python run_inference_integrated.py --mode fast --prompt 'Hello'\")",
+            "    print(\"-------------------------------------------\")",
+            "",
+            "if __name__ == \"__main__\":",
+            "    main()"
+          ],
+          "start": 75
+        }
+      ],
+      "path": "igbundle-llm/export_refined_package.py",
+      "sha256": "cd20057a1ea2173a9751d524426b54d06a0e3478e51671e8ceb6e4f31920debe"
+    },
+    {
+      "bytes": 1087,
+      "excerpts": [
+        {
+          "end": 21,
+          "lines": [
+            "# Abstract Logic (ARC-AGI) Deployment Package",
+            "",
+            "## Contents",
+            "1.  **`qwen_arc_base.gguf`**: ",
+            "    -   The base 7B model converted to GGUF format.",
+            "    -   Use this with `llama.cpp`, `LM Studio`, or `Ollama` for fast, standard text generation.",
+            "    -   *Note*: This file does **not** contain the Manifold Logic (ARC Solver) capabilities, as those rely on non-Euclidean geometry not supported by standard GGUF loaders.",
+            "",
+            "2.  **`adapter/`**:",
+            "    -   `arc_adapter.pt`: The trained Geometric Hyperbolic Adapter (PyTorch).",
+            "    -   `arc_projector.pt`: The Vision Alignment Projector.",
+            "    -   These files contain the \"Abstract Reasoning\" brain suitable for the ARC-AGI dataset.",
+            "",
+            "## How to Run (Full Capabilities)",
+            "To use the Logic/Physics engine, you must use the Python runtime (PyTorch) to load the adapter on top of the base model.",
+            "",
+            "### Requirements",
+            "- Python 3.10+",
+            "- PyTorch",
+            "- Transformers",
+            ""
+          ],
+          "start": 1
+        }
+      ],
+      "path": "igbundle_arc_deployment/README.md",
+      "sha256": "c0b2e717108a7834d8717b36eaf43eff0d7ce275bde2281bb8c7aadfb227752d"
+    },
+    {
+      "bytes": 28157,
+      "excerpts": [
+        {
+          "end": 228,
+          "lines": [
+            "    def _estimate_sectional_curvature(self, param_samples: List[torch.Tensor]) -> List[float]:",
+            "        \"\"\"Estimate sectional curvature using discrete approximation.\"\"\"",
+            "",
+            "        curvatures = []",
+            "        n_samples = len(param_samples)",
+            "",
+            "        for i in range(min(5, n_samples-3)):  # Limit computation for efficiency",
+            "            # Take 4 points to estimate curvature",
+            "            p1, p2, p3, p4 = param_samples[i:i+4]",
+            "",
+            "            # Compute approximate curvature using cross-ratio",
+            "            d12 = torch.norm(p1 - p2)",
+            "            d34 = torch.norm(p3 - p4)",
+            "            d13 = torch.norm(p1 - p3)",
+            "            d24 = torch.norm(p2 - p4)",
+            "            d14 = torch.norm(p1 - p4)",
+            "            d23 = torch.norm(p2 - p3)",
+            "",
+            "            # Discrete Gaussian curvature estimate",
+            "            if d12 > 0 and d34 > 0 and d13 > 0 and d24 > 0:",
+            "                cross_ratio = (d13 * d24) / (d12 * d34)",
+            "                curvature = torch.log(cross_ratio).item()",
+            "                curvatures.append(curvature)",
+            "",
+            "        return curvatures"
+          ],
+          "start": 204
+        },
+        {
+          "end": 289,
+          "lines": [
+            "def create_test_model(input_dim: int = 10, hidden_dim: int = 64, output_dim: int = 3) -> nn.Module:",
+            "    \"\"\"Create test neural network model.\"\"\"",
+            "",
+            "    return nn.Sequential(",
+            "        nn.Linear(input_dim, hidden_dim),",
+            "        nn.ReLU(),",
+            "        nn.Linear(hidden_dim, hidden_dim),",
+            "        nn.ReLU(),",
+            "        nn.Linear(hidden_dim, output_dim)",
+            "    )",
+            "",
+            "def generate_synthetic_data(n_samples: int = 1000, input_dim: int = 10, output_dim: int = 3):",
+            "    \"\"\"Generate synthetic dataset for experiments.\"\"\"",
+            "",
+            "    X = torch.randn(n_samples, input_dim)",
+            "",
+            "    # Create non-linear target function",
+            "    hidden = torch.tanh(X @ torch.randn(input_dim, 20))",
+            "    logits = hidden @ torch.randn(20, output_dim)",
+            "    y = torch.argmax(logits, dim=1)",
+            "",
+            "    dataset = torch.utils.data.TensorDataset(X, y)"
+          ],
+          "start": 268
+        }
+      ],
+      "path": "llmos/research/neural_info_geometry/info_geometry_experiments.py",
+      "sha256": "7e6ebb39a8ad66cdab63f72d0767363c9055f56af66e7cb3131f4362755e2861"
+    }
+  ]
+}

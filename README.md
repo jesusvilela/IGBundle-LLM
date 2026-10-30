@@ -67,6 +67,18 @@ The historical value near -5.63 is not evidence of learned hyperbolicity. For `g
 
 The Poincare affinity correction changes historical numerics; old checkpoint scores must not be attributed to the corrected implementation without reevaluation. The default adapter is now exactly residual-identity at initialization (both output weights and bias are zero). No new checkpoint or performance result is implied.
 
+## Expanded archive audit: GGUFs and images
+
+Two surviving model GGUFs were inspected without reading tensor payloads: the cp600-named Q8_0 export contains **339 ordinary Qwen2 tensors**; the 0.5B F16 export contains **290**. Their packaged fast path does not load the separate geometric adapter. These files are distinct from the October cp300 benchmark artifacts. Prefix fingerprints identify the inspected headers, **not the full checkpoints**.
+
+Nine research images were reviewed against their generators. The thesis loss, affinity and spectrum plots are synthetic and now labeled inside the public PNGs. An archived “negative curvature” drawing actually depicts a positive-curvature paraboloid; prescribed layouts and simulated convergence curves are not learned-geometry results.
+
+![Analytic geometry reference, not a model measurement](docs/assets/geometry-reference.svg)
+
+**Hyperbolic geometry is not hypercomplex algebra.** A verified Poincare operator, a high-dimensional vector, or a Hamiltonian module does not establish a quaternion/octonion product or its execution in a GGUF. No such integration is established by the inspected paths. The geometric approach remains a hypothesis, not a claim rescued by relabeling diagrams.
+
+[Full export/image audit and derivations](docs/export-image-audit.md) · [GGUF cp600-named directory](docs/benchmark-results/gguf-dist-directory.json) · [GGUF 0.5B directory](docs/benchmark-results/gguf-arc-directory.json) · [Image/source fingerprints and excerpts](docs/benchmark-results/artifact-audit.json).
+
 ## Project structure
 
 ```
@@ -98,6 +110,8 @@ With any Python 3.10+ interpreter, no third-party packages are needed for:
 python scripts/verify_evidence.py
 python -m unittest discover -s tests -p test_evidence.py
 python -m unittest discover -s tests -p test_arc_eval.py
+python -m unittest discover -s tests -p test_gguf_inspection.py
+python -m unittest discover -s tests -p test_artifact_audit.py
 ```
 
 In an existing environment with PyTorch, the bounded operator checks are:

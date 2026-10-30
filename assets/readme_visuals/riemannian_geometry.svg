@@ -42,10 +42,10 @@
     <text x="380" y="126" text-anchor="middle">Fiber F₂</text>
     <text x="560" y="106" text-anchor="middle">Fiber F₃</text>
     <text x="690" y="96" text-anchor="middle">Fiber F₄</text>
-    <text x="120" y="380">Base manifold M with geodesic structure</text>
+    <text x="120" y="380">Conceptual base and fibers; no measured metric or curvature</text>
   </g>
 
   <g font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#94a3b8">
-    <text x="640" y="390">Generated placeholder; run generate_readme_visualizations.py for full plots.</text>
+    <text x="120" y="405">Illustration only. See docs/export-image-audit.md for source and image limitations.</text>
   </g>
 </svg>
