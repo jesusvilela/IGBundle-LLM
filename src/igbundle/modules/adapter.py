@@ -74,6 +74,7 @@ class IGBundleAdapter(nn.Module):
         # Init weights (optional, typically small for adapters)
         nn.init.normal_(self.input_proj.weight, std=0.01)
         nn.init.zeros_(self.out_proj.weight) # Zero init for identity start
+        nn.init.zeros_(self.out_proj.bias)
 
     def forward(self, x, context=None):
         """

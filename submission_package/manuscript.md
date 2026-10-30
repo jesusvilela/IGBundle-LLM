@@ -1,3 +1,5 @@
+> **Empirical correction (30 October 2026):** This archived manuscript's performance, “MFR,” ablation, learned-geometry, and efficiency claims are unsupported and superseded. Do not treat its results as validated. See the [current correction notice](../docs/correction-notice.md), [evidence ledger](../docs/research_to_code_evidence_ledger.md), and published [benchmark summaries](../docs/benchmark-results/).
+
 # ManifoldGL: Information-Geometric Bundle Adapters for Large Language Models
 
 **Jesús Vilela Jato**, **A. I. Scientist**, **H. A. L. 9000**  

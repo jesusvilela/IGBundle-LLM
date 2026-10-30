@@ -1,0 +1,22 @@
+"run_date","variant","benchmark","sample_size","accuracy_percent","weighted_index_weight","mcnemar_p_vs_merged_cp300","parse_failures","api_failures"
+"2026-10-27","merged_cp300","mmlupro","98","47.96","0.3",,"3","0"
+"2026-10-27","merged_cp300","arc","60","88.33","0.1",,"0","0"
+"2026-10-27","merged_cp300","math","40","45.00","0.25",,"0","0"
+"2026-10-27","merged_cp300","gsm8k","30","76.67","0.1",,"0","0"
+"2026-10-27","merged_cp300","ifbench","16","68.75","0.15",,"0","0"
+"2026-10-27","merged_cp300","probes","8","75.00","0.1",,"0","0"
+"2026-10-27","merged_cp300","weighted_index",,"60.0","custom weighted score",,,
+"2026-10-27","base_qwen","mmlupro","98","53.06","0.3","0.36","1","0"
+"2026-10-27","base_qwen","arc","60","90.0","0.1","1","0","0"
+"2026-10-27","base_qwen","math","40","40.0","0.25","0.75","0","0"
+"2026-10-27","base_qwen","gsm8k","30","83.33","0.1","0.5","0","0"
+"2026-10-27","base_qwen","ifbench","16","68.75","0.15","1","0","0"
+"2026-10-27","base_qwen","probes","8","75.00","0.1","1","0","0"
+"2026-10-27","base_qwen","weighted_index",,"61.1","custom weighted score",,,
+"2026-10-27","reconstructed_adapter_composite","mmlupro","98","51.02","0.3","0.68","3","0"
+"2026-10-27","reconstructed_adapter_composite","arc","60","91.67","0.1","0.69","0","0"
+"2026-10-27","reconstructed_adapter_composite","math","40","50.0","0.25","0.73","0","0"
+"2026-10-27","reconstructed_adapter_composite","gsm8k","30","80.0","0.1","1","0","0"
+"2026-10-27","reconstructed_adapter_composite","ifbench","16","81.25","0.15","0.63","0","0"
+"2026-10-27","reconstructed_adapter_composite","probes","8","75.00","0.1","1","0","0"
+"2026-10-27","reconstructed_adapter_composite","weighted_index",,"64.7","custom weighted score",,,

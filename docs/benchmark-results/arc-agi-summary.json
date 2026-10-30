@@ -1,0 +1,22 @@
+{
+  "evaluation": "historical ARC-AGI subset",
+  "sample_size": 100,
+  "exact_solves": 1,
+  "accuracy": 0.01,
+  "wilson_95_percent_interval": [
+    0.0017673865655472639,
+    0.05448752476093461
+  ],
+  "model_first_reasoning_format_compliance": {
+    "compliant": 0,
+    "sample_size": 100,
+    "rate": 0.0
+  },
+  "notes": [
+    "The legacy evaluator scored only the first test pair per task and allowed substring matching; exact_solves is the historical field, not a certified all-test-pair solve count.",
+    "See arc-agi-rescore.json for strict rescoring of saved first-pair outputs. A new complete-task evaluation is required for the repaired protocol.",
+    "No matched base-model ARC-AGI comparison is available for this run.",
+    "Model-First Reasoning compliance is prompt-format compliance, not geometric faithfulness.",
+    "This historical subset result is not evidence about current checkpoints."
+  ]
+}

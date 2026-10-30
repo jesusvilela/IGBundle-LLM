@@ -1,0 +1,78 @@
+{
+  "scope": "Historical recorded measurements; no model inference rerun or independent regrading.",
+  "source_sha256": {
+    "aa-index-2026-10-27/ig-bundlellmv2-hamiltonians/mmlupro.jsonl": "93963980b29075564508211a842f71798d03f9f11210d27b8adea3a2c4d4d189",
+    "aa-index-2026-10-27/qwen2-5-7b-instruct/mmlupro.jsonl": "5af9420a79c439f8aff836b5cae416e65cf40c75b2d2ec22f843d0c1c3e2b979",
+    "aa-index-2026-10-27/igbundle-cp300-corrected/mmlupro.jsonl": "b9a887b696dc715d73c7d9f6759e6b1576894f6464f4ad3c9a23e758df982c35",
+    "aa-index-2026-10-27/ig-bundlellmv2-hamiltonians/arc.jsonl": "e821edc359933d9451ec9434376957cd2103e2df3a7ca6a1d7210492f4aff86c",
+    "aa-index-2026-10-27/qwen2-5-7b-instruct/arc.jsonl": "998222693f7741b0509ba0875a4e550161cfbaa88c6a25d4cb511063d7cb5e7e",
+    "aa-index-2026-10-27/igbundle-cp300-corrected/arc.jsonl": "72d8c3c7c5fe1dcae5ea47922cec7a0212171ffc8cd05d7977743dd6b7bd17c2",
+    "aa-index-2026-10-27/ig-bundlellmv2-hamiltonians/math.jsonl": "5e82fa0a364675089420991f61a142ff05204fd3deba462903807538023fe36d",
+    "aa-index-2026-10-27/qwen2-5-7b-instruct/math.jsonl": "48bc9b61f35347175db1be3359a2cc9dcdf43b01a6acea4a0aad546745b6cfd2",
+    "aa-index-2026-10-27/igbundle-cp300-corrected/math.jsonl": "f7fe9c22b2ae2f06aee97e390dee8984af7ec4ed3986604b135d027417c55c7c",
+    "aa-index-2026-10-27/ig-bundlellmv2-hamiltonians/gsm8k.jsonl": "a17609ee3440b4056fa440eed8727a0ad7f91c52f3d9ea625d1f5fb4493e281b",
+    "aa-index-2026-10-27/qwen2-5-7b-instruct/gsm8k.jsonl": "cc8e118cc991d145f0343a30729bec01e58735f890a39a07c21a6a9f2a21389d",
+    "aa-index-2026-10-27/igbundle-cp300-corrected/gsm8k.jsonl": "cdd226317d35380d6b70454b9181408594caa670f5e88744823aed01d2a7ac2a",
+    "aa-index-2026-10-27/ig-bundlellmv2-hamiltonians/ifbench.jsonl": "cb5f1475b405284500fafcb6843d6dc5a34607e33754fa71f94bb0339719af52",
+    "aa-index-2026-10-27/qwen2-5-7b-instruct/ifbench.jsonl": "b751f673dc73379d4f6a3b57fa0c1f5d40b6f5965821d6ad0c474a1fa56185cf",
+    "aa-index-2026-10-27/igbundle-cp300-corrected/ifbench.jsonl": "dfd36e0b9cfeb3e4b38f451b8ddb4191651cb1472ed1a1b5e112d9d4190442e4",
+    "aa-index-2026-10-27/ig-bundlellmv2-hamiltonians/probes.jsonl": "fa6dae2b56f4f889442727b23ad9e882ce1a916e3a6bfd571a83fae2c665293d",
+    "aa-index-2026-10-27/qwen2-5-7b-instruct/probes.jsonl": "02930074e16add192b7b3b19533aaedf191adbde40f44eb3c8d850d1f1729e65",
+    "aa-index-2026-10-27/igbundle-cp300-corrected/probes.jsonl": "d80aec0899058c0e9e66becad23bbc89dfd03828706c7f4f01a606a36b58ad2f",
+    "falsification-matched-2026-09-20/results.json": "b5d8795e33a373a9dc03a6badb07c9f7eace7fc7bb0858a9d3cdbe798bef1c09",
+    "arc_evaluation_results.json": "87404140e95a0eac725500e7f1259d686d469f0fbfe112ee35ad09f65a333f78",
+    "A_faithfulness_audit.json": "e882c67d3d142ee8f969f5f078456dc2f1493d6f1491a056f74245e6844aac60",
+    "audit_faithfulness.py": "93c2b983b542c60dfcf0c1fdac9805e72c967e8d3b63c1100b6570e396f4b397",
+    "cp300/model.safetensors.index.json": "998a078123ffc97763690de7f2a677eb89168af5eaf8a5e12e6bc24d18e25bdb"
+  },
+  "october_checkpoint_index": {
+    "tensor_count": 339,
+    "custom_adapter_key_matches": [],
+    "scope": "Inspection of the surviving cp300 safetensors index only; not a GGUF tensor audit or proof of the served model identity."
+  },
+  "september": {
+    "historical_source_commit_local_only": "d2c5696",
+    "geometric_checkpoint_sha256": "427943f726ced188f2215e12ea4a2b1a1e4fc1a53aeaeaf5593a95e5466242dd",
+    "control_checkpoint_sha256": "5c2dfc8110fa1f6d87d89d2f84a11bb3a68e23a44e2a9a33da56c8594773a145",
+    "matching": {
+      "shared": [
+        "base",
+        "corpus",
+        "seed",
+        "500 steps",
+        "learning rate",
+        "sequence length"
+      ],
+      "confounds": {
+        "trainable_parameters": {
+          "geometric_A": 4160713,
+          "control_B": 585728
+        },
+        "architectures": "single layer geometric adapter versus 13-layer rank-2 LoRA",
+        "heldout_partition": "seed-42 shuffled indices after first 8000"
+      }
+    },
+    "environment_reported_by_run": {
+      "python": "3.13.15",
+      "torch": "2.7.1+cu118",
+      "cuda": "11.8",
+      "gpu": "NVIDIA GeForce RTX 3060 Ti"
+    },
+    "public_reproduction_limit": "Original dataset revision and complete loader are not bundled."
+  },
+  "operator_audit": {
+    "inspected_source_snapshot": "historical-audit-source.py.txt",
+    "timestamp_reported_by_run": "2026-03-26T10:15:24.455506+00:00",
+    "reported_pass_count": "6/6",
+    "source_snapshot_lines": 437,
+    "immutable_run_source_and_checkpoint_binding": false,
+    "limitations": [
+      "Inspected loader accepts missing weights (random initialization) and partial state loads.",
+      "Transport check measures coordinate displacement, not metric compatibility or holonomy.",
+      "Triangle check clamps scalar norms without projecting points.",
+      "Energy check uses squared coordinate norm, not the Hamiltonian; drift is a fraction despite the pct key.",
+      "Entropy and divergence from uniform do not establish specialization or fiber diversity.",
+      "These observations do not identify which loader path produced the historical record."
+    ]
+  }
+}

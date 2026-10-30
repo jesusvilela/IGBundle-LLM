@@ -1,11 +1,10 @@
 """
-Proper Riemannian Manifold Geometry for IGBundle
+Legacy experimental geometry, outside the validated Poincare operator core.
 
-This module implements true Riemannian geometric operations including:
-- Riemannian metrics and geodesics
-- Christoffel symbols and curvature tensors
-- Parallel transport and covariant differentiation
-- Exponential and logarithmic maps
+The metric is position-independent, but the connection is an unrelated neural
+network. The tensor proxies below do not establish its Levi-Civita connection
+or sectional curvature. Method names are historical, not mathematical
+certifications. See README.md and docs/correction-notice.md.
 
 Author: LLMOS SystemAgent
 License: MIT
@@ -41,10 +40,7 @@ class RiemannianMetric:
 
 class RiemannianGeometry(nn.Module):
     """
-    Implements Riemannian geometry operations on the bundle space.
-
-    The base manifold B is equipped with a learned Riemannian metric,
-    while fibers carry categorical structure with Fisher information metric.
+    Legacy metric/connection prototype; the two are not geometrically bound.
     """
 
     def __init__(self, config):
@@ -91,7 +87,7 @@ class RiemannianGeometry(nn.Module):
 
     def christoffel_symbols(self, positions: torch.Tensor, metric: RiemannianMetric) -> torch.Tensor:
         """
-        Compute Christoffel symbols Γ^k_{ij} = 0.5 * g^{kl} * (∂g_{il}/∂x^j + ∂g_{jl}/∂x^i - ∂g_{ij}/∂x^l)
+        Return a symmetric neural connection surrogate, not metric derivatives.
 
         Args:
             positions: (B, T, P, D)
@@ -114,7 +110,7 @@ class RiemannianGeometry(nn.Module):
 
     def riemann_curvature(self, positions: torch.Tensor, metric: RiemannianMetric) -> torch.Tensor:
         """
-        Compute Riemann curvature tensor R^i_{jkl}
+        Return a legacy incomplete connection-derivative proxy, not a Riemann tensor.
 
         Args:
             positions: (B, T, P, D)
@@ -152,7 +148,7 @@ class RiemannianGeometry(nn.Module):
 
     def sectional_curvature(self, positions: torch.Tensor, u: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
         """
-        Compute sectional curvature K(u,v) = R(u,v,v,u) / (g(u,u)g(v,v) - g(u,v)^2)
+        Legacy contraction of the incomplete proxy; not certified sectional curvature.
 
         Args:
             positions: (B, T, P, D)
@@ -301,12 +297,8 @@ class RiemannianGeometry(nn.Module):
 
 class FiberBundleLambdaCalculus(nn.Module):
     """
-    Implements true fiber-to-fiber bundle lambda calculus operations.
-
-    This provides:
-    - Lambda abstraction over fiber bundle sections
-    - Application of bundle morphisms
-    - Categorical composition in fiber categories
+    Neural encodings named after lambda operations; no calculus or category
+    laws are established by these networks. This is a legacy prototype.
     """
 
     def __init__(self, config):

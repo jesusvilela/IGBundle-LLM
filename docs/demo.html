@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Get Started | IGBundle</title>
+    <title>Research access | IGBundle</title>
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
 </head>
@@ -12,104 +12,52 @@
         <div class="brand">IGBundle</div>
         <div class="nav-links">
             <a href="index.html" class="nav-link">Home</a>
-            <a href="wiki.html" class="nav-link">Thesis</a>
-            <a href="demo.html" class="nav-link active">Get Started</a>
-            <a href="https://huggingface.co/jesusvilela/igbundle-qwen2.5-7b-riemannian" target="_blank" class="nav-badge">HF Model</a>
-            <a href="https://github.com/jesusvilela/IGBundle-LLM" target="_blank" class="nav-badge">GitHub</a>
+            <a href="wiki.html" class="nav-link">Evidence</a>
+            <a href="demo.html" class="nav-link active">Research access</a>
+            <a href="https://github.com/jesusvilela/IGBundle-LLM" target="_blank" rel="noopener noreferrer" class="nav-badge">GitHub</a>
         </div>
     </nav>
 
     <div class="container">
         <div style="text-align: center; margin-bottom: 2rem;">
-            <h1 class="hero-title" style="font-size: 2rem;">Get Started</h1>
-            <p class="hero-subtitle">Run the pretrained model or train your own geometric adapter.</p>
+            <h1 class="hero-title" style="font-size: 2rem;">Research code, not a hosted demo</h1>
+            <p class="hero-subtitle">This page does not offer a validated hosted model or inference service.</p>
         </div>
 
         <div class="wiki-content">
-
-            <h2>Option A: Load the Pretrained Model</h2>
-            <p>The fastest path. Pulls the model from Hugging Face and runs inference.</p>
-
-            <pre><code>pip install transformers torch accelerate</code></pre>
-
-            <pre><code class="language-python">from transformers import AutoModelForCausalLM, AutoTokenizer
-
-model = AutoModelForCausalLM.from_pretrained(
-    "jesusvilela/igbundle-qwen2.5-7b-riemannian",
-    device_map="auto",
-    trust_remote_code=True
-)
-tokenizer = AutoTokenizer.from_pretrained(
-    "jesusvilela/igbundle-qwen2.5-7b-riemannian"
-)
-
-inputs = tokenizer("Explain the geometry of attention.", return_tensors="pt").to(model.device)
-outputs = model.generate(**inputs, max_new_tokens=256)
-print(tokenizer.decode(outputs[0], skip_special_tokens=True))</code></pre>
-
             <div class="callout">
-                <strong>Requirements</strong>: ~8 GB VRAM for NF4 quantization, or ~16 GB for BFloat16.
-                CPU inference works but is slow.
+                IGBundle remains an experimental research prototype. Existing checkpoints are historical artifacts; current evidence does not establish improved task performance or learned hyperbolicity. See the <a href="https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/correction-notice.md">correction notice</a> before interpreting older documentation or model cards.
             </div>
 
-            <h2>Option B: Clone and Train</h2>
-            <p>Full source with geometric adapter, training pipeline, and evaluation.</p>
-
-            <h3>1. Clone</h3>
+            <h2>Inspect the source</h2>
+            <p>The repository contains the implementation, tests, research configurations, and published evidence summaries. Cloning the repository does not download a base model or start training.</p>
             <pre><code>git clone https://github.com/jesusvilela/IGBundle-LLM.git
-cd IGBundle-LLM
-pip install -r requirements.txt</code></pre>
-
-            <h3>2. Train</h3>
-            <pre><code>python train.py --config configs/igbundle_standard.yaml</code></pre>
-
-            <p>Training uses Unsloth for 4-bit quantization and LoRA + GeometricAdapter.
-               The adapter is injected at Layer 12 and adds ~0.9% parameters.</p>
-
-            <div class="callout">
-                <strong>Training losses</strong>: Causal LM + Curvature (&kappa; &rarr; -1) + Sheaf Consistency (JSD) + Bundle Structure.
-                Natural gradient optimizer (Fisher Information Metric) for 30% faster convergence.
-            </div>
-
-            <h3>3. Evaluate</h3>
-            <pre><code># Manifold Faithfulness Rate + ARC benchmarks
-python eval_arc.py --checkpoint &lt;path&gt; --limit 100 --mfr
-
-# Standard benchmarks via llama.cpp server
-python export_gguf.py --checkpoint &lt;path&gt;
-# Then point lm-evaluation-harness at localhost:8080</code></pre>
-
-            <h2>Option C: Neural Glass (Interactive UI)</h2>
+cd IGBundle-LLM</code></pre>
             <p>
-                Gradio-based chat interface with real-time geometric telemetry: curvature heatmap,
-                entropy gauge, fiber distributions, thought trace.
+                Before installing dependencies or downloading model weights, review the repository license, base-model terms, checkpoint provenance, environment requirements, and the limitations in the <a href="https://github.com/jesusvilela/IGBundle-LLM/blob/main/README.md">README</a> and <a href="wiki.html">evidence page</a>. Historical training commands, hardware figures, or launcher instructions should not be treated as verified support.
             </p>
-            <pre><code>python app_neural_glass.py</code></pre>
-            <p>Opens at <code>http://localhost:7860</code>. Requires a CUDA GPU with &ge;5 GB VRAM.</p>
 
-            <h2>Project Structure</h2>
-            <pre><code>src/igbundle/
-  geometry/      &mdash; Riemannian, hyperbolic, Poincare, KAN manifold
-  modules/       &mdash; Geometric adapter, losses, attention, vision
-  dynamics/      &mdash; Hamiltonian, FitzHugh-Nagumo, equilibrium propagation
-  fibers/        &mdash; Fiber state, constraints, swarm executor
-  steering/      &mdash; GSP controller (inference-time feedback)
-  optimization/  &mdash; Symplectic optimizer, SPIDER variance reduction
-  training/      &mdash; Geometric trainer, GRPO, losses
-  quantum/       &mdash; Gibbs sampling, scrambling
-  nn/            &mdash; KAN (Kolmogorov-Arnold Networks)
+            <h2>Published evidence</h2>
+            <ul>
+                <li><a href="benchmark-results/aa-index-2026-10-27.csv">October 2026 per-task evaluation summary</a></li>
+                <li><a href="benchmark-results/matched-token-nll-2026-09-20.csv">September 2026 prompt-free paired NLL measurements</a></li>
+                <li><a href="benchmark-results/faithfulness-audit-A.json">Historical audit record (not a certification)</a></li>
+                <li><a href="benchmark-results/aa-paired-outcomes-2026-10-27.csv">October prompt-free paired recorded grades</a></li>
+                <li><a href="benchmark-results/provenance.json">Provenance and known limitations</a></li>
+                <li><a href="https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/research_to_code_evidence_ledger.md">Research-to-code evidence ledger</a></li>
+            </ul>
 
-thesis/          &mdash; Academic thesis (PDF + sources)
-tests/           &mdash; Geometry, pipeline, integration tests
-configs/         &mdash; Training and ablation configs</code></pre>
-
+            <h2>Reproduction standard</h2>
+            <p>The evidence arithmetic runs offline with the Python standard library, without installing ML dependencies or loading models:</p>
+            <pre><code>python scripts/verify_evidence.py</code></pre>
+            <p>This recomputes stored measurements and checks site links. It does not repeat model inference or verify the historical graders. The README lists the separately bounded CPU operator checks and legacy implementation limitations.</p>
+            <p>For a meaningful comparison, keep data splits, model loading, decoding, parameter budget, layer coverage, and training budget matched; isolate the geometric component; use multiple seeds; and publish exact checkpoint provenance and task-level outputs. Geometry checks alone are not a substitute for downstream evaluation.</p>
         </div>
 
         <div class="footer">
             <p>&copy; 2025-2026 <a href="https://github.com/jesusvilela">Jesus Vilela Jato</a>. All rights reserved.</p>
         </div>
     </div>
-
     <script src="assets/js/main.js"></script>
 </body>
 </html>

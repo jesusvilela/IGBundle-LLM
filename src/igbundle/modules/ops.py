@@ -1,45 +1,47 @@
 import torch
 import torch.nn.functional as F
 
+
+def project_to_poincare_ball(x: torch.Tensor, max_norm: float = 0.95) -> torch.Tensor:
+    """Radially clip vectors to a closed ball strictly inside the unit ball."""
+    if not 0 < max_norm < 1:
+        raise ValueError("max_norm must be strictly between zero and one")
+    if not x.is_floating_point() or not torch.isfinite(x).all():
+        raise ValueError("Poincare coordinates must be finite floating-point values")
+    # Accumulate low-precision norms in float32; preserve float64 for diagnostics.
+    work = x.float() if x.dtype in (torch.float16, torch.bfloat16) else x
+    norm = torch.linalg.vector_norm(work, dim=-1, keepdim=True)
+    if not torch.isfinite(norm).all():
+        raise ValueError("Coordinate norm overflow during Poincare projection")
+    return work * (max_norm / norm.clamp_min(max_norm))
+
+
 def compute_poincare_distance(x: torch.Tensor, y: torch.Tensor, epsilon: float = 1e-5) -> torch.Tensor:
     """
-    Computes pairwise Poincare distance between sets of vectors.
-    x: (B, T, P, D)
-    y: (B, T, P, D)
-    Returns: (B, T, P, P) pairwise distance matrix
+    Unit-curvature Poincare distances for x (..., P, D), y (..., Q, D).
+
+    Inputs must lie strictly inside the unit ball; projection is explicit.
+    Half/bfloat16 inputs are evaluated in float32. At coincident points the
+    norm's zero subgradient is used. epsilon is retained for API compatibility,
+    not added to the distance or the metric denominator.
     """
-    # Mobius addition-based distance or isometric invariant definition
-    # d(u,v) = arccosh(1 + 2 * ||u-v||^2 / ((1-||u||^2)(1-||v||^2)))
-    
-    # We need pairwise computation. 
-    # x_i: (B, T, P, 1, D)
-    # y_j: (B, T, 1, P, D)
-    x_i = x.unsqueeze(3)
-    y_j = y.unsqueeze(2)
-    
-    # Squared Euclidean distance in the ambient space (ball)
-    sq_euc_dist = torch.sum((x_i - y_j).pow(2), dim=-1)
-    
-    # Norms
-    x_sq_norm = torch.sum(x_i.pow(2), dim=-1)
-    y_sq_norm = torch.sum(y_j.pow(2), dim=-1)
-    
-    # Clip norms to ensure stability (stay inside ball)
-    # Critical Fix (Review 2.D): Ensure norms never strictly equal 1.0 (boundary singularity)
-    x_sq_norm = torch.clamp(x_sq_norm, max=1.0 - epsilon)
-    y_sq_norm = torch.clamp(y_sq_norm, max=1.0 - epsilon)
-    
-    # Argument for arccosh
-    # Critical Fix (Review 2.D): Prevent denominator collapse
-    alpha_num_stab = 1e-7 
-    denom = (1.0 - x_sq_norm) * (1.0 - y_sq_norm) + alpha_num_stab
-    
-    val = 1.0 + 2.0 * sq_euc_dist / denom
-    
-    # Arccosh
-    # Critical Fix (Review 2.D): Ensure val >= 1 + epsilon for stable gradient
-    dist = torch.acosh(torch.clamp(val, min=1.0 + epsilon))
-    return dist
+    if not 0 < epsilon < 1:
+        raise ValueError("epsilon must be strictly between zero and one")
+    if x.ndim < 2 or y.ndim < 2 or x.shape[-1] != y.shape[-1]:
+        raise ValueError("Expected point sets with matching coordinate dimensions")
+    for points in (x, y):
+        if not points.is_floating_point() or not torch.isfinite(points).all():
+            raise ValueError("Poincare coordinates must be finite floating-point values")
+    x = x.float() if x.dtype in (torch.float16, torch.bfloat16) else x
+    y = y.float() if y.dtype in (torch.float16, torch.bfloat16) else y
+    x_sq = x.square().sum(dim=-1)
+    y_sq = y.square().sum(dim=-1)
+    if (x_sq >= 1).any() or (y_sq >= 1).any():
+        raise ValueError("Poincare coordinates must lie strictly inside the unit ball")
+    numerator = torch.linalg.vector_norm(x.unsqueeze(-2) - y.unsqueeze(-3), dim=-1)
+    denominator = torch.sqrt((1 - x_sq).unsqueeze(-1) * (1 - y_sq).unsqueeze(-2))
+    # acosh(1 + 2r^2) = 2 asinh(r), without cancellation or a biased diagonal.
+    return 2 * torch.asinh(numerator / denominator)
 
 # Assuming compute_pairwise_kl_categorical is defined elsewhere or needs to be added.
 # For this edit, we'll define a placeholder that mimics the original d_fiber input.
@@ -88,6 +90,8 @@ def compute_affinity_matrix(means: torch.Tensor, log_sigmas: torch.Tensor, fiber
         A: (B, T, P, P) normalized over last dim.
     """
     
+    if geometry not in ('euclidean', 'riemannian'):
+        raise ValueError(f"Unknown affinity geometry: {geometry!r}")
     if geometry == 'euclidean':
         # 1. Base Manifold: Euclidean (Gaussian KL)
         # We assume means are in Euclidean space (no projection)
@@ -108,8 +112,7 @@ def compute_affinity_matrix(means: torch.Tensor, log_sigmas: torch.Tensor, fiber
         
     else: # riemannian (default)
         # 1. Base Manifold: Hyperbolic (Poincare Ball)
-        # Project Euclidean means to Poincare Ball via Tanh
-        means_hyp = torch.tanh(means) 
+        means_hyp = project_to_poincare_ball(means)
         
         # Compute Geodesic Distances
         # We interpret 'log_sigmas' not as variance, but as Inverse Curvature / Temperature
@@ -136,7 +139,7 @@ def compute_affinity_matrix(means: torch.Tensor, log_sigmas: torch.Tensor, fiber
     # Affinity = Softmax(-Energy)
     A = F.softmax(-energy, dim=-1)
     
-    return A
+    return A.to(means.dtype)
 
 def mix_messages(affinity: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
     """

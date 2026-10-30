@@ -1,53 +1,35 @@
-# IGBundle — Fiber Bundle Adapters for Language Models
+# IGBundle
 
-## Project Overview
-IGBundle is a research project that applies fiber bundle geometry to transformer language models.
-A geometric adapter at a single transformer layer (Layer 12 of Qwen 2.5-7B) introduces Poincare
-ball coordinates, categorical fiber sections, Hamiltonian dynamics, and Riemannian curvature
-regularization as an inductive bias for hierarchical reasoning.
+> Research prototype exploring information-geometric operations and fiber-structured adapters for language models. The geometric inductive-bias idea remains a hypothesis; current evidence does not establish a general task-performance advantage or learned hyperbolicity.
 
-## Team
-- Jesus Vilela Jato — Principal Researcher & Orchestrator
-- Claude (Anthropic) — Geometry, diagnostics, training pipeline, GSP, NMEM
-- Gemini (Google) — UI, memory backend, evaluation, dashboard
+## Current evidence
 
-## Key Documentation
-- Thesis: /docs/wiki.html
-- Get Started: /docs/demo.html
-- Source: https://github.com/jesusvilela/IGBundle-LLM
-- Model: https://huggingface.co/jesusvilela/igbundle-qwen2.5-7b-riemannian
+- 27 October 2026 local multi-benchmark comparison: custom weighted indices 61.1 (base), 60.0 (merged cp300), 64.7 (reconstructed adapter composite); no individual paired task comparison was significant. Small subsets; custom metric; composite reconstruction and model-loading paths are confounded.
+- 20 September 2026 paired token-NLL probe: vanilla-LoRA control B had lower NLL than geometric arm A on all 24 examples. Parameter count and layer coverage were unequal.
+- Historical audit: the record reports 6/6, but lacks immutable source/weights binding; inspected loading permits missing or partial weights and the criteria include proxies. Not a current operator certification.
+- Historical ARC-Challenge zero-shot acc_norm: 54.86% for both adapter and base (1,172 items each). Historical ARC-AGI: 1/100 reported by a first-test-pair legacy scorer, not an all-test-pair exact-task solve rate; Model-First Reasoning format compliance 0/100.
+- Strict saved-output ARC rescoring is 0/100 under the new last-grid-candidate policy. The previously accepted answer contains the correct grid followed by code-array syntax. This is parser sensitivity, not new inference or proof that no correct answer was emitted.
+- At fixed coordinates the historical log-determinant proxy cancels its position-independent metric factor. Coordinates can change with training; this does not imply the metric is flat or every estimator is weight-invariant.
+- The current default Poincare kernel and small-adapter forward/backward path have bounded regression checks. Legacy learned-connection geometry and model training are not certified.
+- The published 252 paired recorded grades permit offline recomputation of October indices and exact McNemar tests. This is arithmetic verification, not new inference or independent grading.
 
-## Architecture
-- Base Model: Qwen 2.5-7B (NF4 quantized via Unsloth)
-- Adapter: GeometricIGBundleAdapter at Layer 12 (~0.9% params added)
-- Base Manifold: Poincare Ball H^64 (D=64, curvature c=1)
-- Fibers: K=16 categorical sections, P=8 mixture components
-- Dynamics: Hamiltonian system with symplectic integration, Lorentz limiter (c=5.0)
-- Curvature: Log-determinant Laplacian estimator, regularized toward kappa=-1
-- Inference: GSP (Geometric Steering Probe) — GENERIC-compliant homeostatic controller
-- Memory: NMEM (neuromorphic) with FHN decay, FFT spectral forgetting, Gabor interference
-- UI: Neural Glass (Gradio) with real-time curvature/entropy telemetry
+## Pages
 
-## Key Results
-- Manifold Faithfulness: 6/6 tests PASS (K=-5.63, S=0.95, JSD=0.424, PT=0.041)
-- Benchmarks preserved: ARC 54.86%, TruthfulQA 64.78%, Winogrande 71.03%, GSM8K 75.51%
-- Geometry is real and measurable, not decorative
-- Overhead: +15% training time, +4% inference latency, -30% convergence steps
+- [Project overview and results](https://jesusvilela.github.io/IGBundle-LLM/)
+- [Evidence detail](https://jesusvilela.github.io/IGBundle-LLM/wiki.html)
+- [Research access](https://jesusvilela.github.io/IGBundle-LLM/demo.html)
+- [Correction notice](https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/correction-notice.md)
+- [Evidence ledger](https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/research_to_code_evidence_ledger.md)
+- [Source repository](https://github.com/jesusvilela/IGBundle-LLM)
 
-## Quick Start
-```bash
-git clone https://github.com/jesusvilela/IGBundle-LLM
-cd IGBundle-LLM
-pip install -r requirements.txt
-python train.py --config configs/igbundle_standard.yaml
-```
+## Evidence files
 
-## Source Structure
-src/igbundle/
-  geometry/      — Riemannian, hyperbolic, Poincare, KAN manifold
-  modules/       — Geometric adapter, losses, attention, vision
-  dynamics/      — Hamiltonian, FitzHugh-Nagumo, equilibrium propagation
-  fibers/        — Fiber state, constraints, swarm executor
-  steering/      — GSP controller
-  optimization/  — Symplectic optimizer, SPIDER variance reduction
-  training/      — Geometric trainer, GRPO, losses
+- [October per-task results](https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/benchmark-results/aa-index-2026-10-27.csv)
+- [September paired token-NLL measurements](https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/benchmark-results/matched-token-nll-2026-09-20.csv)
+- [Operator-audit record](https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/benchmark-results/faithfulness-audit-A.json)
+- [Historical ARC-AGI aggregate](https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/benchmark-results/arc-agi-summary.json)
+- [Paired recorded outcomes](https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/benchmark-results/aa-paired-outcomes-2026-10-27.csv)
+- [Offline verification](https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/benchmark-results/verification.json)
+- [Provenance and limitations](https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/benchmark-results/provenance.json)
+
+Older claims of accuracy gains, “MFR,” learned curvature, ablation effects, or efficiency are withdrawn or unsupported. Read archived thesis PDFs with the correction notice. The repository is experimental code, not a supported inference product; its license is all rights reserved.

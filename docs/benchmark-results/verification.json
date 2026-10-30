@@ -1,0 +1,168 @@
+{
+  "scope": "Offline arithmetic and link checks only; not a new model benchmark.",
+  "september": {
+    "n": 24,
+    "means": {
+      "base_nll": 2.3187611798445382,
+      "geometric_A_nll": 1.9351787467797597,
+      "vanilla_LoRA_B_nll": 0.8187115900218487
+    },
+    "control_wins": 24,
+    "mean_A_minus_B": 1.116467156757911,
+    "paired_t_95_interval": [
+      0.9143592288574667,
+      1.3185750846583553
+    ],
+    "paired_t_statistic": 11.427499676053447,
+    "two_sided_sign_p": 1.1920928955078125e-07
+  },
+  "october": {
+    "merged_cp300": {
+      "weighted_index": 59.95025510204081,
+      "benchmarks": {
+        "mmlupro": {
+          "n": 98,
+          "accuracy_percent": 47.95918367346939
+        },
+        "arc": {
+          "n": 60,
+          "accuracy_percent": 88.33333333333333
+        },
+        "math": {
+          "n": 40,
+          "accuracy_percent": 45.0
+        },
+        "gsm8k": {
+          "n": 30,
+          "accuracy_percent": 76.66666666666667
+        },
+        "ifbench": {
+          "n": 16,
+          "accuracy_percent": 68.75
+        },
+        "probes": {
+          "n": 8,
+          "accuracy_percent": 75.0
+        }
+      }
+    },
+    "base_qwen": {
+      "weighted_index": 61.06420068027211,
+      "benchmarks": {
+        "mmlupro": {
+          "n": 98,
+          "accuracy_percent": 53.06122448979592,
+          "first_only": 12,
+          "merged_only": 7,
+          "exact_mcnemar_p": 0.359283447265625
+        },
+        "arc": {
+          "n": 60,
+          "accuracy_percent": 90.0,
+          "first_only": 3,
+          "merged_only": 2,
+          "exact_mcnemar_p": 1.0
+        },
+        "math": {
+          "n": 40,
+          "accuracy_percent": 40.0,
+          "first_only": 4,
+          "merged_only": 6,
+          "exact_mcnemar_p": 0.75390625
+        },
+        "gsm8k": {
+          "n": 30,
+          "accuracy_percent": 83.33333333333333,
+          "first_only": 2,
+          "merged_only": 0,
+          "exact_mcnemar_p": 0.5
+        },
+        "ifbench": {
+          "n": 16,
+          "accuracy_percent": 68.75,
+          "first_only": 1,
+          "merged_only": 1,
+          "exact_mcnemar_p": 1.0
+        },
+        "probes": {
+          "n": 8,
+          "accuracy_percent": 75.0,
+          "first_only": 0,
+          "merged_only": 0,
+          "exact_mcnemar_p": 1.0
+        }
+      }
+    },
+    "reconstructed_adapter_composite": {
+      "weighted_index": 64.66028911564626,
+      "benchmarks": {
+        "mmlupro": {
+          "n": 98,
+          "accuracy_percent": 51.02040816326531,
+          "first_only": 13,
+          "merged_only": 10,
+          "exact_mcnemar_p": 0.6776394844055176
+        },
+        "arc": {
+          "n": 60,
+          "accuracy_percent": 91.66666666666667,
+          "first_only": 4,
+          "merged_only": 2,
+          "exact_mcnemar_p": 0.6875
+        },
+        "math": {
+          "n": 40,
+          "accuracy_percent": 50.0,
+          "first_only": 5,
+          "merged_only": 3,
+          "exact_mcnemar_p": 0.7265625
+        },
+        "gsm8k": {
+          "n": 30,
+          "accuracy_percent": 80.0,
+          "first_only": 4,
+          "merged_only": 3,
+          "exact_mcnemar_p": 1.0
+        },
+        "ifbench": {
+          "n": 16,
+          "accuracy_percent": 81.25,
+          "first_only": 3,
+          "merged_only": 1,
+          "exact_mcnemar_p": 0.625
+        },
+        "probes": {
+          "n": 8,
+          "accuracy_percent": 75.0,
+          "first_only": 0,
+          "merged_only": 0,
+          "exact_mcnemar_p": 1.0
+        }
+      }
+    }
+  },
+  "historical_arc_first_pair_rescore": {
+    "n": 100,
+    "recorded_correct": 1,
+    "strict_first_pair_correct": 0,
+    "errors": 0,
+    "scope": "First test pair in saved generations, not all-test-pair ARC task solving."
+  },
+  "historical_arc_challenge": {
+    "adapter": 0.5486348122866894,
+    "base": 0.5486348122866894
+  },
+  "local_site_links_checked": 37,
+  "artifact_sha256": {
+    "aa-index-2026-10-27.csv": "baa95712550b4912a4aa6ee1ebe67d3f4f9de448d7650d4afd4b5e7e49a0d58f",
+    "aa-paired-outcomes-2026-10-27.csv": "012c61d5a39f34fc6a7fd38d3dc46ba08556583c899996b09727e8a8a4d43dc1",
+    "arc-agi-rescore.json": "43adf0b8e1ca54f1112465223a14d7bdfc230e1b52cf6548dfd417e972bbc4e5",
+    "arc-agi-summary.json": "4df106dd4f5ca2309229fa1865d0a6186cc531af6377e097e5a3cc2e75135f58",
+    "arc-challenge-adapter-2026-01.json": "be00fbd2661f36623e0aab86e04124a31a5ba6a0f793f097d21d4e4ee293f677",
+    "arc-challenge-base-2026-01.json": "ae58fff0c9e56a777959b8b88f86919f0c4892c748fbb8b703dcddd17d61538b",
+    "faithfulness-audit-A.json": "6056d1ccf475c5c42ff1bdf5889657cbe7c585eccd80c489524cb94fd8ed99c8",
+    "historical-audit-source.py.txt": "93c2b983b542c60dfcf0c1fdac9805e72c967e8d3b63c1100b6570e396f4b397",
+    "matched-token-nll-2026-09-20.csv": "4109f1c3a6ebca34d764b3871826fb5614ad5703dd1bfd74448de6b7426ff754",
+    "provenance.json": "540e53a0875c7712196ba06f29f1ae04f1e1c1a82bb519509a961de3cd2e47e5"
+  }
+}

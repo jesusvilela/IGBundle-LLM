@@ -1,15 +1,10 @@
 """
-Geometrically Rigorous IGBundle Adapter
+Legacy experimental learned-connection adapter, not the validated default.
 
-This module provides a mathematically correct implementation of fiber bundle
-operations with proper Riemannian geometry and lambda calculus semantics.
-
-Key improvements over the original adapter:
-- True Riemannian curvature instead of variance parameters
-- Proper lambda calculus operations in fiber bundle context
-- Categorical composition in fiber spaces
-- Parallel transport for geometric consistency
-- Information-geometric updates derived from manifold structure
+Its neural encodings and consistency penalties do not establish lambda
+calculus, categorical or sheaf laws. The connection is not derived from its
+metric, and coordinate smoothing is not parallel transport. See README.md for
+the tested default IGBundleAdapter and the explicit validation boundary.
 
 Author: LLMOS SystemAgent
 License: MIT
@@ -50,14 +45,8 @@ class GeometricState:
 
 class GeometricIGBundleAdapter(nn.Module):
     """
-    Geometrically rigorous IGBundle adapter with proper mathematical foundations.
-
-    This adapter implements:
-    1. True Riemannian geometry on the base manifold with learned metrics
-    2. Fiber bundle lambda calculus operations
-    3. Parallel transport for geometric consistency
-    4. Information-geometric updates derived from natural gradients
-    5. Sheaf-theoretic consistency constraints
+    Legacy prototype combining learned coordinates, neural updates and
+    heuristic penalties. Historical method names are not verified semantics.
     """
 
     def __init__(self, config):

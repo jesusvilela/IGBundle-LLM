@@ -1,5 +1,7 @@
 # Thesis Document History
 
+> **Historical record notice (30 October 2026):** This changelog preserves earlier thesis edits; it is not validation of claims those edits introduced. Prior ARC-AGI, “MFR,” ablation, learned-curvature, and efficiency claims have been superseded. See the [current correction notice](../docs/correction-notice.md) and [evidence ledger](../docs/research_to_code_evidence_ledger.md).
+
 This document tracks the evolution of the ManifoldGL/IGBundle thesis artifacts.
 
 ## Current Version (Candidate for Peer Review)
@@ -41,8 +43,3 @@ A consistency agent reviewed the document (2026-01-03) and verified:
     *   **New Section**: Added "6.3 ARC-AGI Benchmark Validation" (Accuracy +16.3%).
     *   **New Section**: Added "6.4 Geometric Consistency" (Hyperbolicity).
     *   **Formatting**: Implemented Markdown Table support for result data grid.
-
-
-
-
-

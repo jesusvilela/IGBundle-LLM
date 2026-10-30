@@ -1,198 +1,125 @@
-# IGBundle: Fiber Bundle Adapters for Language Models
+# IGBundle: Fiber-Structured Geometric Adapters for Language Models
 
-**Geometric inductive bias for transformer reasoning via information geometry and hyperbolic latent spaces.**
+**A research prototype exploring whether information-geometric operations and fiber-structured adapters can provide a useful inductive bias for language models.**
 
 [![License: All Rights Reserved](https://img.shields.io/badge/License-All_Rights_Reserved-red.svg)](LICENSE)
-![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)
-![PyTorch 2.6](https://img.shields.io/badge/PyTorch-2.6-ee4c2c.svg)
-![Status: Active Research](https://img.shields.io/badge/Status-Active_Research-purple.svg)
-[![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Model-igbundle--qwen2.5--7b-yellow)](https://huggingface.co/jesusvilela/igbundle-qwen2.5-7b-riemannian)
-[![Thesis](https://img.shields.io/badge/%F0%9F%93%84%20Thesis-PDF-blue)](thesis/IGBundle_Thesis_V3_GENERIC_Merged_c_Jesus_Vilela_Jato.pdf)
+![Status: Experimental Research](https://img.shields.io/badge/Status-Experimental%20Research-purple.svg)
 
-<div align="center">
+> **Evidence status (30 October 2026):** The geometric inductive-bias idea remains an open research hypothesis, but the available experiments do **not** establish a general task-performance advantage, learned hyperbolicity, or training/inference efficiency gains. Previously advertised accuracy, “MFR,” ablation, and efficiency claims are retracted. Recorded-result arithmetic is reproducible offline; historical model runs and graders have not been independently reproduced. See the [correction notice](docs/correction-notice.md), [evidence ledger](docs/research_to_code_evidence_ledger.md), and [verification output](docs/benchmark-results/verification.json).
 
-![Riemannian Manifold Topology](assets/readme_visuals/riemannian_geometry.svg)
+## Research design
 
-*Fiber bundle structure: categorical fibers over a Poincare base manifold with parallel transport and geodesic affinity.*
+IGBundle explores Poincare-ball coordinates, categorical fiber components, and geometric or dynamical operators as a possible structure for adapting language models. These describe the intended parameterization; they are not evidence that a trained model has learned semantic hierarchy, a fiber bundle, sheaf structure, or hyperbolic geometry.
 
-</div>
+In a historical experimental branch, a spatial log-determinant proxy cancels a position-independent metric factor at **fixed coordinates**. That is not a measurement of learned curvature. Coordinates may change with training, and the actual metric need not be flat. This historical proxy is not the current public branch's default adapter. Operator checks, geometry diagnostics, and downstream task evaluation answer different questions.
 
----
+## What the evidence currently shows
 
-## What is IGBundle?
+### October 2026 local multi-benchmark evaluation
 
-IGBundle is a parameter-efficient fine-tuning method that models the semantic latent space of a transformer as a **fiber bundle** over a **hyperbolic base manifold**. Instead of flat Euclidean weight updates (LoRA), it enforces geometric constraints — Riemannian curvature, sheaf consistency, and symplectic dynamics — that provide an inductive bias for hierarchical and abstract reasoning.
+A 27 October local run compared an exported Qwen2.5-7B checkpoint (cp300), the base model, and a reconstructed composite with runtime IGBundle adapters. It used greedy decoding on fixed, small subsets (8–98 examples per task). Its “intelligence index” is a custom weighted average, not a standardized benchmark:
 
-The adapter is injected at a single transformer layer (Layer 12 of Qwen 2.5-7B) and introduces:
+| Variant | Custom weighted index | Scope |
+|:---|---:|:---|
+| Base Qwen2.5-7B | 61.1 | Q4_K_M GGUF |
+| Merged cp300 checkpoint | 60.0 | Q4_K_M GGUF |
+| Reconstructed adapter composite | 64.7 | Separate NF4/bf16 loading path |
 
-- **Poincare ball coordinates** (H^64) — hyperbolic geometry for hierarchical concept organization
-- **Categorical fiber sections** (K=16, P=8) — structured mixture components over the base manifold
-- **Hamiltonian dynamics** — symplectic integration for fiber evolution
-- **Riemannian curvature regularization** — enforces target curvature kappa = -1
+No individual paired task comparison was statistically significant. The reconstructed composite had higher point estimates than cp300 on 5/6 tasks, but every recomputed exact McNemar p-value was at least 0.625 (0.63 in the rounded historical table). These small subsets cannot establish equivalence or a broad benefit.
 
-At inference time, a **Geometric Steering Probe (GSP)** uses measured curvature and entropy as real-time feedback to modulate generation without retraining.
+**Checkpoint caveat:** the exported cp300 weights did not contain the runtime geometric adapter. The reconstructed arm grafted a surviving adapter trained on the base model onto cp300; it was not the original trained checkpoint. Model assembly and quantization also differed. This exploratory, post-hoc reconstruction does not isolate a geometric effect. The [per-task summary](docs/benchmark-results/aa-index-2026-10-27.csv) includes sample counts, scores, weights, parse failures, and paired p-values.
 
-## Architecture
+The [252 paired recorded grades](docs/benchmark-results/aa-paired-outcomes-2026-10-27.csv) now permit recomputing accuracies, custom indices, and exact two-sided McNemar tests. These are recorded grader decisions, not newly verified answers. Source hashes and missing provenance are disclosed in the [provenance manifest](docs/benchmark-results/provenance.json). Nonsignificance does not demonstrate equivalence or “no harm.”
 
-```mermaid
-graph LR
-    subgraph "Qwen 2.5-7B"
-        L0["Layers 0-11"] --> L12["Layer 12"]
-        L12 --> L13["Layers 13-27"]
-        L13 --> Head["LM Head"]
-    end
+| Task | n | Base | Merged cp300 | Reconstructed composite | McNemar p, composite vs cp300 |
+|:---|---:|---:|---:|---:|---:|
+| MMLU-Pro | 98 | 53.1% | 48.0% | 51.0% | 0.68 |
+| ARC-Challenge | 60 | 90.0% | 88.3% | 91.7% | 0.69 |
+| MATH-500 | 40 | 40.0% | 45.0% | 50.0% | 0.73 |
+| GSM8K | 30 | 83.3% | 76.7% | 80.0% | 1.00 |
+| IFBench-lite | 16 | 68.8% | 68.8% | 81.2% | 0.63 |
+| Degeneration probes | 8 | 75.0% | 75.0% | 75.0% | 1.00 |
 
-    subgraph "IGBundle Adapter"
-        L12 -->|"hidden state h"| Proj["Input Projection<br/>H → 256"]
-        Proj --> PB["Poincare Ball<br/>H^64, κ=-1"]
-        Proj --> Fib["Fiber Sections<br/>K=16 × P=8"]
-        PB --> Dyn["Hamiltonian<br/>Dynamics"]
-        Fib --> Dyn
-        Dyn --> Out["Output Projection<br/>256 → H"]
-        Out -->|"h + α·δ"| L12
-    end
+### September 2026 paired token-NLL probe
 
-    subgraph "GSP Controller"
-        L12 -.->|"K, S telemetry"| GSP["Geometric<br/>Steering Probe"]
-        GSP -.->|"temp, top_p"| Head
-    end
+On 24 examples reported as held out, with 64 tokens scored per example, mean token negative log-likelihood was 2.3188 for the frozen base, 1.9352 for geometric adapter A, and 0.8187 for vanilla-LoRA control B. B had lower NLL on all 24 examples. The mean paired difference `A − B` was +1.1165 (95% paired t interval `[0.9144, 1.3186]`). The independently recomputable two-sided sign-test p-value is `1.1921 × 10⁻⁷`; it is not the historical paired t-test p-value.
 
-    style PB fill:#e1f5ff,color:#000
-    style Fib fill:#fff4e1,color:#000
-    style GSP fill:#f0e6ff,color:#000
-```
+This is a small language-modeling probe, not task accuracy. A had 4,160,713 trainable parameters and one geometric layer; B had 585,728 parameters and 13 LoRA layers. The comparison does not isolate geometry, layer coverage, or objective. [Per-example scores](docs/benchmark-results/matched-token-nll-2026-09-20.csv) are published without prompt text.
 
-The adapter operates as a residual perturbation clamped to ≤10% of the base hidden state norm, preserving the pretrained language modeling distribution while introducing geometric structure.
+### Historical diagnostics and task evaluations
 
-## Mathematical Foundation
+- The historical audit file reports **6/6 checks passed**, but does not bind the run to immutable source and checkpoint hashes. The inspected audit loader allows random initialization when weights are missing and non-strict loading. Its displacement and squared-coordinate-norm proxies do not verify parallel transport or Hamiltonian energy conservation. Retained as a historical report, **not operator certification**. [Audit data](docs/benchmark-results/faithfulness-audit-A.json) · [method limitations](docs/benchmark-results/provenance.json).
+- Historical zero-shot ARC-Challenge `acc_norm` was **54.86% for both** an adapter checkpoint and the base (1,172 test items per run). This is a separate protocol and dataset size from the October subset run. [Adapter results](docs/benchmark-results/arc-challenge-adapter-2026-01.json) · [Base results](docs/benchmark-results/arc-challenge-base-2026-01.json).
+- A separate historical ARC-AGI evaluator reported **1/100 (1%)**, but scored only the first test pair per task and allowed substring matching. This is not an all-test-pair exact-task solve rate. Model-First Reasoning format compliance was **0/100**; it is a prompt-format metric, not geometric faithfulness. [Historical aggregate](docs/benchmark-results/arc-agi-summary.json) · [strict rescoring of the saved first-pair answers](docs/benchmark-results/arc-agi-rescore.json).
 
-**Fiber Bundle.** The total space *E* is a bundle π: E → M where the base manifold M is a Poincare ball B^n with constant negative curvature, and each fiber F_x is a categorical distribution over K sections with P mixture components.
+The new last-grid-candidate parser scores those saved first-pair outputs **0/100**. The previously accepted answer contains the correct grid followed by a code-array expression, which the new policy rejects. This is a **parser-policy sensitivity result**, not new inference or proof that the model never emitted a correct answer. The repaired scorer is a declared local protocol, not an official ARC leaderboard evaluator.
 
-**Riemannian Metric.** The adapter learns a metric tensor g on M approximated via the Fisher information matrix of the fiber distributions. Curvature is regularized toward κ = -1 via a log-determinant Laplacian estimator.
+The historical value near -5.63 is not evidence of learned hyperbolicity. For `g(x) = lambda(x) G`, `log det g = D log lambda + log det G`; spatial differences remove the second term when G is position-independent. This limited algebraic statement does not certify the other claims in the historical [falsification draft, section 2.6](https://github.com/jesusvilela/IGBundle-LLM/blob/579dd7c2220abc146bf7380afb55f188f6f461b1/draft_paper_falsification.md).
 
-**Sheaf Consistency.** Overlapping context patches must agree: the JS divergence between fiber distributions of adjacent tokens is penalized, enforcing local-to-global semantic coherence.
+## Verified implementation boundary
 
-**Symplectic Integration.** Fiber state evolves via a Hamiltonian system with a Lorentz-factor speed limiter (c=5.0), ensuring energy conservation and preventing gradient explosion.
+| Surface | What is checked | What is not established |
+|---|---|---|
+| Default `IGBundleAdapter` / Poincare affinity | Radial projection, analytic origin distances, exact zero diagonal, symmetry, sampled triangle inequalities, finite/checked gradients, float32/bfloat16 small-tensor forward/backward, identity initialization | Trained-model quality, learned geometry, or all possible numerical inputs |
+| `arc_eval.py`, HF and GGUF ARC runners | Shared deterministic selection, strict grid equality, all test pairs, errors retained and run invalidated, explicit empty-run rejection, output overwrite protection | Backend model loading or restoration of separate runtime adapter weights; no new model evaluation was run |
+| Historical evidence | Recomputed NLL means and paired statistics; October accuracies, indices and McNemar tests; source hashes and first-pair ARC rescoring | Independent grading, dataset non-contamination, or complete reproduction from a fresh clone |
+| Legacy `geometry/riemannian.py`, `GeometricIGBundleAdapter`, training and experimental geometry modules | **Outside the validated core** | The metric is position-independent while connection coefficients come from an unrelated network; these do not establish Levi-Civita geometry, categorical laws, or sheaf laws. The legacy `train.py` entry point also contains an incomplete trainer block and is not a supported training command. |
 
-## Key Results
+The Poincare affinity correction changes historical numerics; old checkpoint scores must not be attributed to the corrected implementation without reevaluation. The default adapter is now exactly residual-identity at initialization (both output weights and bias are zero). No new checkpoint or performance result is implied.
 
-### Manifold Faithfulness (Tier 3)
-
-The geometric constraints are not decorative — they produce measurable, non-trivial structure:
-
-| Metric | Value | Interpretation |
-|:---|:---:|:---|
-| Curvature K | -5.63 | Strongly hyperbolic (target: -1.0) |
-| Entropy S | 0.95 | Below uniform (ln16 ≈ 2.77), sections specialized |
-| Jensen-Shannon Div. | 0.424 | Fibers differ across contexts |
-| Parallel Transport | 0.041 | Near-zero holonomy — geometric consistency |
-| Faithfulness | **6/6** | All geometric verification tests pass |
-
-### Benchmark Preservation
-
-The adapter preserves base model capabilities with minimal degradation:
-
-| Benchmark | Score | Notes |
-|:---|:---:|:---|
-| ARC-Challenge | 54.86% | Identical to base Qwen 2.5-7B |
-| TruthfulQA (MC2) | 64.78% | Strong factual grounding |
-| Winogrande | 71.03% | Commonsense reasoning intact |
-| GSM8K | 75.51% | Multi-step math preserved |
-
-### Computational Overhead
-
-| Metric | vs. LoRA Baseline |
-|:---|:---:|
-| Training speed | -15% per step |
-| VRAM (8GB GPU) | +0.6 GB |
-| Inference latency | +4% |
-| Convergence steps | **-30%** (natural gradients) |
-
-## Project Structure
+## Project structure
 
 ```
 src/igbundle/
-├── geometry/          # Riemannian, hyperbolic, Poincare, KAN manifold
-├── modules/           # Geometric adapter, losses, attention, vision
-├── dynamics/          # Hamiltonian, FitzHugh-Nagumo, equilibrium propagation
-├── fibers/            # Fiber state, constraints, swarm executor
-├── steering/          # GSP controller (inference-time feedback)
-├── optimization/      # Symplectic optimizer, SPIDER variance reduction
-├── training/          # Geometric trainer, GRPO, losses
-├── quantum/           # Gibbs sampling, scrambling
-└── nn/                # KAN (Kolmogorov-Arnold Networks)
+├── geometry/          # Legacy experimental geometry; not certified
+├── modules/           # Default mixture adapter, KL, affinity, and losses
+├── integrations/      # Hugging Face block wrapping
+└── training/          # Legacy experimental training utilities
 
-thesis/                # Academic thesis (PDF + LaTeX sources)
-tests/                 # Geometry, pipeline, and integration tests
-configs/               # Training and ablation configurations
-assets/                # Visualizations and figures
+tests/                 # Unit and integration tests
+configs/               # Research configurations
+docs/                  # GitHub Pages and evidence summaries
 ```
 
-## Quick Start
-
-### Installation
+## Getting the code
 
 ```bash
 git clone https://github.com/jesusvilela/IGBundle-LLM.git
 cd IGBundle-LLM
-pip install -r requirements.txt
 ```
 
-### Load the Pretrained Model
+This repository is experimental code, not a supported inference product. Existing hosted checkpoints are historical artifacts; verify their source/configuration compatibility and model-license terms before use. No model download, training run, or hardware requirement is implied by cloning this repository.
 
-```python
-from transformers import AutoModelForCausalLM, AutoTokenizer
+### Low-resource verification
 
-model = AutoModelForCausalLM.from_pretrained(
-    "jesusvilela/igbundle-qwen2.5-7b-riemannian",
-    device_map="auto",
-    trust_remote_code=True
-)
-tokenizer = AutoTokenizer.from_pretrained(
-    "jesusvilela/igbundle-qwen2.5-7b-riemannian"
-)
-
-inputs = tokenizer("Explain the geometry of attention.", return_tensors="pt").to(model.device)
-outputs = model.generate(**inputs, max_new_tokens=256)
-print(tokenizer.decode(outputs[0], skip_special_tokens=True))
-```
-
-### Training
+With any Python 3.10+ interpreter, no third-party packages are needed for:
 
 ```bash
-python train.py --config configs/igbundle_standard.yaml
+python scripts/verify_evidence.py
+python -m unittest discover -s tests -p test_evidence.py
+python -m unittest discover -s tests -p test_arc_eval.py
 ```
 
-### Evaluation
+In an existing environment with PyTorch, the bounded operator checks are:
 
 ```bash
-python eval_arc.py --checkpoint <path> --limit 100 --mfr
+python -m unittest discover -s tests -p test_geometry.py
+python -m unittest discover -s tests -p test_ig.py
 ```
 
-## Active Development
+Use `CUDA_VISIBLE_DEVICES=""`, `OMP_NUM_THREADS=1`, `MKL_NUM_THREADS=1`, and `OPENBLAS_NUM_THREADS=1` to bound local resources. None of these commands loads a model, downloads data, or runs LLM training. Do not use blanket test discovery as a lightweight check: the legacy `test_pipeline.py` invokes the unsupported model-training entry point.
 
-Development happens on feature branches. Current focus areas:
+The [CPU evidence workflow](.github/workflows/evidence.yml) runs only this bounded suite. Its green result means these contracts passed, not that the whole experimental repository or its scientific claims are certified.
 
-- **Multimodal integration** — SigLIP v2 vision encoder with geometric grounding
-- **Neuromorphic memory (NMEM)** — biologically-inspired forgetting with FHN dynamics
-- **Falsification experiment** — controlled comparison: geometric adapter vs. multi-layer vanilla LoRA
-- **Inference hardening** — OOM prevention, EOS control, degeneration detection
+## Research standard
 
-## Related Work
-
-This project builds on ideas from:
-
-- Nickel & Kiela (2017) — Poincare Embeddings for Hierarchical Representations
-- Turner et al. (2023) — Activation Addition: Steering Without Optimization
-- Grmela & Ottinger (1997) — GENERIC framework for non-equilibrium thermodynamics
-- Chen et al. (2022) — Fully Hyperbolic Neural Networks
-- McClelland et al. (1995) — Complementary Learning Systems
+The hypothesis remains open. A stronger causal test should match parameter budget and layer placement, isolate the geometric operator/objective, use a shared split and training budget with multiple seeds, and publish exact checkpoint provenance and task-level outputs. Geometry diagnostics alone cannot establish language-model benefit.
 
 ## Citation
 
 ```bibtex
 @misc{vilela2025igbundle,
-    title   = {IGBundle: Fiber Bundle Adapters for Language Models},
+    title   = {IGBundle: Fiber-Structured Geometric Adapters for Language Models},
     author  = {Vilela Jato, Jes{\'u}s},
     year    = {2025},
     url     = {https://github.com/jesusvilela/IGBundle-LLM}
@@ -201,9 +128,6 @@ This project builds on ideas from:
 
 ## License
 
-All rights reserved. See [LICENSE](LICENSE) for details.
+All rights reserved. See [LICENSE](LICENSE).
 
----
-
-*IGBundle is an active research project. Results are preliminary and subject to revision.*
-*(c) 2025-2026 Jesus Vilela Jato*
+*© 2025–2026 Jesús Vilela Jato*
