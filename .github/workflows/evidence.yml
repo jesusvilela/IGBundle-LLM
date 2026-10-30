@@ -50,3 +50,7 @@ jobs:
         env:
           MPLBACKEND: Agg
         run: python -m unittest discover -b -s tests -p test_demo_evidence.py
+      - name: Install pinned HF test dependencies
+        run: python -m pip install -r requirements-test-hf.txt
+      - name: Tiny real HF integration
+        run: python -m unittest discover -b -s tests -p test_tiny_hf_integration.py

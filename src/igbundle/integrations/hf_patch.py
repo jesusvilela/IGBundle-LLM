@@ -71,7 +71,7 @@ class IGBundleBlockWrapper(nn.Module):
     @property
     def attention_type(self):
         """Return attention_type for newer transformers (4.45+) compatibility."""
-        original_block = object.__getattribute__(self, 'original_block')
+        original_block = super().__getattr__('original_block')
         if hasattr(original_block, 'attention_type'):
             return original_block.attention_type
         # Fallback: check for _attn_implementation (common in HF models)
@@ -151,7 +151,9 @@ def wrap_hf_candidate(model, adapter_config):
             
         # For 4bit/8bit, we want adapter in bf16 or fp32, not 4bit
         # We default to bf16 if available, else fp32
-        target_dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float32
+        target_dtype = (torch.bfloat16
+                        if target_device.type == "cuda" and torch.cuda.is_bf16_supported()
+                        else torch.float32)
         
         adapter.to(device=target_device, dtype=target_dtype)
         
