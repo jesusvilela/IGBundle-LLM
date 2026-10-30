@@ -239,6 +239,20 @@ Pinned optional dependencies are in `requirements-test-hf.txt`.
 Run `python -m unittest discover -b -s tests -p test_tiny_hf_integration.py`
 in a compatible CPU environment.
 
+### Declared LoRA restoration
+
+The six public HF load/merge paths now check exact default-LoRA tensor keys,
+shapes, finite values and restored values. Missing or extra tensors and wrapper
+prefix mismatches fail explicitly; no names are guessed or rewritten.
+The optional Unsloth path receives the same post-load check, but was not executed.
+
+Tiny pinned PEFT checks cover both unwrapped saves and saves made after IGBundle
+wrapper insertion. The latter require the same wrapper structure when loading.
+Only one `default` LoRA adapter is supported by this contract.
+This is a post-load check, **not rollback**: a failed caller must discard its
+partially constructed model. Coverage does not establish base identity, training
+history, historical compatibility, or full application correctness.
+
 ## Research standard
 
 The hypothesis remains open. A stronger causal test should match parameter budget and layer placement, isolate the geometric operator/objective, use a shared split and training budget with multiple seeds, and publish exact checkpoint provenance and task-level outputs. Geometry diagnostics alone cannot establish language-model benefit.

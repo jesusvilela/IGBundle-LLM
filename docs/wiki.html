@@ -147,7 +147,17 @@
                 full-app or GGUF certificate.
             </p>
 
-            <h2>11. What a stronger test needs</h2>
+            <h2 id="peft-coverage">11. Exact declared-LoRA restoration</h2>
+            <p>Six public load/merge paths now check exact default-LoRA keys,
+                shapes, finite values and restored values. Partial state and
+                wrapper-prefix mismatches fail explicitly.
+            </p>
+            <p>Tiny real PEFT checks cover wrapped saves with matching wrapper
+                structure. This is post-load verification, not rollback or
+                historical checkpoint certification. Unsloth remains untested.
+            </p>
+
+            <h2>12. What a stronger test needs</h2>
             <p>
                 A causal evaluation should match parameter budget and layer placement; compare against a vanilla adapter under the same data, objective, optimizer budget, decoding, and hardware; isolate the geometric operator; use multiple seeds and fixed task splits; and publish exact checkpoint provenance with per-task outputs. Operator diagnostics should remain distinct from downstream outcomes.
             </p>

@@ -292,9 +292,33 @@ Two coupled wrapper defects were repaired: registered modules are retrieved thro
 BF16-capable GPU. The latter is checked with a mocked capability probe.
 
 This validates a narrow, real backend composition, not the five public loader
-entry points end-to-end. PEFT serialization **after** wrapper insertion is not
-covered. No historical weights, quantization, pretrained scores, training
+entry points end-to-end. The subsequent LoRA contract below adds wrapped-save
+coverage. No historical weights, quantization, pretrained scores, training
 convergence, full server workflow or geometry-aware GGUF inference is certified.
+
+### Exact declared-LoRA contract
+
+The six public load/merge paths now use a shared exact-state check: app,
+evaluation, benchmark, arena, effect validation and export. The optional Unsloth
+app path is checked after its loader returns; that backend itself was not run.
+Only one default LoRA adapter is supported.
+
+The checker reads local safetensors on CPU, or a tensor-only
+`adapter_model.bin` with `weights_only=True`. It compares PEFT's serialized-key
+view with the saved mapping: no missing/extra keys, malformed tensors,
+nonfinite values, conversion overflow or unequal restored values are accepted.
+It does not remap `original_block` prefixes.
+
+Tiny real PEFT checks demonstrate the distinction: a save made after wrapper
+insertion is rejected against an unwrapped base, and its nonzero LoRA state
+restores when the wrapper structure matches. Tests also reject partial/extra
+state, wrong shapes, sparse/nonfinite values and overflow.
+
+This is a post-load assertion, not an atomic rollback. On failure, callers must
+discard the partially constructed model. Paths that load PEFT before wrapping
+and paths that wrap first require different matching checkpoint names.
+This deliberate failure is safer than silently running initialized LoRA values;
+it does not repair or certify any historical checkpoint.
 
 Inventory visited 1,577 workspace directories while excluding dependencies, Git internals, reparse-point directories and duplicate audit checkouts. Vendored llama.cpp model folders were checked separately and contained tokenizer fixtures. Dataset pictures and UI/vendor graphics were not treated as scientific evidence. Only the nine selected PNGs above received visual review; this is not a certification of every image or document in the archive.
 

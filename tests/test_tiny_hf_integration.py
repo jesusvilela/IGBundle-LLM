@@ -160,6 +160,10 @@ class TinyHFTests(unittest.TestCase):
 
     def test_wrapped_lora_names_require_matching_wrapper_structure(self):
         source = wrap_hf_candidate(peft_model(), adapter_config()).eval()
+        with torch.no_grad():
+            for name, value in source.named_parameters():
+                if "lora_B" in name:
+                    value.fill_(.037)
         with tempfile.TemporaryDirectory() as directory:
             source.save_pretrained(directory)
             with self.assertRaisesRegex(ValueError, "LoRA coverage"):
@@ -174,9 +178,23 @@ class TinyHFTests(unittest.TestCase):
         model = peft_model()
         state = get_peft_model_state_dict(model)
         first = next(iter(state))
-        for value in (torch.full_like(state[first], float("nan")), state[first] + 1):
+        for value in (torch.full_like(state[first], float("nan")), state[first] + 1,
+                      torch.ones(1), state[first].to_sparse(),
+                      torch.full_like(state[first], 1e300, dtype=torch.float64)):
             with self.assertRaises(ValueError):
                 verify_peft_state(model, {**state, first: value})
+
+    def test_binary_peft_read_is_explicitly_tensor_only_cpu(self):
+        from igbundle.integrations.checkpoint import _read_peft_state
+        state = get_peft_model_state_dict(peft_model())
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "adapter_model.bin"
+            (Path(directory) / "adapter_config.json").write_text("{}")
+            torch.save(state, path)
+            with patch.object(torch, "load", wraps=torch.load) as read:
+                loaded = _read_peft_state(directory)
+            read.assert_called_once_with(path, map_location="cpu", weights_only=True)
+            self.assertEqual(set(loaded), set(state))
 
     def test_public_loader_and_export_paths_use_checked_lora(self):
         import ast

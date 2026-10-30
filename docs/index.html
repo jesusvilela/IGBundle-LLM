@@ -49,6 +49,10 @@
         </p>
 
         <section class="section" id="export-audit">
+            <p class="card-text"><strong>LoRA coverage:</strong>
+                declared PEFT state must match exact keys and restored values.
+                <a href="wiki.html#peft-coverage">Wrapped-save scope and limits</a>.
+            </p>
             <p class="card-text"><strong>Tiny real-backend check:</strong>
                 random Qwen2 plus PEFT and the default adapter now passes bounded
                 restoration, gradient and cached-generation contracts.

@@ -21,9 +21,16 @@ Research documents generate hypotheses; implementation and operator tests establ
 
 ## Published data
 
+**Declared-LoRA coverage:** six public load/merge paths verify exact serialized
+keys and restored values. Tiny real PEFT checks cover nonzero wrapped-save state
+when the wrapper structure matches, and reject mismatches. This is post-load
+verification without rollback, not historical checkpoint certification.
+
 **Tiny real backend:** random Qwen2 plus PEFT and the default adapter is now
 exercised on hosted CPU, including restoration, gradients and cached generation.
-Versions and scope are pinned; PEFT is saved before wrapper insertion.
+Versions and scope are pinned. The joint LoRA/IGBundle logit roundtrip saves PEFT
+before wrapper insertion; the separate LoRA coverage check also covers wrapped
+saves with matching structure.
 This narrows the integration gap, not the historical provenance or efficacy gap.
 
 **Exact algebra reference:** finite coefficient certificates for an explicitly
