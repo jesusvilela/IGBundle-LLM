@@ -1,122 +1,133 @@
-import torch
-import numpy as np
-import os
+"""Bounded parameter display; retained filename is not a topology certificate."""
+
 import argparse
+from collections.abc import Mapping
+import hashlib
+import html
+import io
 from pathlib import Path
 
-# Add braintop/src to path for local development import
-import sys
-base_dir = os.path.dirname(os.path.abspath(__file__))
-braintop_src = os.path.join(base_dir, "braintop", "src")
-if braintop_src not in sys.path:
-    sys.path.append(braintop_src)
 
-from braintop.utils.builders import TopologyBuilder
-from braintop.core.visualizer import TopologyVisualizer
+MAX_CHECKPOINT_BYTES = 64 * 1024 * 1024
+MAX_PROJECTION_VALUES = 4 * 1024 * 1024
+NOTICE = (
+    "Parameter values only: not measured topology, curvature, learned "
+    "hyperbolicity, hypercomplex execution or task performance."
+)
 
-def generate_viz(checkpoint_path, output_file, lite_mode=False, node_metadata=None):
+
+def read_projection(checkpoint_path, tensor_key=None):
+    """Inspect one projection from a trusted local tensor-only checkpoint."""
+    path = Path(checkpoint_path) / "adapter_weights.pt"
+    # Bound the byte read before importing tensor libraries or allocating tensors.
+    with path.open("rb") as stream:
+        if path.stat().st_size > MAX_CHECKPOINT_BYTES:
+            raise ValueError("Checkpoint exceeds the 64 MiB inspection limit")
+        payload = stream.read(MAX_CHECKPOINT_BYTES + 1)
+    if len(payload) > MAX_CHECKPOINT_BYTES:
+        raise ValueError("Checkpoint exceeds the 64 MiB inspection limit")
+    import torch
+
+    state = torch.load(io.BytesIO(payload), map_location="cpu", weights_only=True)
+    if not isinstance(state, Mapping) or not all(isinstance(key, str) for key in state):
+        raise ValueError("Expected a string-keyed state dictionary")
+    candidates = sorted(key for key in state
+                        if key == "input_proj.weight" or key.endswith(".input_proj.weight"))
+    if tensor_key is None:
+        if len(candidates) != 1:
+            raise ValueError(f"Select --tensor-key explicitly; candidates: {candidates}")
+        tensor_key = candidates[0]
+    if tensor_key not in candidates:
+        raise ValueError("Tensor key must identify an exact input_proj.weight")
+    value = state[tensor_key]
+    if (not isinstance(value, torch.Tensor) or value.is_meta
+            or value.layout != torch.strided or value.is_quantized
+            or not value.is_floating_point()):
+        raise ValueError("Projection must be a materialized dense floating tensor")
+
+    if value.ndim != 2 or not value.numel() or value.numel() > MAX_PROJECTION_VALUES:
+        raise ValueError("Projection must be a nonempty matrix with at most 4,194,304 values")
+    if not torch.isfinite(value).all():
+        raise ValueError("Projection contains nonfinite values")
+    return value.detach(), tensor_key, hashlib.sha256(payload).hexdigest()
+
+
+def generate_viz(checkpoint_path, output_file, lite_mode=False, node_metadata=None,
+                 *, tensor_key=None):
+    """Write a deterministic, self-contained HTML/SVG projection heatmap.
+
+    No model is constructed and no complete-adapter restoration is attempted.
+    Arbitrary node/activation metadata is no longer accepted as evidence.
     """
-    Main entry point for generating topology visualizations.
-    node_metadata: dict mapping node_id or index to metadata dict.
-    """
-    print(f"Loading weights from {checkpoint_path}...")
-    weights_path = os.path.join(checkpoint_path, "adapter_weights.pt")
-    
-    if not os.path.exists(weights_path):
-        weights_path = os.path.join(checkpoint_path, "pytorch_model.bin") # Fallback for some formats
-        if not os.path.exists(weights_path):
-            print("Warning: Could not find adapter_weights.pt, using default layout.")
-            state_dict = {}
-        else:
-            state_dict = torch.load(weights_path, map_location="cpu")
-    else:
-        state_dict = torch.load(weights_path, map_location="cpu")
-    
-    # Extract projection weights for latent basis
-    proj_weight = None
-    for k, v in state_dict.items():
-        if "input_proj.weight" in k:
-            proj_weight = v.float().numpy() 
-            break
-            
-    if proj_weight is None:
-        # If no weights, we use a random projection for the "scaffold"
-        print("Using scaffold projection (uninitialized).")
-        num_nodes = 512 # Default
-        embeddings = np.random.randn(num_nodes, 128)
-    else:
-        num_nodes = proj_weight.shape[0]
-        embeddings = proj_weight
-    
-    # LITE MODE: Downsample
-    if lite_mode:
-        print("⚡ LITE MODE ACTIVE: Downsampling to 50 nodes for lightweight web preview.")
-        if num_nodes > 50:
-            indices = np.random.choice(num_nodes, 50, replace=False)
-            embeddings = embeddings[indices]
-            num_nodes = 50
-    
-    print(f"Building topology with {num_nodes} nodes...")
-    builder = TopologyBuilder("igbundle_manifold", "IGBundle Real-time Fiber Space")
-    
-    concepts = [f"Fiber {i}" for i in range(num_nodes)]
-    builder.add_conceptual_layer(
-        "latent_basis", 
-        num_nodes=num_nodes, 
-        concepts=concepts, 
-        embeddings=embeddings
+    if node_metadata is not None:
+        raise ValueError("Unbound node metadata is not supported")
+    output = Path(output_file)
+    if output.suffix.lower() != ".html":
+        raise ValueError("Output must be an .html file")
+    if output.resolve() == (Path(checkpoint_path) / "adapter_weights.pt").resolve():
+        raise ValueError("Output must not replace the input checkpoint")
+    value, key, digest = read_projection(checkpoint_path, tensor_key)
+    limit = 32 if lite_mode else 64
+    rows, cols = min(limit, value.shape[0]), min(limit, value.shape[1])
+    sample = value[:rows, :cols].double()
+    scale = sample.abs().max().item()
+    cells = []
+    for row in range(rows):
+        for col in range(cols):
+            number = sample[row, col].item()
+            strength = abs(number) / scale if scale else 0.0
+            pale = round(255 * (1 - strength))
+            color = f"rgb(255,{pale},{pale})" if number >= 0 else f"rgb({pale},{pale},255)"
+            cells.append(
+                f'<rect x="{col * 8}" y="{row * 8}" width="8" height="8" fill="{color}">'
+                f'<title>row {row}, column {col}: {number:.17g}</title></rect>'
+            )
+    warning = html.escape(NOTICE)
+    title = "Input-projection parameter prefix"
+    svg = (
+        f'<svg xmlns="http://www.w3.org/2000/svg" role="img" '
+        f'viewBox="0 0 760 {rows * 8 + 100}" aria-labelledby="plot-title plot-desc">'
+        f'<title id="plot-title">{title}</title><desc id="plot-desc">{warning}</desc>'
+        f'<rect width="100%" height="100%" fill="white"/>'
+        f'<text x="8" y="20" font-size="16">{title} (not topology)</text>'
+        f'<g transform="translate(8,32)">{"".join(cells)}</g>'
+        f'<text x="8" y="{rows * 8 + 55}" font-size="12">'
+        'Parameter values, not learned geometry or performance.</text></svg>'
     )
-    
-    manifold_type = "hyperbolic" if "riemannian" in checkpoint_path.lower() else "euclidean"
-    if "euclidean" in output_file.lower(): manifold_type = "euclidean"
-    if "hyperbolic" in output_file.lower() or "riemannian" in output_file.lower(): manifold_type = "hyperbolic"
-    
-    print(f"Manifold Geometry: {manifold_type.upper()}")
-    
-    builder.add_riemannian_layer(
-        "ideal_bundle", 
-        num_nodes=num_nodes, 
-        manifold_type=manifold_type, 
-        radius=1.0 if lite_mode else 1.5
-    )
-    
-    # Optional: Apply activations to ideal_bundle nodes
-    if node_metadata:
-        # Get the layer and inject metadata into nodes
-        topo = builder.topology
-        layer = topo.get_layer("ideal_bundle")
-        if layer:
-            for i, node in enumerate(layer.nodes):
-                if i < len(node_metadata):
-                    node.metadata.update(node_metadata[i])
-                    # Also update labels with activation if relevant
-                    if "activation" in node_metadata[i]:
-                        node.label = f"{node.label} ({node_metadata[i]['activation']:.2f})"
+    document = f"""<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{title}</title></head><body>
+<h1>{title}</h1>
+<p><strong>{warning}</strong></p>
+<dl>
+<dt>Tensor key</dt><dd>{html.escape(key)}</dd>
+<dt>Full matrix shape</dt><dd>{value.shape[0]} x {value.shape[1]}</dd>
+<dt>Source dtype</dt><dd>{html.escape(str(value.dtype))}</dd>
+<dt>Displayed prefix</dt><dd>{rows} x {cols}; first rows and columns, not a random sample</dd>
+<dt>Source file SHA-256</dt><dd>{digest}</dd>
+<dt>Color scale</dt><dd>Blue negative, white zero, red positive;
+displayed maximum absolute value {scale:.17g}. Each image uses its own scale.</dd>
+</dl>
+<p>Rows are output channels and columns are input coordinates of a stored linear
+projection. No distance, neighborhood, curvature or semantic labels are inferred.
+The hash binds this file's bytes, not its training history, base model, complete
+adapter coverage or runtime compatibility.</p>
+{svg}
+</body></html>
+"""
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(document, encoding="utf-8", newline="\n")
+    print(f"Saved parameter-only display: {output}")
+    return str(output)
 
-    builder.connect_layers("latent_basis", "ideal_bundle", "nearest", num_connections=1 if lite_mode else 2)
-    
-    topology = builder.build()
-    
-    output_path = Path(output_file)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-
-    print(f"Generating visualization to {output_file}...")
-    visualizer = TopologyVisualizer(topology)
-    
-    # Style the visualization if metadata is present
-    color_by = "activation" if node_metadata else "layer"
-    size_by = "activation" if node_metadata else "degree"
-    
-    fig = visualizer.create_figure(color_by=color_by, size_by=size_by)
-    visualizer.save(output_file)
-    print(f"Visualization saved to {output_file}")
-    return output_file
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--checkpoint", default="trained_adapter")
-    parser.add_argument("--output", default="output/igbundle_topology.html")
-    parser.add_argument("--lite", action="store_true", help="Generate lightweight version for web preview")
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--checkpoint", required=True,
+                        help="Trusted local directory containing adapter_weights.pt (max 64 MiB)")
+    parser.add_argument("--tensor-key", help="Exact input projection key; required if ambiguous")
+    parser.add_argument("--output", default="output/igbundle_parameters.html")
+    parser.add_argument("--lite", action="store_true", help="Display at most 32 x 32 instead of 64 x 64")
     args = parser.parse_args()
-    
-    generate_viz(args.checkpoint, args.output, args.lite)
+    generate_viz(args.checkpoint, args.output, args.lite, tensor_key=args.tensor_key)
