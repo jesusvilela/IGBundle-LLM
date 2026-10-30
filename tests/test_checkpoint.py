@@ -1,5 +1,7 @@
 import ast
 import copy
+import contextlib
+import io
 import os
 from pathlib import Path
 import sys
@@ -176,6 +178,40 @@ class CheckpointTests(unittest.TestCase):
                                 k.arg == "strict" and isinstance(k.value, ast.Constant)
                                 and k.value.value is False for k in n.keywords
                             ))
+
+
+    def test_injection_propagates_restore_and_declared_peft_errors(self):
+        tree = ast.parse((ROOT / "validate_effects.py").read_text(encoding="utf-8"))
+        node = next(n for n in tree.body
+                    if isinstance(n, ast.FunctionDef) and n.name == "inject_adapter")
+        for declared in (False, True):
+            with self.subTest(declared=declared), tempfile.TemporaryDirectory() as directory:
+                (Path(directory) / "adapter_weights.pt").touch()
+                if declared:
+                    (Path(directory) / "adapter_config.json").write_text("{}")
+                restore = Mock(side_effect=ValueError("incomplete state"))
+                peft = Mock()
+                peft.from_pretrained.side_effect = RuntimeError("invalid PEFT")
+                m = Mock(config=SimpleNamespace(hidden_size=4))
+                namespace = {
+                    "os": os, "require_checkpoint_file": require_checkpoint_file,
+                    "wrap_hf_candidate": lambda model, config: model,
+                    "load_weights": restore, "PeftModel": peft,
+                }
+                exec(compile(ast.Module(body=[node], type_ignores=[]),
+                             "validate_effects.py", "exec"), namespace)
+                output = io.StringIO()
+                with contextlib.redirect_stdout(output):
+                    with self.assertRaisesRegex(
+                        RuntimeError if declared else ValueError,
+                        "invalid PEFT" if declared else "incomplete state",
+                    ):
+                        namespace["inject_adapter"](m, {"ig_adapter": {}}, directory)
+                self.assertNotIn("restored", output.getvalue())
+                if declared:
+                    restore.assert_not_called()
+                else:
+                    restore.assert_called_once()
 
 
 if __name__ == "__main__":

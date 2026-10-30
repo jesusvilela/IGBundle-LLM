@@ -19,6 +19,8 @@
 
 ## Pages
 
+Default-adapter restoration now fails on missing, extra, malformed or nonfinite tensors in five public HF entry points. CPU-only synthetic tests verify coverage and restored-operator execution. Full-state mode restores only the default adapter, not base/LoRA. No archived checkpoint compatibility or GGUF geometry integration is established.
+
 - [Project overview and results](https://jesusvilela.github.io/IGBundle-LLM/)
 - [Evidence detail](https://jesusvilela.github.io/IGBundle-LLM/wiki.html)
 - [Research access](https://jesusvilela.github.io/IGBundle-LLM/demo.html)

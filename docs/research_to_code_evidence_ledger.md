@@ -21,6 +21,12 @@ Research documents generate hypotheses; implementation and operator tests establ
 
 ## Published data
 
+**Runtime restoration checkpoint:** the default adapter now has a fail-closed
+tensor-coverage contract, used by five public HF loaders. Tiny synthetic tests
+cover restoration and actual wrapped execution, not real HF/PEFT compatibility.
+Historical checkpoint identity and the separate GGUF execution gap remain
+unresolved. [Contract and exclusions](export-image-audit.md#default-adapter-restoration-checkpoint).
+
 - [October 27, 2026 per-benchmark summary](benchmark-results/aa-index-2026-10-27.csv)
 - [September 20, 2026 paired token-NLL rows](benchmark-results/matched-token-nll-2026-09-20.csv)
 - [Faithfulness audit summary](benchmark-results/faithfulness-audit-A.json)

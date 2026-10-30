@@ -98,8 +98,50 @@ Output paths for the inspection/export commands must be new. The source/image ex
 
 `scripts/geometry_reference.py` reproducibly renders the analytic SVG. On Windows, `scripts/label_archived_figures.ps1 -Archive H:\LLM-MANIFOLD -OutputDirectory <existing-output-directory>` adds labels to the three original thesis PNGs after verifying their archived hashes; it refuses to overwrite an archive source.
 
+## Default-adapter restoration checkpoint
+
+The public HF entry points had another concrete failure mode: missing or partial
+weights could leave freshly initialized adapters running while appearing to load
+a checkpoint. `src/igbundle/integrations/checkpoint.py` now rejects incomplete
+default-adapter state.
+
+- `app.py`, `benchmark.py`, `bench_arena.py`, and `validate_effects.py` require
+  `adapter_weights.pt`; `evaluate.py` requires `full_state_dict.pt`.
+- Missing files are rejected before base-model allocation in those entry points
+  (including the `validate_effects.py` CLI preflight).
+- Every registered `IGBundleAdapter` tensor must be present at its exact name,
+  with the expected shape, finite values, and a compatible dtype. Conversion
+  overflow is rejected. All adapter tensors are validated before any are copied.
+- Adapter-only mappings reject extra keys. Explicit full-state mode permits
+  additional known model keys but **does not restore them**.
+- Disk reads use `torch.load(..., map_location="cpu", weights_only=True)`, with no
+  fallback to unrestricted pickle loading.
+- Declared PEFT load failures are no longer swallowed. The app's CPU branch now
+  attempts its declared PEFT component rather than silently omitting it.
+
+The bounded tests restore tiny synthetic tensor dictionaries, verify that base
+weights remain unchanged, and reject missing, extra, malformed, nonfinite,
+meta, sparse, and incompatible tensors. A controlled output bias verifies that
+the restored adapter executes inside a block wrapper and receives gradients.
+Entry-point tests execute isolated loader functions with stubs; they do not
+import Unsloth, Transformers or PEFT, or load a real LLM.
+
+This contract intentionally rejects legacy partial or differently prefixed
+checkpoints rather than guessing their meaning. It covers the **default**
+adapter only, not the separate `GeometricIGBundleAdapter` or packaged archive.
+Tensor coverage cannot identify a base checkpoint, recover training settings,
+certify PEFT loading, or prove that the weights were learned. No original adapter
+pickle was opened, no historical run was reconstructed, and no new task score
+was obtained. The app's historical telemetry labels and legacy benchmark
+protocols remain outside this verified contract.
+
+Run `python -m unittest discover -b -s tests -p test_checkpoint.py` in an existing
+PyTorch environment. The hosted evidence workflow uses CPU-only PyTorch and one
+thread. A local PyTorch import exceeded a two-minute wait and was stopped;
+tensor validation for this checkpoint ran on GitHub, not as a local model job.
+
 ## Coverage and remaining blockers
 
 Inventory visited 1,577 workspace directories while excluding dependencies, Git internals, reparse-point directories and duplicate audit checkouts. Vendored llama.cpp model folders were checked separately and contained tokenizer fixtures. Dataset pictures and UI/vendor graphics were not treated as scientific evidence. Only the nine selected PNGs above received visual review; this is not a certification of every image or document in the archive.
 
-No model payload, adapter pickle, full multi-gigabyte hash, model inference, training job, or GPU workload was used. No private cross-repository content was republished. The blockers to stronger claims are concrete: exact checkpoint/runtime bindings, strict companion restoration, implemented and tested hypercomplex operations in that path, and a resource-approved matched model experiment. The audit does not manufacture those missing results.
+No historical model payload, adapter pickle, full multi-gigabyte hash, model inference, training job, or GPU workload was used. Only tiny synthetic tensor checkpoints were deserialized for restoration tests. No private cross-repository content was republished. The blockers to stronger claims are concrete: exact checkpoint/runtime bindings, restoration of the actual historical companion, implemented and tested hypercomplex operations in that path, and a resource-approved matched model experiment. The new default-adapter contract does not manufacture those missing results.

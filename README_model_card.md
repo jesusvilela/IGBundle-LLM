@@ -22,6 +22,11 @@ The original accompanying notes identify Qwen2.5-7B-Instruct as the base model a
 
 ## Evaluation status
 
+The current source rejects incomplete default-adapter state in five HF entry
+points. Its tiny synthetic restoration tests do not establish this historical
+checkpoint's compatibility or identity; no prefix guessing or partial restoration
+is supported. This does not add geometric execution to the inspected GGUFs.
+
 The [expanded export/image audit](https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/export-image-audit.md) inspected two distinct local GGUFs, not necessarily this card's checkpoint. Both expose standard Qwen2 tensor names; their inspected fast runner does not restore the separate geometric adapter. Neither the file names nor the archived visualizations establish a hyperbolic or hypercomplex inference architecture.
 
 No task-performance claim is made for this model card:

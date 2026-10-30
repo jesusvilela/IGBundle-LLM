@@ -60,6 +60,7 @@ The historical value near -5.63 is not evidence of learned hyperbolicity. For `g
 
 | Surface | What is checked | What is not established |
 |---|---|---|
+| Default-adapter restoration | Exact registered tensor coverage, shapes, finite values and safe dtype conversion before copying; missing-weight rejection in five HF entry points; tiny restored-operator execution | Historical checkpoint compatibility, base/LoRA identity, production HF loading, or GGUF adapter execution |
 | Default `IGBundleAdapter` / Poincare affinity | Radial projection, analytic origin distances, exact zero diagonal, symmetry, sampled triangle inequalities, finite/checked gradients, float32/bfloat16 small-tensor forward/backward, identity initialization | Trained-model quality, learned geometry, or all possible numerical inputs |
 | `arc_eval.py`, HF and GGUF ARC runners | Shared deterministic selection, strict grid equality, all test pairs, errors retained and run invalidated, explicit empty-run rejection, output overwrite protection | Backend model loading or restoration of separate runtime adapter weights; no new model evaluation was run |
 | Historical evidence | Recomputed NLL means and paired statistics; October accuracies, indices and McNemar tests; source hashes and first-pair ARC rescoring | Independent grading, dataset non-contamination, or complete reproduction from a fresh clone |
@@ -119,11 +120,27 @@ In an existing environment with PyTorch, the bounded operator checks are:
 ```bash
 python -m unittest discover -s tests -p test_geometry.py
 python -m unittest discover -s tests -p test_ig.py
+python -m unittest discover -b -s tests -p test_checkpoint.py
 ```
 
 Use `CUDA_VISIBLE_DEVICES=""`, `OMP_NUM_THREADS=1`, `MKL_NUM_THREADS=1`, and `OPENBLAS_NUM_THREADS=1` to bound local resources. None of these commands loads a model, downloads data, or runs LLM training. Do not use blanket test discovery as a lightweight check: the legacy `test_pipeline.py` invokes the unsupported model-training entry point.
 
 The [CPU evidence workflow](.github/workflows/evidence.yml) runs only this bounded suite. Its green result means these contracts passed, not that the whole experimental repository or its scientific claims are certified.
+
+### Fail-closed adapter restoration
+
+`app.py`, `benchmark.py`, `bench_arena.py`, and `validate_effects.py` now require
+`adapter_weights.pt` when an adapter checkpoint is requested; `evaluate.py`
+requires `full_state_dict.pt`. Missing or incompatible state no longer silently
+leaves random default adapters active. The shared loader uses CPU,
+`weights_only=True`, and exact registered names; it does not guess key prefixes.
+Declared PEFT load errors propagate instead of becoming warnings.
+
+This is an intentional compatibility break for partial checkpoints. It is not
+a converter for the archived `adapter_refined.pt` or `arc_adapter.pt`, and does
+not repair the separate GGUF runner. Full-state mode restores only default
+adapter tensors, not the base or LoRA. See the
+[restoration contract and limits](docs/export-image-audit.md#default-adapter-restoration-checkpoint).
 
 ## Research standard
 

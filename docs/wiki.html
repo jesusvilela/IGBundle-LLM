@@ -99,7 +99,12 @@
             <p>For the drawn downward paraboloid z = −(x²+y²)/4 with its induced Euclidean metric, K = 1/[4(1+r²/4)²] is positive. A saddle has variable negative curvature; the Poincare disk has constant K = −1 by its prescribed metric. None of these analytic facts establishes learned hyperbolicity. Hypercomplex claims additionally require a specified product, applicable algebraic laws, and a verified model integration path.</p>
             <p><a href="https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/export-image-audit.md">Read the complete audit, analytic derivations, coverage, exclusions and reproduction commands.</a> These checks used no model loading, training or GPU work.</p>
 
-            <h2>6. What a stronger test needs</h2>
+            <h2 id="restoration">6. Fail-closed default-adapter restoration</h2>
+            <p>Five public HF entry points now require complete default-adapter state. The shared loader checks exact tensor names, shapes, finite values and conversion overflow before copying any adapter tensors. It reads tensor-only state on CPU and does not retry unrestricted pickle loading. Declared PEFT loading errors propagate.</p>
+            <p>Tiny synthetic checkpoints cover round-trip restoration, rejection without partial mutation, unchanged base weights, and execution of a restored adapter with gradients. Entry-point checks use isolated functions and stubs, not real Transformers/PEFT loading. Partial or differently prefixed historical checkpoints now fail explicitly.</p>
+            <p>This does not identify a base model, validate archived companion weights, implement a GGUF geometry backend, or establish hypercomplex execution. Full-state mode restores only default-adapter tensors. <a href="https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/export-image-audit.md#default-adapter-restoration-checkpoint">Exact contract, file requirements and remaining limits</a>.</p>
+
+            <h2>7. What a stronger test needs</h2>
             <p>
                 A causal evaluation should match parameter budget and layer placement; compare against a vanilla adapter under the same data, objective, optimizer budget, decoding, and hardware; isolate the geometric operator; use multiple seeds and fixed task splits; and publish exact checkpoint provenance with per-task outputs. Operator diagnostics should remain distinct from downstream outcomes.
             </p>
