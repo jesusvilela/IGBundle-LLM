@@ -123,7 +123,20 @@
             <p>No topology, learned curvature, hypercomplex multiplication or model benefit follows from these parameter values.</p>
             <p><a href="https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/export-image-audit.md#projection-display-checkpoint">Display contract</a></p>
 
-            <h2>9. What a stronger test needs</h2>
+            <h2 id="algebra-reference">9. Exact algebra reference</h2>
+            <p>An independent Cayley-Dickson reference checks unit, conjugation,
+                norm composition and alternativity in dimensions 1, 2, 4 and 8.
+                Checks expand exact coefficients rather than sampling floating-point inputs.
+                Associativity fails for the octonions:
+                (e1 e2) e4 = e7, but e1 (e2 e4) = -e7 in the declared convention.
+            </p>
+            <p>
+                <a href="benchmark-results/algebra-reference.json">Exact certificate</a>.
+                This is not an IGBundle integration, hyperbolic metric, checkpoint
+                certification or task result.
+            </p>
+
+            <h2>10. What a stronger test needs</h2>
             <p>
                 A causal evaluation should match parameter budget and layer placement; compare against a vanilla adapter under the same data, objective, optimizer budget, decoding, and hardware; isolate the geometric operator; use multiple seeds and fixed task splits; and publish exact checkpoint provenance with per-task outputs. Operator diagnostics should remain distinct from downstream outcomes.
             </p>

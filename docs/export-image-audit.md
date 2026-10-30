@@ -106,6 +106,38 @@ The manifest records a bounded name scan of 70 Python files in the active `src/i
 
 ## Reproduce the bounded checks
 
+### Exact algebra reference
+
+The independent `scripts/algebra_reference.py` defines real, complex, quaternion
+and octonion products recursively in dimensions 1, 2, 4 and 8:
+
+```text
+(a,b)(c,d) = (ac - conjugate(d)b, da + b*conjugate(c))
+conjugate(a,b) = (conjugate(a), -b)
+N(x) = sum_i x_i^2
+```
+
+Its finite certificate uses Python integers, not floating-point tolerances.
+The product is bilinear by construction and conjugation is linear.
+Consequently, unit and conjugation-reversal identities reduce to basis checks;
+associativity reduces to all basis triples. Alternativity is checked by the
+two antisymmetry identities of the trilinear associator. In characteristic zero,
+these imply `[x,x,y]=[y,x,x]=0` for every real vector.
+
+Norm composition is not inferred from selected numerical examples: the checker
+collects every coefficient of `N(x*y) - N(x)*N(y)` and requires all to vanish.
+The quaternion product also has an independent Hamilton-formula regression.
+For octonions, basis indices `[1,2,4]` give left product `e7`, right product `-e7`,
+and associator `2*e7`. Reassociation is therefore invalid in general.
+
+The [reproducible certificate](benchmark-results/algebra-reference.json)
+covers only this explicitly defined algebra, not learned weights, an intrinsic
+hyperbolic metric, neural integration or a GGUF runtime. It is not a new
+mathematical discovery or a formal proof-assistant certificate.
+Private cross-project materials were not copied into the public evidence set.
+
+### Inspection commands
+
 From the repository, with Python 3.10+ and no third-party packages:
 
 ```powershell

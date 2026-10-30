@@ -152,10 +152,11 @@
     "adapter": 0.5486348122866894,
     "base": 0.5486348122866894
   },
-  "local_site_links_checked": 49,
+  "local_site_links_checked": 51,
   "artifact_sha256": {
     "aa-index-2026-10-27.csv": "baa95712550b4912a4aa6ee1ebe67d3f4f9de448d7650d4afd4b5e7e49a0d58f",
     "aa-paired-outcomes-2026-10-27.csv": "012c61d5a39f34fc6a7fd38d3dc46ba08556583c899996b09727e8a8a4d43dc1",
+    "algebra-reference.json": "e26d366af8ba8c15a3b340b6ffbfba14bdc8502387f209faff714108e8fd7683",
     "arc-agi-rescore.json": "43adf0b8e1ca54f1112465223a14d7bdfc230e1b52cf6548dfd417e972bbc4e5",
     "arc-agi-summary.json": "4df106dd4f5ca2309229fa1865d0a6186cc531af6377e097e5a3cc2e75135f58",
     "arc-challenge-adapter-2026-01.json": "be00fbd2661f36623e0aab86e04124a31a5ba6a0f793f097d21d4e4ee293f677",

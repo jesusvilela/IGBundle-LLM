@@ -207,6 +207,20 @@ the HF-directory, `--outfile`, and `--outtype f16` interface and writing the
 reserved GGUF destination. Local preflight and mocked orchestration are checked;
 real model merge, converter compatibility and GGUF inference remain unverified.
 
+### Exact hypercomplex reference
+
+`scripts\algebra_reference.py` supplies an independent Cayley-Dickson reference
+in real dimensions 1, 2, 4 and 8. Exact integer coefficient checks establish
+norm composition, conjugation reversal and alternativity for that product;
+associativity holds through dimension 4 and fails in dimension 8.
+Under the declared basis convention, `(e1*e2)*e4 = e7` but
+`e1*(e2*e4) = -e7`.
+
+Run `python scripts\algebra_reference.py` with no third-party dependencies.
+The [certificate](docs/benchmark-results/algebra-reference.json) is a mathematical
+reference, **not an adapter integration, learned geometry or model result**.
+It supplies no hypercomplex hyperbolic metric or GGUF implementation.
+
 ## Research standard
 
 The hypothesis remains open. A stronger causal test should match parameter budget and layer placement, isolate the geometric operator/objective, use a shared split and training budget with multiple seeds, and publish exact checkpoint provenance and task-level outputs. Geometry diagnostics alone cannot establish language-model benefit.

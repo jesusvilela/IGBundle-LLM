@@ -1,0 +1,86 @@
+{
+  "protocol": "exact-cayley-dickson-reference-v1",
+  "convention": "(a,b)(c,d)=(ac-conj(d)b, da+b*conj(c)); conjugate reverses imaginary signs",
+  "arithmetic": "Python integers, no floating point",
+  "certificates": [
+    {
+      "dimension": 1,
+      "basis_triples_checked": 1,
+      "conjugation_reverses_product": true,
+      "alternativity_polarization": true,
+      "norm_composition_residual_terms": 0,
+      "associative": true,
+      "nonassociativity_counterexample": null
+    },
+    {
+      "dimension": 2,
+      "basis_triples_checked": 8,
+      "conjugation_reverses_product": true,
+      "alternativity_polarization": true,
+      "norm_composition_residual_terms": 0,
+      "associative": true,
+      "nonassociativity_counterexample": null
+    },
+    {
+      "dimension": 4,
+      "basis_triples_checked": 64,
+      "conjugation_reverses_product": true,
+      "alternativity_polarization": true,
+      "norm_composition_residual_terms": 0,
+      "associative": true,
+      "nonassociativity_counterexample": null
+    },
+    {
+      "dimension": 8,
+      "basis_triples_checked": 512,
+      "conjugation_reverses_product": true,
+      "alternativity_polarization": true,
+      "norm_composition_residual_terms": 0,
+      "associative": false,
+      "nonassociativity_counterexample": {
+        "basis_indices": [
+          1,
+          2,
+          4
+        ],
+        "left": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        "right": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          -1
+        ],
+        "associator": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2
+        ]
+      }
+    }
+  ],
+  "extension": "Bilinear product and linear conjugation; coefficient identities extend over real scalars.",
+  "limits": [
+    "Independent mathematical reference, not an IGBundle implementation.",
+    "No checkpoint, activation, learned hyperbolicity or performance evidence.",
+    "No quaternionic/octonionic hyperbolic metric or GGUF runtime is supplied.",
+    "Dimensions above eight are deliberately unsupported."
+  ]
+}

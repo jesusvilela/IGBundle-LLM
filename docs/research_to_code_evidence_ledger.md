@@ -21,6 +21,12 @@ Research documents generate hypotheses; implementation and operator tests establ
 
 ## Published data
 
+**Exact algebra reference:** finite coefficient certificates for an explicitly
+defined Cayley-Dickson product distinguish quaternion/octonion laws from vector
+dimension or Hamiltonian terminology.
+[Certificate](benchmark-results/algebra-reference.json).
+This independent reference is not wired into an adapter or GGUF runtime.
+
 **Export preflight:** missing converter/config/weights and output collisions are
 rejected before model allocation; LoRA-only scope is explicit. Dependency-free
 contracts exercise dry runs and fake backend orchestration, not a real merge.
