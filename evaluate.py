@@ -13,6 +13,7 @@ import os
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import PeftModel
 from igbundle.integrations.hf_patch import wrap_hf_candidate, StateCollector
+from igbundle.integrations.checkpoint import load_weights, require_checkpoint_file
 from igbundle.modules.losses import SheafLoss
 
 def evaluate():
@@ -20,6 +21,7 @@ def evaluate():
     parser.add_argument("--config", type=str, default="configs/qwen25_7b_igbundle_lora.yaml")
     parser.add_argument("--checkpoint", type=str, required=True)
     args = parser.parse_args()
+    full_sd_path = require_checkpoint_file(os.path.join(args.checkpoint, "full_state_dict.pt"))
     
     with open(args.config, 'r') as f:
         cfg = yaml.safe_load(f)
@@ -51,22 +53,12 @@ def evaluate():
     # Load Weights
     # 1. LoRA
     print("Loading LoRA...")
-    try:
-        model = PeftModel.from_pretrained(model, args.checkpoint)
-    except Exception as e:
-        print(f"PEFT load failed (maybe full model?): {e}")
+    model = PeftModel.from_pretrained(model, args.checkpoint)
         
     # 2. IGBundle Weights
     # If they were saved separately or in the checkpoint
-    print("Loading IGBundle weights from checkpoint if available...")
-    
-    full_sd_path = os.path.join(args.checkpoint, "full_state_dict.pt")
-    if os.path.exists(full_sd_path):
-        print(f"Loading full state dict from {full_sd_path}")
-        sd = torch.load(full_sd_path)
-        # Load only adapter keys if base is frozen/4bit
-        adapter_sd = {k: v for k, v in sd.items() if "igbundle" in k or "adapter" in k}
-        model.load_state_dict(adapter_sd, strict=False)
+    print(f"Restoring complete IGBundle state from {full_sd_path}")
+    load_weights(model, full_sd_path, full_state=True)
     
     model.eval()
     

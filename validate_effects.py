@@ -11,9 +11,9 @@ import argparse
 import yaml
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
-from peft import PeftModel, PeftConfig
+from peft import PeftModel
 from igbundle.integrations.hf_patch import wrap_hf_candidate, StateCollector
-from safetensors.torch import load_file
+from igbundle.integrations.checkpoint import load_weights, require_checkpoint_file
 
 def load_base_model(config_path):
     with open(config_path, 'r') as f:
@@ -45,6 +45,7 @@ def load_base_model(config_path):
     return model, tokenizer, cfg
 
 def inject_adapter(model, cfg, checkpoint_path):
+    ig_path = require_checkpoint_file(os.path.join(checkpoint_path, "adapter_weights.pt"))
     print("Injecting IGBundle Adapter...")
     if hasattr(model.config, "hidden_size"):
         cfg['ig_adapter']['hidden_size'] = model.config.hidden_size
@@ -58,30 +59,10 @@ def inject_adapter(model, cfg, checkpoint_path):
     model = wrap_hf_candidate(model, adapter_cfg)
     
     print(f"Loading Weights from {checkpoint_path}")
-    if os.path.exists(checkpoint_path):
-        try:
-            # 1. Peft/LoRA
-            peft_config = PeftConfig.from_pretrained(checkpoint_path)
-            model = PeftModel(model, peft_config)
-            
-            # 2. Strict=False load for LoRA + IGBundle
-            if os.path.exists(os.path.join(checkpoint_path, "adapter_model.safetensors")):
-                w = load_file(os.path.join(checkpoint_path, "adapter_model.safetensors"))
-                model.load_state_dict(w, strict=False)
-            elif os.path.exists(os.path.join(checkpoint_path, "adapter_model.bin")):
-                w = torch.load(os.path.join(checkpoint_path, "adapter_model.bin"), map_location="cpu")
-                model.load_state_dict(w, strict=False)
-                
-            # 3. Explicit IGBundle weights
-            ig_path = os.path.join(checkpoint_path, "adapter_weights.pt")
-            if os.path.exists(ig_path):
-                print(f"Loading IGBundle specific weights from {ig_path}")
-                ig_w = torch.load(ig_path, map_location="cpu")
-                model.load_state_dict(ig_w, strict=False)
-                
-            print("Adapter Loaded Successfully.")
-        except Exception as e:
-            print(f"Error loading adapter: {e}")
+    if os.path.isfile(os.path.join(checkpoint_path, "adapter_config.json")):
+        model = PeftModel.from_pretrained(model, checkpoint_path)
+    load_weights(model, ig_path)
+    print("Complete default adapter state restored.")
             
     return model
 
@@ -102,6 +83,7 @@ def main():
     parser.add_argument("--config", default="configs/qwen25_7b_igbundle_lora.yaml")
     parser.add_argument("--checkpoint", default="output/igbundle_qwen7b/checkpoint-60")
     args = parser.parse_args()
+    require_checkpoint_file(os.path.join(args.checkpoint, "adapter_weights.pt"))
     
     # 1. Load Base
     model, tokenizer, cfg = load_base_model(args.config)

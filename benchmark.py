@@ -7,10 +7,13 @@ import os
 import glob
 from tqdm import tqdm
 from igbundle.integrations.hf_patch import wrap_hf_candidate, StateCollector
+from igbundle.integrations.checkpoint import load_weights, require_checkpoint_file
 from igbundle.utils import triton_fix
 
 class ValidationBenchmark:
     def __init__(self, model_id, checkpoint_path=None):
+        if checkpoint_path:
+            ig_weights = require_checkpoint_file(os.path.join(checkpoint_path, "adapter_weights.pt"))
         self.tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         
@@ -50,19 +53,11 @@ class ValidationBenchmark:
             }
             self.model = wrap_hf_candidate(self.model, DictConfig(adapter_config))
             
-            # Load Weights
-            # Try loading adapter_weights.pt first (IGBundle specific)
-            ig_weights = os.path.join(checkpoint_path, "adapter_weights.pt")
-            if os.path.exists(ig_weights):
-                print(f"Loading IGBundle weights: {ig_weights}")
-                sd = torch.load(ig_weights, map_location=self.device)
-                self.model.load_state_dict(sd, strict=False)
-            
-            # Try LoRA
-            try:
+            # A declared PEFT component must load successfully.
+            if os.path.isfile(os.path.join(checkpoint_path, "adapter_config.json")):
                 self.model = PeftModel.from_pretrained(self.model, checkpoint_path)
-            except Exception as e:
-                print(f"LoRA load warning: {e}")
+            print(f"Loading complete IGBundle weights: {ig_weights}")
+            load_weights(self.model, ig_weights)
 
         self.model.eval()
 

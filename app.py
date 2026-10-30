@@ -15,6 +15,7 @@ import gradio as gr
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import PeftModel
 from igbundle.integrations.hf_patch import wrap_hf_candidate, StateCollector
+from igbundle.integrations.checkpoint import load_weights, require_checkpoint_file
 from generate_braintop_viz import generate_viz
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -325,6 +326,7 @@ def plot_ablation_comparison():
     return PILImage.open(buf)
 
 def load_model(config_path, checkpoint_path):
+    adapter_w_path = require_checkpoint_file(os.path.join(checkpoint_path, "adapter_weights.pt"))
     print(f"Loading config from {config_path}")
     with open(config_path, 'r') as f:
         cfg = yaml.safe_load(f)
@@ -358,6 +360,8 @@ def load_model(config_path, checkpoint_path):
             device_map="cpu",
             trust_remote_code=True
         )
+        if os.path.isfile(os.path.join(checkpoint_path, "adapter_config.json")):
+            model = PeftModel.from_pretrained(model, checkpoint_path)
 
     print("Injecting IGBundle Adapter...")
     if hasattr(model.config, "hidden_size"):
@@ -369,10 +373,8 @@ def load_model(config_path, checkpoint_path):
     adapter_cfg = DictConfig(cfg['ig_adapter'])
     model = wrap_hf_candidate(model, adapter_cfg)
 
-    adapter_w_path = os.path.join(checkpoint_path, "adapter_weights.pt")
-    if os.path.exists(adapter_w_path):
-        print(f"Loading IGBundle weights from {adapter_w_path}")
-        model.load_state_dict(torch.load(adapter_w_path, map_location=model.device), strict=False)
+    print(f"Loading complete IGBundle weights from {adapter_w_path}")
+    load_weights(model, adapter_w_path)
 
     model.eval()
     return model, tokenizer

@@ -5,6 +5,7 @@ import os
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import PeftModel
 from igbundle.integrations.hf_patch import wrap_hf_candidate, StateCollector
+from igbundle.integrations.checkpoint import load_weights, require_checkpoint_file
 
 # Representative MT-Bench Questions
 MT_BENCH_QUESTIONS = [
@@ -19,6 +20,8 @@ MT_BENCH_QUESTIONS = [
 ]
 
 def generate_arena_answers(model_id, checkpoint_path):
+    if checkpoint_path:
+        ig_weights = require_checkpoint_file(os.path.join(checkpoint_path, "adapter_weights.pt"))
     print(f"Loading Model: {model_id}")
     device = "cuda" if torch.cuda.is_available() else "cpu"
     
@@ -55,17 +58,10 @@ def generate_arena_answers(model_id, checkpoint_path):
         }
         model = wrap_hf_candidate(model, DictConfig(adapter_config))
         
-        # Load Weights
-        ig_weights = os.path.join(checkpoint_path, "adapter_weights.pt")
-        if os.path.exists(ig_weights):
-            print("Loading IGBundle explicit weights...")
-            model.load_state_dict(torch.load(ig_weights, map_location=device), strict=False)
-            
-        try:
+        if os.path.isfile(os.path.join(checkpoint_path, "adapter_config.json")):
             model = PeftModel.from_pretrained(model, checkpoint_path)
-            # model = model.merge_and_unload() # Don't merge if we want to keep the wrapping dynamic
-        except Exception as e:
-            print(f"Peft load warning: {e}")
+        print("Loading complete IGBundle weights...")
+        load_weights(model, ig_weights)
 
     model.eval()
     
