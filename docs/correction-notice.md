@@ -7,7 +7,8 @@
 Do not cite the following older figures as validated results:
 
 - ARC-AGI accuracy of 28.7% versus a 12.4% baseline, or a +131.5% relative improvement.
-- 94.2% “MFR” or any interpretation of that value as learned geometric faithfulness.
+- 94.2% or 100% “MFR” or any interpretation of such values as learned geometric faithfulness.
+- A “learned curvature” of σ ≈ 2.2. In the adapter, σ is a per-component Gaussian scale (`log_sigma`), not a curvature; a nonzero value does not show that the data prefers a non-Euclidean representation.
 - Ablation effects, statistical significance, curvature convergence to -1, or claims that the model learned semantic hyperbolicity.
 - Claims of 30% faster convergence, 15% training overhead, 4% inference latency overhead, or specified VRAM savings.
 - Unmatched single-model benchmark scores presented as evidence that an adapter preserved or improved base-model capabilities.
