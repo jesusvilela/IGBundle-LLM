@@ -24,7 +24,7 @@ The original accompanying notes identify Qwen2.5-7B-Instruct as the base model a
 
 No task-performance claim is made for this model card:
 
-- A fixed-operator audit reports 6/6 checks passed for the tested configuration; this does not verify learned geometry.
+- A historical audit reports 6/6 checks, but lacks immutable source/weight binding and uses heuristic proxy criteria. It is not an operator certification or evidence about this checkpoint.
 - Historical ARC-Challenge zero-shot `acc_norm` was 54.86% for both an adapter checkpoint and its base model.
 - A September 2026 small paired token-NLL probe favored its vanilla-LoRA control, with parameter-count and layer-coverage confounds.
 - An October 2026 local subset evaluation found no significant individual paired task differences. The exported cp300 checkpoint did not contain the runtime geometric adapter; its reconstructed composite was not the original trained checkpoint.

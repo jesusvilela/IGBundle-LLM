@@ -32,8 +32,8 @@
 
         <div class="stats-hero">
             <div class="stat-block">
-                <span class="stat-value" style="color: var(--green);">6/6</span>
-                <span class="stat-label">Fixed-operator audit checks</span>
+                <span class="stat-value" style="color: var(--green);">252</span>
+                <span class="stat-label">October paired recorded outcomes</span>
             </div>
             <div class="stat-block">
                 <span class="stat-value" style="color: var(--accent);">0/6</span>
@@ -45,7 +45,7 @@
             </div>
         </div>
         <p style="color: var(--text-muted); text-align: center; margin: -1rem auto 2rem; max-width: 760px;">
-            Operator checks do not measure learned geometry or task quality. October comparisons used small subsets; neither probe establishes a general performance effect.
+            Arithmetic is reproducible from the published records; the original model runs and graders have not been independently reproduced. Neither probe establishes a general performance effect.
         </p>
 
         <section class="section">
@@ -69,7 +69,7 @@
                     <div class="card-icon">&kappa;</div>
                     <h3 class="card-title">Geometric operators</h3>
                     <p class="card-text">
-                        Fixed geometric operators have passed a local audit. The default curvature readout is weight-invariant and must not be interpreted as learned curvature.
+                        The current Poincare distance kernel has analytic and gradient regression checks. Historical “6/6” diagnostics are not a certification of this code or of learned geometry.
                     </p>
                 </div>
             </div>
@@ -93,17 +93,19 @@
                 </table>
             </div>
             <p class="card-text" style="max-width: 900px; margin: 1rem auto;">
-                No individual paired task comparison was statistically significant. The reconstructed arm was not the original trained checkpoint and does not isolate a geometric effect. Subsets ranged from 8 to 98 examples.
+                No individual paired task comparison was statistically significant. The reconstructed arm was not the original trained checkpoint and does not isolate a geometric effect. Subsets ranged from 8 to 98 examples. Lack of significance does not establish equivalence or “no harm.”
             </p>
             <p style="text-align: center;">
                 <a href="benchmark-results/aa-index-2026-10-27.csv">Download per-task scores, sample sizes, and p-values</a>
+                · <a href="benchmark-results/aa-paired-outcomes-2026-10-27.csv">Paired recorded grades</a>
+                · <a href="benchmark-results/verification.json">Offline verification output</a>
             </p>
         </section>
 
         <section class="section">
             <h2 class="section-title">Separate paired token-NLL probe · 20 September 2026</h2>
             <p class="section-subtitle">
-                Mean next-token negative log-likelihood on 24 held-out examples (64 tokens each); lower is better for this probe, which is not task accuracy.
+                Mean next-token negative log-likelihood on 24 examples reported as held out (64 tokens each); lower is better for this probe, which is not task accuracy.
             </p>
             <div class="card" style="overflow-x: auto;">
                 <table>
@@ -126,7 +128,7 @@
         <section class="section">
             <div class="callout">
                 <strong>Correction notice:</strong> older claims of a +131.5% ARC-AGI gain, 94.2% “MFR,” learned curvature near -5.63, ablation gains, and training/inference efficiency are withdrawn or unsupported. The underlying idea remains open to a matched, reproducible test.
-                <a href="correction-notice.html">Read the evidence and scope</a>.
+                <a href="https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/correction-notice.md">Read the evidence and scope</a>.
             </div>
         </section>
 

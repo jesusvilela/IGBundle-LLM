@@ -24,7 +24,7 @@
             <p style="color: var(--text-muted);">Updated 30 October 2026 · IGBundle is experimental research, not a validated model release.</p>
 
             <div class="callout" style="margin-top: 1.5rem;">
-                <strong>Bottom line:</strong> The fiber-structured geometric-adapter idea remains a hypothesis worth testing. Available results do not demonstrate a general task-performance advantage or learned hyperbolicity. Older numerical claims were withdrawn; see the <a href="correction-notice.html">correction notice</a>.
+                <strong>Bottom line:</strong> The fiber-structured geometric-adapter idea remains an open hypothesis. Available results do not demonstrate a general task-performance advantage or learned hyperbolicity. Older numerical claims were withdrawn; see the <a href="https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/correction-notice.md">correction notice</a>.
             </div>
 
             <h2>1. October 2026 local multi-benchmark evaluation</h2>
@@ -40,44 +40,48 @@
                 </tbody>
             </table>
             <p>
-                None of the per-task paired comparisons was significant. For the reconstructed composite vs cp300, McNemar p-values were 0.63–1.00. The composite was assembled post hoc and was not the original trained checkpoint; different checkpoint assembly and quantization/loading paths prevent isolating a geometric effect. Higher point estimates on some small subsets are not confirmation of benefit.
+                None of the per-task paired comparisons was significant. For the reconstructed composite vs cp300, recomputed exact McNemar p-values were 0.625–1.00 (0.63–1.00 rounded in the historical table). The composite was assembled post hoc and was not the original trained checkpoint; different checkpoint assembly and quantization/loading paths prevent isolating a geometric effect. Higher point estimates on some small subsets are not confirmation of benefit.
             </p>
             <p><a href="benchmark-results/aa-index-2026-10-27.csv">Download per-task scores, sample sizes, weights, parse failures, and paired p-values.</a></p>
+            <p><a href="benchmark-results/aa-paired-outcomes-2026-10-27.csv">252 paired recorded grades</a> allow recomputing scores, weighted indices, and exact McNemar tests. This checks arithmetic, not the original graders. No nonsignificant test establishes equivalence or absence of harm.</p>
 
             <h2>2. September 2026 paired token-NLL probe</h2>
             <p>
-                On 24 held-out examples with 64 tokens scored per example, mean token NLL was 2.3188 for the frozen base, 1.9352 for geometric adapter A, and 0.8187 for vanilla-LoRA control B. B had lower NLL on all 24 pairs. Mean paired difference A − B was 1.1165 (95% paired t interval 0.9144–1.3186; p = 5.83 × 10<sup>−11</sup>).
+                On 24 examples reported as held out, with 64 tokens scored per example, mean token NLL was 2.3188 for the frozen base, 1.9352 for geometric adapter A, and 0.8187 for vanilla-LoRA control B. B had lower NLL on all 24 pairs. Mean paired difference A − B was 1.1165 (95% paired t interval 0.9144–1.3186). The reproducible two-sided sign-test p-value is 1.1921 × 10<sup>−7</sup>, distinct from the historical t-test.
             </p>
             <p>
                 This probe is not task accuracy and does not isolate geometry: A had 4,160,713 trainable parameters and one geometric layer; B had 585,728 parameters and 13 LoRA layers. The published file omits prompt text.
             </p>
             <p><a href="benchmark-results/matched-token-nll-2026-09-20.csv">Download the 24 prompt-free paired measurements.</a></p>
 
-            <h2>3. Operator diagnostics are not task evidence</h2>
+            <h2>3. Historical diagnostics are not a mathematical certification</h2>
             <p>
-                A local audit reports 6/6 checks passed for the tested fixed operators/configuration. It can support only those implementation-level checks. It does not show that training learned geometry or that geometry improves language tasks.
+                A historical file reports 6/6 checks passed, but lacks an immutable source/checkpoint binding. The inspected audit loader allows absent weights (random initialization) and partial state loads. Its transport check is coordinate displacement; its energy check uses squared coordinate norm, not a Hamiltonian. This record is retained for transparency, not as verified operator faithfulness.
             </p>
             <p>
-                The historical curvature readout around −5.63 comes from a fixed conformal component and is weight-invariant. It is not a learned curvature estimate. Accordingly, the phrase “learned curvature K = −5.63” is withdrawn.
+                For the historical log-determinant proxy with g(x) = λ(x)G and fixed λ, spatial finite differences cancel the position-independent log det G. At fixed coordinates that proxy cannot detect changes in G. Coordinates can still change with training; this does not prove that the actual metric is flat or that every curvature estimator is weight-invariant. The current public branch and historical experimental branch are distinct.
             </p>
-            <p><a href="benchmark-results/faithfulness-audit-A.json">View the compact operator-audit record.</a></p>
+            <p><a href="benchmark-results/faithfulness-audit-A.json">Historical audit record</a> · <a href="benchmark-results/historical-audit-source.py.txt">Inspected audit source snapshot (not bound to that run)</a>.</p>
+            <p><a href="benchmark-results/provenance.json">Source hashes and audit limitations</a> · <a href="benchmark-results/verification.json">Offline verification output</a>. Current numerical tests cover the Poincare distance and default adapter's small-tensor forward/backward path, not the legacy learned-connection geometry.</p>
 
             <h2>4. Historical task evaluations</h2>
             <table>
                 <thead><tr><th>Evaluation</th><th>Result</th><th>Scope</th></tr></thead>
                 <tbody>
                     <tr><td>ARC-Challenge zero-shot acc_norm</td><td>54.86% adapter; 54.86% base</td><td>1,172 items per run; separate historical protocol</td></tr>
-                    <tr><td>ARC-AGI exact solve</td><td>1/100 (1%)</td><td>Historical subset; no matched base comparison available</td></tr>
+                    <tr><td>Historical ARC-AGI first-test-pair score</td><td>1/100 (1%) reported</td><td>Legacy scorer; not all-test-pair task solving; no matched base comparison</td></tr>
                     <tr><td>Model-First Reasoning format compliance</td><td>0/100</td><td>Prompt-format metric, not geometric faithfulness</td></tr>
                 </tbody>
             </table>
             <p>
                 Do not compare the October ARC-Challenge subset score directly to the historical zero-shot result. The sample sizes and protocols differ.
             </p>
+            <p>The new last-grid-candidate parser scores the saved historical first-pair answers 0/100. The previously accepted answer contains the correct grid followed by a code-array expression, rejected by the new policy. This is parser sensitivity, not new inference or evidence that no correct answer was emitted. The repaired protocol is local, not an official leaderboard evaluator.</p>
             <ul>
                 <li><a href="benchmark-results/arc-challenge-adapter-2026-01.json">ARC-Challenge adapter aggregate</a></li>
                 <li><a href="benchmark-results/arc-challenge-base-2026-01.json">ARC-Challenge base aggregate</a></li>
                 <li><a href="benchmark-results/arc-agi-summary.json">ARC-AGI aggregate and interval</a></li>
+                <li><a href="benchmark-results/arc-agi-rescore.json">Prompt-free strict rescoring of saved first-pair answers</a></li>
             </ul>
 
             <h2>5. What a stronger test needs</h2>
@@ -89,7 +93,7 @@
             </p>
 
             <div class="callout">
-                The thesis and older PDFs are archived historical documents. Read them with the <a href="correction-notice.html">correction notice</a> and <a href="https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/research_to_code_evidence_ledger.md">evidence ledger</a>.
+                The thesis and older PDFs are archived historical documents. Read them with the <a href="https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/correction-notice.md">correction notice</a> and <a href="https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/research_to_code_evidence_ledger.md">evidence ledger</a>.
             </div>
         </div>
 

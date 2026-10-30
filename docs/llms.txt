@@ -6,16 +6,19 @@
 
 - 27 October 2026 local multi-benchmark comparison: custom weighted indices 61.1 (base), 60.0 (merged cp300), 64.7 (reconstructed adapter composite); no individual paired task comparison was significant. Small subsets; custom metric; composite reconstruction and model-loading paths are confounded.
 - 20 September 2026 paired token-NLL probe: vanilla-LoRA control B had lower NLL than geometric arm A on all 24 examples. Parameter count and layer coverage were unequal.
-- Fixed-operator audit: 6/6 checks passed for the tested configuration; this does not demonstrate learned geometry or task benefit.
-- Historical ARC-Challenge zero-shot acc_norm: 54.86% for both adapter and base (1,172 items each). Historical ARC-AGI: 1/100 exact solves; Model-First Reasoning format compliance 0/100.
-- The default curvature readout is weight-invariant; the historical value near -5.63 is not learned curvature.
+- Historical audit: the record reports 6/6, but lacks immutable source/weights binding; inspected loading permits missing or partial weights and the criteria include proxies. Not a current operator certification.
+- Historical ARC-Challenge zero-shot acc_norm: 54.86% for both adapter and base (1,172 items each). Historical ARC-AGI: 1/100 reported by a first-test-pair legacy scorer, not an all-test-pair exact-task solve rate; Model-First Reasoning format compliance 0/100.
+- Strict saved-output ARC rescoring is 0/100 under the new last-grid-candidate policy. The previously accepted answer contains the correct grid followed by code-array syntax. This is parser sensitivity, not new inference or proof that no correct answer was emitted.
+- At fixed coordinates the historical log-determinant proxy cancels its position-independent metric factor. Coordinates can change with training; this does not imply the metric is flat or every estimator is weight-invariant.
+- The current default Poincare kernel and small-adapter forward/backward path have bounded regression checks. Legacy learned-connection geometry and model training are not certified.
+- The published 252 paired recorded grades permit offline recomputation of October indices and exact McNemar tests. This is arithmetic verification, not new inference or independent grading.
 
 ## Pages
 
 - [Project overview and results](https://jesusvilela.github.io/IGBundle-LLM/)
 - [Evidence detail](https://jesusvilela.github.io/IGBundle-LLM/wiki.html)
 - [Research access](https://jesusvilela.github.io/IGBundle-LLM/demo.html)
-- [Correction notice](https://jesusvilela.github.io/IGBundle-LLM/correction-notice.html)
+- [Correction notice](https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/correction-notice.md)
 - [Evidence ledger](https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/research_to_code_evidence_ledger.md)
 - [Source repository](https://github.com/jesusvilela/IGBundle-LLM)
 
@@ -25,5 +28,8 @@
 - [September paired token-NLL measurements](https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/benchmark-results/matched-token-nll-2026-09-20.csv)
 - [Operator-audit record](https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/benchmark-results/faithfulness-audit-A.json)
 - [Historical ARC-AGI aggregate](https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/benchmark-results/arc-agi-summary.json)
+- [Paired recorded outcomes](https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/benchmark-results/aa-paired-outcomes-2026-10-27.csv)
+- [Offline verification](https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/benchmark-results/verification.json)
+- [Provenance and limitations](https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/benchmark-results/provenance.json)
 
 Older claims of accuracy gains, “MFR,” learned curvature, ablation effects, or efficiency are withdrawn or unsupported. Read archived thesis PDFs with the correction notice. The repository is experimental code, not a supported inference product; its license is all rights reserved.

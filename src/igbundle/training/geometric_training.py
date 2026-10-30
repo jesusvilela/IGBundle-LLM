@@ -1,15 +1,9 @@
 """
-Geometrically Rigorous Training Integration
+Legacy experimental training utilities, outside the validated operator core.
 
-This module provides training procedures that incorporate proper geometric losses
-and maintain mathematical consistency throughout the training process.
-
-Key features:
-- Riemannian optimization with natural gradients
-- Geometric regularization losses
-- Curvature-aware learning rate scheduling
-- Bundle structure preservation
-- Sheaf-theoretic consistency constraints
+These routines have not established natural-gradient, curvature or topology
+guarantees and are not a supported training pipeline. The evidence workflow
+does not execute them. See README.md for the bounded reproduction commands.
 
 Author: LLMOS SystemAgent
 License: MIT
@@ -56,10 +50,7 @@ class GeometricTrainingConfig:
 
 class RiemannianOptimizer:
     """
-    Riemannian optimization using natural gradients on the statistical manifold.
-
-    This implements proper natural gradient descent on the manifold of
-    probability distributions, accounting for the Fisher information metric.
+    Legacy gradient-preconditioning prototype, not verified natural gradient.
     """
 
     def __init__(self, parameters, lr: float = 1e-3, momentum: float = 0.9):
