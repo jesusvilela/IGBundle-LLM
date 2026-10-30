@@ -21,6 +21,12 @@ Research documents generate hypotheses; implementation and operator tests establ
 
 ## Published data
 
+**Projection-display correction:** the standalone renderer now plots a bounded
+deterministic prefix of one selected projection, not an inferred manifold.
+Exact key selection, source-file hashing and explicit failure replace random
+scaffolds and filename-derived geometry labels.
+[Contract and limits](export-image-audit.md#projection-display-checkpoint).
+
 **Demo correction:** synthetic training trajectories and literal ablation/statistics
 fallbacks were removed. Live telemetry now labels Gaussian dispersion and categorical
 probabilities explicitly; missing data is unavailable. Headless checks cover tiny-array

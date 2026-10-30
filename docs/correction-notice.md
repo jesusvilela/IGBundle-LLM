@@ -23,6 +23,11 @@ The [inspected audit source snapshot](benchmark-results/historical-audit-source.
 
 ## Later comparisons
 
+The standalone topology renderer has also been replaced with a parameter-only
+heatmap. Its former random scaffold and filename-selected manifold were not
+measurements of learned geometry. The replacement identifies its input bytes
+and displayed prefix; it does not certify topology or checkpoint provenance.
+
 The public demo's remaining claim paths have also been corrected: synthetic
 missing-log trajectories, literal ablation bars, invented fallback statistics,
 and unsupported narrative claims were removed. The live sigma counter is not

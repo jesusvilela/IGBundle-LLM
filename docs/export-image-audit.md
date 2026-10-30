@@ -151,8 +151,9 @@ unbound `thesis_stats.json` contents. These were display paths, not new experime
 The corrected app removes those substitutions and unsupported narrative claims.
 Training and ablation panels now render **unavailable** placeholders with no
 data curves or bars. Local JSON files are not automatically promoted to evidence.
-The standalone `generate_braintop_viz.py` renderer remains outside this checkpoint;
+The standalone `generate_braintop_viz.py` renderer was outside the demo checkpoint;
 the app no longer imports it or directs users to its output as learned geometry.
+Its subsequent replacement is documented below.
 
 `MixtureState.sigma` is a Gaussian standard deviation, and `MixtureState.p` is a
 categorical probability tensor. The corrected live labels reflect those definitions:
@@ -181,8 +182,44 @@ The tests do not import Transformers, PEFT or Unsloth, start a server, load mode
 or exercise the real inference backend. Optional UI dependencies are listed in
 `requirements-demo.txt`; the CLI now requires an explicit checkpoint.
 
+## Projection-display checkpoint
+
+At `a1ac1a4fc2888413951c169e81d469367a83823c`, the standalone renderer
+substituted random projection rows when weights were unavailable, randomly
+subsampled lite displays, and selected a purported manifold from checkpoint or
+output filenames. It relied on version-dependent `torch.load` defaults and
+silently selected the first matching projection. None of those operations
+measured learned topology.
+
+The retained entry point now writes a self-contained HTML/SVG parameter heatmap.
+It requires `adapter_weights.pt`, reads at most 64 MiB plus one overflow-detection
+byte, and uses CPU `weights_only=True` loading without an unsafe retry.
+Only an exact `input_proj.weight` suffix is eligible; multiple candidates require
+an explicit `--tensor-key`. The selected tensor must be a nonempty, finite,
+dense floating matrix with at most 4,194,304 values.
+
+The display is the first 64 rows and columns, or 32 in `--lite` mode.
+It is a deterministic prefix, not a representative sample, activation map or
+dimensionality reduction. Rows are output channels, columns input coordinates.
+Colors use the displayed prefix's maximum absolute value; scales differ between
+images. The exact input-file SHA-256, selected key, full shape and dtype are
+embedded in the HTML. The SVG itself carries a parameter-only warning.
+
+No base model, topology builder, random layout or semantic labels are used.
+The historical `node_metadata` argument now fails explicitly instead of promoting
+unbound annotations to evidence. Missing/malformed inputs produce errors, not
+scaffolds or success-shaped output. Existing output survives validation failures.
+
+Tiny synthetic checkpoint tests cover exact selection, rejected loads without
+retry, finite/dense dtype checks, byte/value/display limits, deterministic output,
+zero/BF16 display and HTML escaping. They do not open historical checkpoints.
+The file-size guard bounds the input read, not arbitrary deserialization resource
+use; this utility is for trusted local files. Selecting one tensor does not
+validate the remaining state, restore the complete adapter or certify checkpoint
+provenance. No new hyperbolicity, hypercomplexity or task result is claimed.
+
 ## Coverage and remaining blockers
 
 Inventory visited 1,577 workspace directories while excluding dependencies, Git internals, reparse-point directories and duplicate audit checkouts. Vendored llama.cpp model folders were checked separately and contained tokenizer fixtures. Dataset pictures and UI/vendor graphics were not treated as scientific evidence. Only the nine selected PNGs above received visual review; this is not a certification of every image or document in the archive.
 
-No historical model payload, adapter pickle, full multi-gigabyte hash, model inference, training job, or GPU workload was used. Only tiny synthetic tensor checkpoints were deserialized for restoration tests. No private cross-repository content was republished. The blockers to stronger claims are concrete: exact checkpoint/runtime bindings, restoration of the actual historical companion, implemented and tested hypercomplex operations in that path, and a resource-approved matched model experiment. The new default-adapter contract does not manufacture those missing results.
+No historical model payload, adapter pickle, full multi-gigabyte hash, model inference, training job, or GPU workload was used. Only tiny synthetic tensor checkpoints were deserialized for restoration and display tests. No private cross-repository content was republished. The blockers to stronger claims are concrete: exact checkpoint/runtime bindings, restoration of the actual historical companion, implemented and tested hypercomplex operations in that path, and a resource-approved matched model experiment. The new default-adapter contract does not manufacture those missing results.

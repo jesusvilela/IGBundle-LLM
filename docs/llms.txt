@@ -19,6 +19,8 @@
 
 ## Pages
 
+The standalone renderer is now a bounded projection-weight display, not a topology viewer. It rejects missing or ambiguous state, uses tensor-only CPU loading, and embeds source-file identity and prefix limits. No random layout or filename-derived geometry claim remains in that entry point.
+
 The public demo no longer fabricates missing training/ablation/statistics displays. Live sigma is Gaussian dispersion, not curvature; categorical probabilities are not pairwise affinity. Missing telemetry is unavailable, not zero. Headless checks cover aggregation, bounded capture and real Gradio UI construction with a stubbed model and intercepted launch, not a running server or LLM integration.
 
 Default-adapter restoration now fails on missing, extra, malformed or nonfinite tensors in five public HF entry points. CPU-only synthetic tests verify coverage and restored-operator execution. Full-state mode restores only the default adapter, not base/LoRA. No archived checkpoint compatibility or GGUF geometry integration is established.

@@ -169,6 +169,26 @@ The UI is constructed with a stubbed model and intercepted server launch.
 These checks do **not** validate a running server or real model/backend loading.
 See the [demo correction scope](docs/export-image-audit.md#demo-evidence-checkpoint).
 
+### Parameter display, not topology
+
+The retained `generate_braintop_viz.py` entry point now produces a deterministic
+HTML/SVG heatmap of stored input-projection weights, not a purported manifold.
+It rejects missing weights, ambiguous tensor selection and malformed values.
+No random scaffold, filename-derived curvature label or semantic node metadata
+is used.
+
+```powershell
+python generate_braintop_viz.py --checkpoint "<trusted-checkpoint-directory>" --tensor-key "<exact.input_proj.weight>" --output output\parameters.html --lite
+```
+
+The key may be omitted only when exactly one input projection exists.
+Input is limited to 64 MiB and the selected matrix to 4,194,304 values; the display
+contains only the first 32 x 32 values in lite mode, otherwise at most 64 x 64.
+The source hash, shape, dtype, prefix extent and color scale are embedded.
+Only trusted local tensor checkpoints are supported; `weights_only=True` is not
+a general resource-isolation guarantee. This does not restore an adapter or
+certify learned geometry. See the [display contract](docs/export-image-audit.md#projection-display-checkpoint).
+
 ## Research standard
 
 The hypothesis remains open. A stronger causal test should match parameter budget and layer placement, isolate the geometric operator/objective, use a shared split and training budget with multiple seeds, and publish exact checkpoint provenance and task-level outputs. Geometry diagnostics alone cannot establish language-model benefit.

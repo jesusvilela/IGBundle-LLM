@@ -152,7 +152,7 @@
     "adapter": 0.5486348122866894,
     "base": 0.5486348122866894
   },
-  "local_site_links_checked": 47,
+  "local_site_links_checked": 48,
   "artifact_sha256": {
     "aa-index-2026-10-27.csv": "baa95712550b4912a4aa6ee1ebe67d3f4f9de448d7650d4afd4b5e7e49a0d58f",
     "aa-paired-outcomes-2026-10-27.csv": "012c61d5a39f34fc6a7fd38d3dc46ba08556583c899996b09727e8a8a4d43dc1",
