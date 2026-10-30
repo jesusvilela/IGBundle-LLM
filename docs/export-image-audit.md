@@ -23,6 +23,28 @@ The ARC package's README describes a 7B export, but its surviving GGUF directory
 
 The repository's `export_gguf.py` merges PEFT/LoRA weights. It is **not** an exporter for arbitrary nonlinear geometric modules. GGUF is a container; runtime architecture support determines which operations execute. A custom geometry-aware runtime is possible, but none is established by these two files and their inspected fast path.
 
+### Public exporter preflight correction
+
+The public exporter previously allocated its base before invoking an absent,
+working-directory-relative `safe_convert_wrapper.py`, and reused a fixed merged
+directory. It now checks the local PEFT config/weight files, requires an exact
+base-identifier match and explicit trusted converter path, and rejects existing
+output destinations before model allocation.
+
+`--lora-only` is mandatory acknowledgement that nonlinear IGBundle operators are
+omitted. `--dry-run` performs only the stdlib preflight; it creates no outputs and
+imports no model backend. Execution reserves fresh output paths, uses PEFT safe
+merge, and runs the supplied converter with explicit arguments. Conversion errors
+propagate; partial outputs are retained, not silently deleted or reused.
+Successful conversion must also pass the existing bounded GGUF directory
+inspection and contain tensors. This checks structure and extents, not tensor
+values, checkpoint identity, numerical equivalence or runtime behavior.
+
+Nine dependency-free tests use fake model APIs and tiny synthetic GGUF data.
+They establish preflight, argument wiring, failure propagation and output guards.
+No actual PEFT model was merged and no external converter or model runtime was
+validated. The archived packaged runner remains unchanged and uncertified.
+
 ## Images: illustration, synthetic data, or measurement?
 
 Nine PNGs were visually inspected and fingerprinted. The [artifact manifest](benchmark-results/artifact-audit.json) contains paths, image dimensions, SHA256 hashes, classifications, and line-numbered excerpts from the inspected source files. Source-to-image associations are supported by filenames and content, not immutable run receipts; the inspected source is not asserted to be the exact source at image creation.

@@ -21,6 +21,11 @@ Research documents generate hypotheses; implementation and operator tests establ
 
 ## Published data
 
+**Export preflight:** missing converter/config/weights and output collisions are
+rejected before model allocation; LoRA-only scope is explicit. Dependency-free
+contracts exercise dry runs and fake backend orchestration, not a real merge.
+The GGUF directory inspector checks conversion output structure, not model values.
+
 **Projection-display correction:** the standalone renderer now plots a bounded
 deterministic prefix of one selected projection, not an inferred manifold.
 Exact key selection, source-file hashing and explicit failure replace random

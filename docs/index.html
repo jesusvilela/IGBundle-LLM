@@ -49,6 +49,11 @@
         </p>
 
         <section class="section" id="export-audit">
+            <p class="card-text"><strong>Export preflight:</strong>
+                LoRA-only scope and local prerequisites are checked before model allocation.
+                Real conversion and geometry-aware GGUF execution remain unverified.
+                <a href="wiki.html#export-preflight">Scope</a>.
+            </p>
             <p class="card-text"><strong>Standalone display correction:</strong> the former topology renderer now shows bounded, deterministic parameter values, with no random scaffold or filename-derived geometry claim. <a href="wiki.html#projection-display">Contract and limits</a>.</p>
             <p class="card-text"><strong>Demo correction:</strong> synthetic training curves, hard-coded ablation bars and invented fallback statistics have been removed from the public app. Its live telemetry is labeled as dispersion and categorical probabilities, not curvature or geometric quality. <a href="wiki.html#demo-evidence">Scope and checks</a>.</p>
             <p class="card-text"><strong>Runtime hardening:</strong> five public HF entry points now reject missing or incomplete default-adapter state instead of silently using random weights. Tiny CPU restoration checks are not historical checkpoint certification. <a href="wiki.html#restoration">Contract and limits</a>.</p>

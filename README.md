@@ -189,6 +189,24 @@ Only trusted local tensor checkpoints are supported; `weights_only=True` is not
 a general resource-isolation guarantee. This does not restore an adapter or
 certify learned geometry. See the [display contract](docs/export-image-audit.md#projection-display-checkpoint).
 
+### GGUF export preflight
+
+`export_gguf.py` requires an explicit converter and `--lora-only` acknowledgement:
+it merges PEFT LoRA weights, **not nonlinear runtime geometry**. Use `--dry-run`
+to check paths and configuration without importing model libraries or allocating
+weights:
+
+```powershell
+python export_gguf.py --base "<exact base identifier from adapter_config.json>" --checkpoint "<trusted PEFT directory>" --converter "<trusted converter.py>" --output output\new_export --lora-only --dry-run
+```
+
+Execution additionally requires the model dependencies and substantial CPU RAM/disk.
+It reserves fresh `<output>_hf` and `<output>.gguf` destinations; failures retain
+partial files and a retry must use a fresh prefix. The converter must support
+the HF-directory, `--outfile`, and `--outtype f16` interface and writing the
+reserved GGUF destination. Local preflight and mocked orchestration are checked;
+real model merge, converter compatibility and GGUF inference remain unverified.
+
 ## Research standard
 
 The hypothesis remains open. A stronger causal test should match parameter budget and layer placement, isolate the geometric operator/objective, use a shared split and training budget with multiple seeds, and publish exact checkpoint provenance and task-level outputs. Geometry diagnostics alone cannot establish language-model benefit.

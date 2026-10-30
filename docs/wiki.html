@@ -110,6 +110,13 @@
             <p>Observation-weighted summaries support varying decode lengths. Capture retains at most 4,096 sigma samples plus fixed-size summaries; the histogram is labeled as a prefix sample. Repeated context may be counted again. Requests are serialized and capture resets for each request.</p>
             <p>Headless checks render tiny-array plots and verify aggregation, missing-data behavior, bounded storage and hook cleanup. A real Gradio interface is constructed with a stubbed model and intercepted launch; no server or inference backend is tested. <a href="https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/export-image-audit.md#demo-evidence-checkpoint">Exact scope and normalization policy</a>.</p>
 
+            <p id="export-preflight"><strong>Exporter preflight:</strong>
+                the public export entry point now requires explicit LoRA-only scope,
+                an exact base identifier, a trusted converter and fresh output paths.
+                Its dry run imports no model backend. Mocked orchestration and bounded
+                GGUF directory checks do not certify real conversion or geometric execution.
+            </p>
+
             <h2 id="projection-display">8. Parameter display, not topology</h2>
             <p>The standalone renderer now shows a deterministic prefix of one explicitly selected input-projection matrix. Missing, ambiguous or malformed state fails instead of producing a random scaffold. Filenames no longer select geometry; semantic node metadata is rejected.</p>
             <p>The self-contained HTML/SVG embeds a source-file hash, shape, dtype, prefix extent and color scale. Input files are capped at 64 MiB, selected matrices at 4,194,304 values, and plots at 64 x 64 values (32 x 32 in lite mode). This is a trusted-local-file utility, not a deserialization sandbox or proof of complete restoration.</p>
