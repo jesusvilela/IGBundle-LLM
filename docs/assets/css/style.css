@@ -201,6 +201,13 @@ code, .mono { font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 
     border-bottom: 1px solid var(--border);
     color: var(--accent2);
 }
+.section-subtitle {
+    color: var(--text-muted);
+    max-width: 900px;
+    margin: -0.75rem auto 1.25rem;
+    text-align: center;
+    font-size: 0.9rem;
+}
 
 /* Table */
 table {

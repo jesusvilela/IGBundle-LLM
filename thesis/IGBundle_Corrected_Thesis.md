@@ -1,3 +1,5 @@
+> **Empirical correction (30 October 2026):** Despite the “corrected” title, this archived thesis contains experimental results and interpretations later found to be unsupported. In particular, do not cite its ARC-AGI accuracy, “MFR,” ablation, learned-curvature, or efficiency claims as validated. See the [current correction notice](../docs/correction-notice.md), [evidence ledger](../docs/research_to_code_evidence_ledger.md), and published [benchmark summaries](../docs/benchmark-results/).
+
 # ManifoldGL: Information-Geometric Bundle Adapters - CORRECTED VERSION
 
 **A Framework for Non-Euclidean Semantic Representation Learning**

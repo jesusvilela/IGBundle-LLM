@@ -1,3 +1,5 @@
+> **Status correction (30 October 2026):** This document describes planned/configured comparisons, not validated experimental outcomes. Historical performance and efficiency claims elsewhere in this archive are unsupported; consult the [current correction notice](../docs/correction-notice.md) and [evidence ledger](../docs/research_to_code_evidence_ledger.md).
+
 # IGBundle Comparative Studies Framework
 
 **Generated**: 2026-01-02 23:11:16

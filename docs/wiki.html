@@ -3,191 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thesis | IGBundle</title>
+    <title>Evidence | IGBundle</title>
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
     <nav class="navbar">
         <div class="brand">IGBundle</div>
         <div class="nav-links">
             <a href="index.html" class="nav-link">Home</a>
-            <a href="wiki.html" class="nav-link active">Thesis</a>
-            <a href="demo.html" class="nav-link">Get Started</a>
-            <a href="https://huggingface.co/jesusvilela/igbundle-qwen2.5-7b-riemannian" target="_blank" class="nav-badge">HF Model</a>
-            <a href="https://github.com/jesusvilela/IGBundle-LLM" target="_blank" class="nav-badge">GitHub</a>
+            <a href="wiki.html" class="nav-link active">Evidence</a>
+            <a href="demo.html" class="nav-link">Research access</a>
+            <a href="https://github.com/jesusvilela/IGBundle-LLM" target="_blank" rel="noopener noreferrer" class="nav-badge">GitHub</a>
         </div>
     </nav>
 
     <div class="container">
         <div class="wiki-content">
-            <h1 style="font-size: 1.6rem;">IGBundle: Fiber Bundle Adapters for Language Models</h1>
-            <p style="color: var(--text-muted); margin-bottom: 0;">A geometric inductive bias for transformer reasoning</p>
+            <h1 style="font-size: 1.8rem;">Evidence, scope, and limitations</h1>
+            <p style="color: var(--text-muted);">Updated 30 October 2026 · IGBundle is experimental research, not a validated model release.</p>
 
             <div class="callout" style="margin-top: 1.5rem;">
-                <strong>Author</strong>: Jesus Vilela Jato<br>
-                <strong>Date</strong>: December 2025 &ndash; present (active research)<br>
-                <strong>Affiliation</strong>: Independent Research<br>
-                <strong>Team</strong>: Jesus Vilela (orchestrator) + Claude (Anthropic) + Gemini (Google)
+                <strong>Bottom line:</strong> The fiber-structured geometric-adapter idea remains a hypothesis worth testing. Available results do not demonstrate a general task-performance advantage or learned hyperbolicity. Older numerical claims were withdrawn; see the <a href="correction-notice.html">correction notice</a>.
             </div>
 
-            <h2>1. Mathematical Foundations</h2>
-
-            <h3>1.1 Fiber Bundle Structure</h3>
+            <h2>1. October 2026 local multi-benchmark evaluation</h2>
             <p>
-                The central object is a fiber bundle \(\pi: E \to M\) where the base manifold \(M\) is a
-                Poincare ball \(\mathbb{B}^{64}\) with constant curvature \(\kappa = -1\), and each fiber
-                \(F_x\) is a categorical distribution over \(K=16\) sections with \(P=8\) mixture components.
+                A local run on 27 October compared base Qwen2.5-7B, an exported merged cp300 checkpoint, and a reconstructed adapter composite. Evaluation used greedy decoding on fixed subsets ranging from 8 to 98 examples. The custom weighted index is descriptive, not a standardized benchmark and not a statistical test.
             </p>
-            <p>
-                Hidden states from transformer layer 12 are projected into this bundle. The projection is
-                a residual perturbation clamped to &le;10% of the base hidden state norm, preserving the
-                pretrained distribution.
-            </p>
-
-            <h3>1.2 Riemannian Metric and Curvature</h3>
-            <p>
-                The adapter learns a metric tensor \(g_{ij}\) on \(M\), approximated via the Fisher information
-                matrix of the fiber distributions. Curvature is computed via a log-determinant Laplacian estimator:
-            </p>
-            <p>\[ K \approx -\frac{1}{2} \nabla^2 \log \det g \]</p>
-            <p>
-                A curvature loss regularizes toward \(\kappa = -1\). The learned curvature
-                at convergence is \(K = -5.63\) &mdash; strongly hyperbolic, overshooting the target but
-                geometrically meaningful.
-            </p>
-
-            <h3>1.3 Symplectic Dynamics</h3>
-            <p>
-                Fiber state evolves via a Hamiltonian system with symplectic integration and a Lorentz-factor
-                speed limiter (\(c = 5.0\)):
-            </p>
-            <p>\[ \dot{q} = \frac{\partial H}{\partial p}, \quad \dot{p} = -\frac{\partial H}{\partial q} \]</p>
-            <p>
-                The speed limiter prevents gradient explosion: \(v \to v / \sqrt{1 + \|v\|^2 / c^2}\).
-                Combined with the SymplecticSPIDER optimizer, this replaces global gradient clipping
-                (which was found to kill fiber gradients due to the 7M-parameter curvature norm dominating).
-            </p>
-
-            <h3>1.4 Information Geometry</h3>
-            <p>
-                Optimization follows the natural gradient direction on the statistical manifold:
-            </p>
-            <p>\[ \theta_{t+1} = \theta_t - \eta \, F^{-1} \nabla_\theta \mathcal{L} \]</p>
-            <p>
-                This respects the Fisher-Rao metric and converges ~30% faster than Euclidean gradient descent.
-            </p>
-
-            <h3>1.5 Sheaf Consistency</h3>
-            <p>
-                Adjacent tokens must agree on their fiber distributions. The Jensen-Shannon divergence
-                between neighboring sections is penalized:
-            </p>
-            <p>\[ \mathcal{L}_{\text{sheaf}} = \frac{1}{N} \sum_{i} \text{JSD}(\sigma_i \| \sigma_{i+1}) \]</p>
-            <p>
-                This enforces local-to-global semantic coherence &mdash; the "gluing condition" of the sheaf.
-            </p>
-
-            <h2>2. Key Components</h2>
-
-            <h3>2.1 Geometric Steering Probe (GSP)</h3>
-            <p>
-                At inference time, the GSP reads curvature \(K\) and entropy \(S\) from the adapter
-                and modulates generation parameters (temperature, top_p) via a GENERIC-compliant
-                homeostatic controller. No retraining required.
-            </p>
-            <ul>
-                <li>High curvature |K| &rarr; model is confident &rarr; lower temperature</li>
-                <li>High entropy S &rarr; uncertain fiber state &rarr; more conservative sampling</li>
-                <li>Tracks reversible (Hamiltonian) and irreversible (dissipative) energy flows</li>
-            </ul>
-
-            <h3>2.2 Neuromorphic Memory (NMEM)</h3>
-            <p>
-                Biologically-inspired memory replacing the 3-tier IMD system:
-            </p>
-            <ul>
-                <li><strong>FitzHugh-Nagumo decay</strong>: excitable dynamics, not exponential &mdash; memories can reactivate</li>
-                <li><strong>FFT spectral forgetting</strong>: high-frequency detail decays before low-frequency gist</li>
-                <li><strong>Gabor retroactive interference</strong>: new similar memories degrade old ones</li>
-                <li><strong>Multi-anchor retrieval</strong>: Method of Loci spatial indexing</li>
-                <li><strong>Savant preservation</strong>: exact verbatim recall for code, dates, formulas</li>
-                <li><strong>Ghost entries</strong>: decayed memories leave retrievable traces</li>
-            </ul>
-
-            <h3>2.3 Neural Glass</h3>
-            <p>
-                Gradio-based inference UI with real-time telemetry: curvature heatmap, entropy gauge,
-                fiber distribution visualization, thought trace, generation stability metrics.
-                OOM-hardened for 5 GiB VRAM GPUs with dynamic token budgeting.
-            </p>
-
-            <h2>3. Experimental Results</h2>
-
-            <h3>3.1 Manifold Faithfulness (Tier 3)</h3>
             <table>
-                <thead>
-                    <tr><th>Metric</th><th>Value</th><th>Interpretation</th></tr>
-                </thead>
+                <thead><tr><th>Variant</th><th>Custom weighted index</th><th>Evaluation path</th></tr></thead>
                 <tbody>
-                    <tr><td>Curvature K</td><td><strong>-5.63</strong></td><td>Strongly hyperbolic</td></tr>
-                    <tr><td>Entropy S</td><td><strong>0.95</strong></td><td>Below uniform (ln16 &asymp; 2.77), sections specialized</td></tr>
-                    <tr><td>Jensen-Shannon Div.</td><td><strong>0.424</strong></td><td>Fibers differ across contexts</td></tr>
-                    <tr><td>Parallel Transport</td><td><strong>0.041</strong></td><td>Near-zero holonomy &mdash; geometric consistency</td></tr>
-                    <tr><td>Faithfulness</td><td style="color: var(--green);"><strong>6/6 PASS</strong></td><td>All verification tests pass</td></tr>
+                    <tr><td>Base Qwen2.5-7B</td><td>61.1</td><td>Q4_K_M GGUF</td></tr>
+                    <tr><td>Merged cp300</td><td>60.0</td><td>Q4_K_M GGUF; no runtime geometric adapter in the export</td></tr>
+                    <tr><td>Reconstructed adapter composite</td><td>64.7</td><td>Surviving base-trained adapter grafted onto cp300; NF4/bf16 path</td></tr>
                 </tbody>
             </table>
-
-            <h3>3.2 Benchmark Preservation</h3>
-            <table>
-                <thead>
-                    <tr><th>Benchmark</th><th>Score</th><th>Notes</th></tr>
-                </thead>
-                <tbody>
-                    <tr><td>ARC-Challenge</td><td><strong>54.86%</strong></td><td>Identical to base Qwen 2.5-7B</td></tr>
-                    <tr><td>TruthfulQA (MC2)</td><td><strong>64.78%</strong></td><td>Strong factual grounding</td></tr>
-                    <tr><td>Winogrande</td><td><strong>71.03%</strong></td><td>Commonsense reasoning intact</td></tr>
-                    <tr><td>GSM8K</td><td><strong>75.51%</strong></td><td>Multi-step math preserved</td></tr>
-                </tbody>
-            </table>
-
-            <h3>3.3 Entropy Diagnostic History</h3>
             <p>
-                Entropy was frozen at \(S = \ln(16) \approx 2.77\) for 3000 training steps due to
-                10 coupled gradient blockages (arcosh NaN, per-component Poincare projection, global
-                grad clipping killing fiber grads, etc.). After systematic diagnosis and Phase A fixes,
-                entropy unfroze to oscillating \([0.58, 1.04]\), mean ~0.85.
+                None of the per-task paired comparisons was significant. For the reconstructed composite vs cp300, McNemar p-values were 0.63–1.00. The composite was assembled post hoc and was not the original trained checkpoint; different checkpoint assembly and quantization/loading paths prevent isolating a geometric effect. Higher point estimates on some small subsets are not confirmation of benefit.
             </p>
+            <p><a href="benchmark-results/aa-index-2026-10-27.csv">Download per-task scores, sample sizes, weights, parse failures, and paired p-values.</a></p>
 
-            <h3>3.4 Ablation Studies</h3>
-            <p>13 systematic ablations isolating each geometric component. Key findings:</p>
+            <h2>2. September 2026 paired token-NLL probe</h2>
+            <p>
+                On 24 held-out examples with 64 tokens scored per example, mean token NLL was 2.3188 for the frozen base, 1.9352 for geometric adapter A, and 0.8187 for vanilla-LoRA control B. B had lower NLL on all 24 pairs. Mean paired difference A − B was 1.1165 (95% paired t interval 0.9144–1.3186; p = 5.83 × 10<sup>−11</sup>).
+            </p>
+            <p>
+                This probe is not task accuracy and does not isolate geometry: A had 4,160,713 trainable parameters and one geometric layer; B had 585,728 parameters and 13 LoRA layers. The published file omits prompt text.
+            </p>
+            <p><a href="benchmark-results/matched-token-nll-2026-09-20.csv">Download the 24 prompt-free paired measurements.</a></p>
+
+            <h2>3. Operator diagnostics are not task evidence</h2>
+            <p>
+                A local audit reports 6/6 checks passed for the tested fixed operators/configuration. It can support only those implementation-level checks. It does not show that training learned geometry or that geometry improves language tasks.
+            </p>
+            <p>
+                The historical curvature readout around −5.63 comes from a fixed conformal component and is weight-invariant. It is not a learned curvature estimate. Accordingly, the phrase “learned curvature K = −5.63” is withdrawn.
+            </p>
+            <p><a href="benchmark-results/faithfulness-audit-A.json">View the compact operator-audit record.</a></p>
+
+            <h2>4. Historical task evaluations</h2>
             <table>
-                <thead>
-                    <tr><th>Component Removed</th><th>Accuracy Drop</th></tr>
-                </thead>
+                <thead><tr><th>Evaluation</th><th>Result</th><th>Scope</th></tr></thead>
                 <tbody>
-                    <tr><td>Euclidean Target (&kappa;=0)</td><td><strong>-10.9%</strong></td></tr>
-                    <tr><td>No Curvature Loss</td><td><strong>-9.5%</strong></td></tr>
-                    <tr><td>No Natural Gradients</td><td><strong>-8.4%</strong></td></tr>
-                    <tr><td>No Sheaf Consistency</td><td><strong>-5.6%</strong></td></tr>
-                    <tr><td>No Bundle Structure</td><td><strong>-4.9%</strong></td></tr>
+                    <tr><td>ARC-Challenge zero-shot acc_norm</td><td>54.86% adapter; 54.86% base</td><td>1,172 items per run; separate historical protocol</td></tr>
+                    <tr><td>ARC-AGI exact solve</td><td>1/100 (1%)</td><td>Historical subset; no matched base comparison available</td></tr>
+                    <tr><td>Model-First Reasoning format compliance</td><td>0/100</td><td>Prompt-format metric, not geometric faithfulness</td></tr>
                 </tbody>
             </table>
-
-            <h2>4. References</h2>
+            <p>
+                Do not compare the October ARC-Challenge subset score directly to the historical zero-shot result. The sample sizes and protocols differ.
+            </p>
             <ul>
-                <li>Nickel &amp; Kiela (2017) &mdash; Poincare Embeddings for Hierarchical Representations</li>
-                <li>Turner et al. (2023) &mdash; Activation Addition: Steering Without Optimization</li>
-                <li>Grmela &amp; Ottinger (1997) &mdash; GENERIC framework for non-equilibrium thermodynamics</li>
-                <li>Chen et al. (2022) &mdash; Fully Hyperbolic Neural Networks</li>
-                <li>McClelland et al. (1995) &mdash; Complementary Learning Systems</li>
-                <li>Shimizu et al. (2021) &mdash; Hyperbolic Neural Networks++</li>
-                <li>Dai et al. (2021) &mdash; Hyperbolic Attention in Transformers</li>
+                <li><a href="benchmark-results/arc-challenge-adapter-2026-01.json">ARC-Challenge adapter aggregate</a></li>
+                <li><a href="benchmark-results/arc-challenge-base-2026-01.json">ARC-Challenge base aggregate</a></li>
+                <li><a href="benchmark-results/arc-agi-summary.json">ARC-AGI aggregate and interval</a></li>
             </ul>
 
-            <div style="margin-top: 2.5rem; text-align: center;">
-                <a href="https://github.com/jesusvilela/IGBundle-LLM/blob/main/thesis/IGBundle_Thesis_V3_GENERIC_Merged_c_Jesus_Vilela_Jato.pdf" class="btn btn-primary" target="_blank">Full Thesis (PDF)</a>
+            <h2>5. What a stronger test needs</h2>
+            <p>
+                A causal evaluation should match parameter budget and layer placement; compare against a vanilla adapter under the same data, objective, optimizer budget, decoding, and hardware; isolate the geometric operator; use multiple seeds and fixed task splits; and publish exact checkpoint provenance with per-task outputs. Operator diagnostics should remain distinct from downstream outcomes.
+            </p>
+            <p>
+                No efficiency claim is made. The repository does not currently provide a matched, reproducible training-time, inference-latency, or memory comparison supporting earlier percentages.
+            </p>
+
+            <div class="callout">
+                The thesis and older PDFs are archived historical documents. Read them with the <a href="correction-notice.html">correction notice</a> and <a href="https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/research_to_code_evidence_ledger.md">evidence ledger</a>.
             </div>
         </div>
 
@@ -195,7 +97,6 @@
             <p>&copy; 2025-2026 <a href="https://github.com/jesusvilela">Jesus Vilela Jato</a>. All rights reserved.</p>
         </div>
     </div>
-
     <script src="assets/js/main.js"></script>
 </body>
 </html>

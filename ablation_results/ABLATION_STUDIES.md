@@ -1,3 +1,5 @@
+> **Status correction (30 October 2026):** The listed ablations describe study configurations/questions; their presence does not establish that the studies were run or support the historical effect sizes claimed elsewhere. See the [current correction notice](../docs/correction-notice.md) and [evidence ledger](../docs/research_to_code_evidence_ledger.md).
+
 # IGBundle Geometric Ablation Studies
 
 **Total Studies**: 13
