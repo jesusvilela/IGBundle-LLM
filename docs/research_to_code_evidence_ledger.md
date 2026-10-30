@@ -18,8 +18,16 @@ Research documents generate hypotheses; implementation and operator tests establ
 | Thesis training/affinity/SVD images are measurements | Inspected generator uses exponentials plus noise, random block affinities and power-law spectra. | Synthetic illustrations; the public PNGs now have embedded warnings. |
 | The archived downward paraboloid illustrates negative curvature | Its induced Gaussian curvature is analytically positive; the assigned negative heatmap is unrelated. | Incorrect label, corrected by an independent analytic reference. |
 | Hyperbolic and hypercomplex are interchangeable | A metric and an algebra product are different structures; inspected source-name scans and runtime trace establish no hypercomplex integration. | Do not transfer claims between structures or from separate repositories. |
+| Length-preserving scaling certifies hyperbolic parallel transport | The archived scale-only map telescopes to identity on every closed loop; a prescribed K=-1 triangle requires nonzero rotation. Independent gyration, Lorentz transport and angle-defect checks agree. | Scaling alone is insufficient. The new opt-in transport reference is not a model or integrator certification. |
 
 ## Published data
+
+**Hyperbolic transport:** a small opt-in reference provides full gyration and
+dual cotangent transport. The fixed loop rotates by -0.238857852 radians,
+where the archived scale-only formula returns zero.
+[Numerical witness](benchmark-results/transport-reference.json).
+The metric is prescribed and no adapter/GGUF path uses this reference.
+The archived momentum caller is not repaired or certified by these tests.
 
 **Declared-LoRA coverage:** six public load/merge paths verify exact serialized
 keys and restored values. Tiny real PEFT checks cover nonzero wrapped-save state

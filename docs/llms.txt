@@ -19,6 +19,8 @@
 
 ## Pages
 
+An opt-in Poincare transport reference includes gyration and distinct covector transport. A prescribed K=-1 triangle produces -0.238857852 radians of holonomy, matching independent hyperboloid transport and angle defect; the archive's scale-only formula gives zero. No adapter/GGUF integration, learned curvature, integrator certification or model benefit is established.
+
 Six public load/merge paths enforce exact declared default-LoRA keys and restored values. Wrapped-save names require matching structure; no prefix remapping is guessed. This post-load check is not rollback or historical compatibility proof. Unsloth execution remains untested.
 
 Tiny hosted CPU integration uses random two-layer width-16 Qwen2 with PyTorch 2.6.0, Transformers 4.48.3, PEFT 0.14.0 and Accelerate 1.2.1. It checks real backend composition and generation, not pretrained scores, historical weights, quantization or full-app integration.

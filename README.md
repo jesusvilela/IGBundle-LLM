@@ -253,6 +253,27 @@ This is a post-load check, **not rollback**: a failed caller must discard its
 partially constructed model. Coverage does not establish base identity, training
 history, historical compatibility, or full application correctness.
 
+### Hyperbolic transport reference
+
+The opt-in `igbundle.geometry.poincare.PoincareBall` supplies geodesic tangent
+and cotangent transport for the **prescribed** metric
+`g_x = [2 / (1 - c ||x||^2)]^2 I`, with fixed `c > 0`.
+It includes gyration, the rotation missing from the archive's scale-only method.
+Momentum uses the dual map, not the tangent map.
+
+For the geodesic triangle `(0,0) -> (.3,0) -> (0,.4) -> (0,0)` at `c=1`,
+the returned tangent rotates by `-0.238857852` radians, matching the negative
+angle defect; scale-only transport returns zero rotation.
+Independent hyperboloid comparisons cover dimensions 2/3/8 and `c=.25/1/4`,
+alongside metric products, inverse transport, gradients and explicit domain errors.
+[Numerical witness](docs/benchmark-results/transport-reference.json) and
+[audit, derivation and limits](docs/export-image-audit.md#hyperbolic-transport-checkpoint).
+
+Run `python scripts\transport_reference.py` in a compatible PyTorch environment.
+This is a transport-only reference, not a drop-in dynamics replacement.
+It is **not wired into either adapter or GGUF**, does not repair the archived
+Hamiltonian integrator, and establishes no learned curvature or model benefit.
+
 ## Research standard
 
 The hypothesis remains open. A stronger causal test should match parameter budget and layer placement, isolate the geometric operator/objective, use a shared split and training budget with multiple seeds, and publish exact checkpoint provenance and task-level outputs. Geometry diagnostics alone cannot establish language-model benefit.

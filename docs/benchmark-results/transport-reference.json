@@ -1,0 +1,22 @@
+{
+  "scope": "prescribed K=-1 metric; no learned geometry, model, GGUF or integrator certification",
+  "dtype": "float64",
+  "triangle": [
+    [0.0, 0.0],
+    [0.3, 0.0],
+    [0.0, 0.4],
+    [0.0, 0.0]
+  ],
+  "initial_tangent": [1.0, 0.0],
+  "returned_tangent": [0.9716088328075709, -0.23659305993690857],
+  "signed_holonomy_radians": -0.23885785203667698,
+  "expected_negative_angle_defect_radians": -0.2388578520366769,
+  "angle_error": 8.326672684688674e-17,
+  "lorentz_reference_max_abs_error": 3.3306690738754696e-16,
+  "scale_only_returned_tangent": [1.0, 0.0],
+  "scale_only_signed_holonomy_radians": 0.0,
+  "cotangent_pairing_abs_error": 2.7755575615628914e-17,
+  "cotangent_kinetic_energy_abs_error": 2.0816681711721685e-17,
+  "tangent_applied_to_momentum_energy_ratio": 0.7260249991246803,
+  "acceptance_absolute_tolerance": 1e-12
+}

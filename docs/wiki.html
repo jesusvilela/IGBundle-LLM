@@ -157,7 +157,25 @@
                 historical checkpoint certification. Unsloth remains untested.
             </p>
 
-            <h2>12. What a stronger test needs</h2>
+            <h2 id="hyperbolic-transport">12. Hyperbolic transport: rotation and duality</h2>
+            <p>The archived scale-only Poincare transport preserves vector length
+                but returns identity around every closed loop. A new opt-in
+                reference includes the missing gyration rotation and a distinct
+                cotangent map for momentum.
+            </p>
+            <p>On the prescribed K=-1 geodesic triangle
+                (0,0) to (.3,0) to (0,.4) to (0,0), the tangent rotates by
+                -0.238857852 radians, agreeing with an independent hyperboloid
+                calculation and the negative angle defect. Scale-only transport
+                returns zero rotation.
+            </p>
+            <p><a href="benchmark-results/transport-reference.json">Numerical witness</a>
+                and <a href="https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/export-image-audit.md#hyperbolic-transport-checkpoint">source fingerprints, dual-map derivation and bounded test scope</a>.
+                This reference is not wired into either adapter or GGUF and does
+                not certify the archived integrator, learned geometry or task benefit.
+            </p>
+
+            <h2>13. What a stronger test needs</h2>
             <p>
                 A causal evaluation should match parameter budget and layer placement; compare against a vanilla adapter under the same data, objective, optimizer budget, decoding, and hardware; isolate the geometric operator; use multiple seeds and fixed task splits; and publish exact checkpoint provenance with per-task outputs. Operator diagnostics should remain distinct from downstream outcomes.
             </p>

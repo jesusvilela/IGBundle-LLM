@@ -152,7 +152,7 @@
     "adapter": 0.5486348122866894,
     "base": 0.5486348122866894
   },
-  "local_site_links_checked": 53,
+  "local_site_links_checked": 55,
   "artifact_sha256": {
     "aa-index-2026-10-27.csv": "baa95712550b4912a4aa6ee1ebe67d3f4f9de448d7650d4afd4b5e7e49a0d58f",
     "aa-paired-outcomes-2026-10-27.csv": "012c61d5a39f34fc6a7fd38d3dc46ba08556583c899996b09727e8a8a4d43dc1",
@@ -167,7 +167,8 @@
     "gguf-dist-directory.json": "a54803af7f7f43faedb001cf5c00892831e7e501388d8ce4f5dd39332aa550a1",
     "historical-audit-source.py.txt": "93c2b983b542c60dfcf0c1fdac9805e72c967e8d3b63c1100b6570e396f4b397",
     "matched-token-nll-2026-09-20.csv": "4109f1c3a6ebca34d764b3871826fb5614ad5703dd1bfd74448de6b7426ff754",
-    "provenance.json": "540e53a0875c7712196ba06f29f1ae04f1e1c1a82bb519509a961de3cd2e47e5"
+    "provenance.json": "540e53a0875c7712196ba06f29f1ae04f1e1c1a82bb519509a961de3cd2e47e5",
+    "transport-reference.json": "8481bde5999ba3bfe77eac3664ab9a7e38115e403b708de63e8d288fcb089033"
   },
   "publication_asset_sha256": {
     "docs/assets/geometry-reference.svg": "c24d0e3b801b312a36e5f6b18aab16d0c660acf29fd42a357a60be25fe6ac117",

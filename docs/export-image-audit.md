@@ -320,6 +320,86 @@ and paths that wrap first require different matching checkpoint names.
 This deliberate failure is safer than silently running initialized LoRA values;
 it does not repair or certify any historical checkpoint.
 
+### Hyperbolic transport checkpoint
+
+The expanded read-only audit traced
+`igbundle-llm/src/igbundle/geometry/poincare.py` into
+`src/igbundle/dynamics/hamiltonian.py` and checked the existing
+`tests/test_audit_fixes.py`. This is the local archive, not the public default
+adapter. A newer, separately modified local conformal-connection implementation
+was also encountered; it was neither overwritten nor certified.
+
+| Inspected archive file (relative to `igbundle-llm`) | SHA256 |
+|---|---|
+| `src/igbundle/geometry/poincare.py` | `2bb9e137911eb84e8a628df7b46baef5b7009103af2f6022d6b750cbd2d28638` |
+| `src/igbundle/dynamics/hamiltonian.py` | `64d049e0b95cf3fbd3f5f3208a5ee65b86641ad92d612448375777e60f966f4a` |
+| `tests/test_audit_fixes.py` | `a1bdf432d4ab423393f5f29e4956c4b5f5a238e5b51a9c23ea0a3573d6397ad5` |
+
+The archived Poincare method computes only
+`v_y = (lambda_x / lambda_y) v_x`. This preserves metric inner products for
+`g_x = lambda_x^2 I`, but every closed-loop product telescopes to the identity.
+It therefore cannot reproduce nonzero Levi-Civita holonomy. Length preservation
+alone would miss this defect. The inspected audit tests cover the corrected
+curvature-scaled distance/logarithm domain, not this missing rotation.
+
+The new opt-in transport reference uses, for fixed `c > 0`,
+
+```text
+lambda_x = 2 / (1 - c ||x||^2),   g_x = lambda_x^2 I,   K = -c
+PT_x->y(v) = (lambda_x / lambda_y) gyr[y, -x](v)
+CoPT_x->y(p) = (lambda_y / lambda_x) gyr[y, -x](p)
+```
+
+Here `gyr` is the orthogonal gyrovector rotation, evaluated after scaling
+coordinates by `sqrt(c)`. The second map follows from inverse-transpose duality:
+if the tangent map is `s R` with orthogonal `R`, its covector map is `R / s`.
+It preserves the pairing `p(v)` and the covector kinetic energy
+`p^T g^{-1} p / 2` under pure transport.
+
+The archived integrator uses precisely that inverse-metric kinetic energy but
+passes its momentum directly to tangent transport. For the isolated test edge
+`(.3,0) -> (0,.4)`, that substitution gives a kinetic-energy ratio of
+`0.7260249991`, whereas the dual map preserves it within float64 roundoff.
+This is an operator counterexample, **not an energy measurement or repair of
+the complete integrator**. No symplecticity or time-reversal claim is made.
+
+For the positively oriented geodesic triangle
+`(0,0) -> (.3,0) -> (0,.4) -> (0,0)`, the full returned tangent is
+`(0.9716088328, -0.2365930599)` and its signed rotation is
+`-0.2388578520` radians. At `K=-1`, this equals the negative angle defect
+`-2 atan(.3*.4)`; the tests also compute the three interior angles independently
+on the hyperboloid. The scale-only formula returns `(1,0)`.
+
+An independent check embeds the ball into the Lorentz hyperboloid
+`<X,X>_L = -1/c`, pushes a tangent through the chart Jacobian, applies
+`V -> V + <Y,V>_L (X+Y)/(1/c - <X,Y>_L)`, and differentiates the inverse chart.
+The fixed loop agrees within `3.34e-16` absolute error. Its angle error is below
+`8.33e-17`. The predeclared witness acceptance tolerance is `1e-12`.
+
+[Published numerical witness](benchmark-results/transport-reference.json).
+The first execution used hosted CPU PyTorch 2.6.0 in
+[run 41139560935](https://github.com/jesusvilela/IGBundle-LLM/actions/runs/41139560935).
+Bounded tests use dimensions 2, 3 and 8; `c=.25,1,4`; 12 seeded point pairs
+per configuration at scaled radii .6 and .4; float64 reference comparisons
+with `rtol=atol=1e-12`; inverse and metric-product checks; dual pairing and
+kinetic energy; finite-difference gradient checks including the origin;
+batch broadcasting and half/bfloat16 promotion to float32; and explicit
+invalid-input rejection. This is not exhaustive floating-point verification,
+especially near the ball boundary, or a formal proof-assistant certificate.
+
+```powershell
+python -m unittest discover -b -s tests -p test_poincare_transport.py
+python scripts\transport_reference.py
+```
+
+Inputs must be finite, broadcast-compatible tensors with matching dtype/device,
+and points strictly inside the curvature-scaled ball. The implementation does
+not silently project or clamp points and raises on transport overflow.
+The class intentionally provides only conformal factor and tangent/cotangent
+transport, not the archive's full exp/log/dynamics API. It is not imported by
+either adapter or GGUF runtime. Archive files remain unchanged. The metric is
+prescribed, not learned; this adds no hypercomplex multiplication or task result.
+
 Inventory visited 1,577 workspace directories while excluding dependencies, Git internals, reparse-point directories and duplicate audit checkouts. Vendored llama.cpp model folders were checked separately and contained tokenizer fixtures. Dataset pictures and UI/vendor graphics were not treated as scientific evidence. Only the nine selected PNGs above received visual review; this is not a certification of every image or document in the archive.
 
 No historical model payload, historical adapter pickle, full multi-gigabyte hash, pretrained-model inference, training job, or GPU workload was used. Tiny synthetic checkpoints and random-model CPU execution were checked on the hosted runner. No private cross-repository content was republished. The blockers to stronger claims remain exact checkpoint/runtime bindings, restoration of the actual historical companion, tested hypercomplex integration, and a resource-approved matched model experiment.

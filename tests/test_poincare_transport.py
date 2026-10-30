@@ -1,5 +1,6 @@
 """Bounded checks against independent geometry, not a trained-model result."""
 
+import json
 import math
 from pathlib import Path
 import sys
@@ -89,6 +90,20 @@ class PoincareTransportTests(unittest.TestCase):
 
         defect = math.pi - angle(O, A, B) - angle(A, O, B) - angle(B, A, O)
         self.assertAlmostEqual(result["signed_holonomy_radians"], -defect, places=12)
+
+    def test_published_witness_matches_current_reference(self):
+        saved = json.loads((ROOT / "docs" / "benchmark-results" / "transport-reference.json")
+                           .read_text(encoding="utf-8"))
+        actual = witness()
+        self.assertEqual(set(saved), set(actual))
+        for key, value in actual.items():
+            with self.subTest(key=key):
+                if isinstance(value, (float, list)):
+                    torch.testing.assert_close(torch.tensor(saved[key], dtype=torch.float64),
+                                               torch.tensor(value, dtype=torch.float64),
+                                               rtol=0, atol=1e-12)
+                else:
+                    self.assertEqual(saved[key], value)
 
     def test_broadcasting_and_low_precision_promotion(self):
         for dtype in (torch.float32, torch.float16, torch.bfloat16):
