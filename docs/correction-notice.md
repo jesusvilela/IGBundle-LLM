@@ -23,6 +23,13 @@ The [inspected audit source snapshot](benchmark-results/historical-audit-source.
 
 ## Later comparisons
 
+The public demo's remaining claim paths have also been corrected: synthetic
+missing-log trajectories, literal ablation bars, invented fallback statistics,
+and unsupported narrative claims were removed. The live sigma counter is not
+called geometric “MFR”; sigma and categorical probabilities have descriptive
+labels. Missing data is explicitly unavailable. This is a display/telemetry
+correction, not a new experiment or a certification of the model runtime.
+
 The [expanded export/image audit](export-image-audit.md) also withdraws empirical interpretations of the synthetic thesis loss, affinity and spectrum plots, the image's “50–75% step reduction,” and the negative-curvature label on a downward paraboloid. Public synthetic PNGs now carry visible labels. Imposed topology layouts and the inspected standard-Qwen2 GGUF directories do not establish learned hyperbolicity or hypercomplex execution. The two inspected GGUFs are separate from the October cp300 benchmark artifacts.
 
 The 20 September 2026 paired token-NLL probe found lower NLL for a vanilla-LoRA control than for the geometric arm on all 24 paired examples. Its small sample, unequal parameter counts, and different layer coverage prevent causal attribution to geometry.

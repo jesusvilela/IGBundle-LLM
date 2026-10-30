@@ -19,6 +19,8 @@
 
 ## Pages
 
+The public demo no longer fabricates missing training/ablation/statistics displays. Live sigma is Gaussian dispersion, not curvature; categorical probabilities are not pairwise affinity. Missing telemetry is unavailable, not zero. Headless checks cover aggregation, bounded capture and real Gradio UI construction with a stubbed model and intercepted launch, not a running server or LLM integration.
+
 Default-adapter restoration now fails on missing, extra, malformed or nonfinite tensors in five public HF entry points. CPU-only synthetic tests verify coverage and restored-operator execution. Full-state mode restores only the default adapter, not base/LoRA. No archived checkpoint compatibility or GGUF geometry integration is established.
 
 - [Project overview and results](https://jesusvilela.github.io/IGBundle-LLM/)

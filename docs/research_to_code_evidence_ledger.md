@@ -21,6 +21,13 @@ Research documents generate hypotheses; implementation and operator tests establ
 
 ## Published data
 
+**Demo correction:** synthetic training trajectories and literal ablation/statistics
+fallbacks were removed. Live telemetry now labels Gaussian dispersion and categorical
+probabilities explicitly; missing data is unavailable. Headless checks cover tiny-array
+rendering and aggregation, plus real Gradio UI construction with a stubbed model and
+intercepted launch. Server operation and model/backend integration remain unverified.
+[Display contract](export-image-audit.md#demo-evidence-checkpoint).
+
 **Runtime restoration checkpoint:** the default adapter now has a fail-closed
 tensor-coverage contract, used by five public HF loaders. Tiny synthetic tests
 cover restoration and actual wrapped execution, not real HF/PEFT compatibility.

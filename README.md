@@ -142,6 +142,33 @@ not repair the separate GGUF runner. Full-state mode restores only default
 adapter tensors, not the base or LoRA. See the
 [restoration contract and limits](docs/export-image-audit.md#default-adapter-restoration-checkpoint).
 
+### Demo evidence boundaries
+
+The experimental `app.py` no longer substitutes synthetic training curves,
+hard-coded ablation bars, or invented statistics when evidence is unavailable.
+Those panels explicitly show missing evidence. The withdrawn performance and
+efficiency claims have been removed from the demo itself.
+
+Live sigma values are **Gaussian standard deviations, not curvature**.
+The categorical heatmap shows probabilities, not pairwise affinities. Entropy is
+descriptive, and the old sigma interval counter is no longer called “MFR” or
+graded as geometric quality. Missing telemetry is unavailable, not zero.
+Accumulation supports varying decode lengths and retains at most 4,096 sigma
+samples plus fixed-size summaries; the histogram is explicitly a prefix sample.
+
+Plotting checks use tiny arrays, not an LLM:
+
+```bash
+python -m unittest discover -b -s tests -p test_demo_evidence.py
+```
+
+They require NumPy, Matplotlib, Pillow and Gradio; the hosted workflow runs them headlessly.
+`requirements-demo.txt` lists optional UI dependencies in addition to the base
+requirements. The launcher now requires an explicit `--checkpoint` path.
+The UI is constructed with a stubbed model and intercepted server launch.
+These checks do **not** validate a running server or real model/backend loading.
+See the [demo correction scope](docs/export-image-audit.md#demo-evidence-checkpoint).
+
 ## Research standard
 
 The hypothesis remains open. A stronger causal test should match parameter budget and layer placement, isolate the geometric operator/objective, use a shared split and training budget with multiple seeds, and publish exact checkpoint provenance and task-level outputs. Geometry diagnostics alone cannot establish language-model benefit.

@@ -132,13 +132,54 @@ adapter only, not the separate `GeometricIGBundleAdapter` or packaged archive.
 Tensor coverage cannot identify a base checkpoint, recover training settings,
 certify PEFT loading, or prove that the weights were learned. No original adapter
 pickle was opened, no historical run was reconstructed, and no new task score
-was obtained. The app's historical telemetry labels and legacy benchmark
-protocols remain outside this verified contract.
+was obtained. The separate demo correction below addresses telemetry labels;
+legacy benchmark protocols remain outside this restoration contract.
 
 Run `python -m unittest discover -b -s tests -p test_checkpoint.py` in an existing
 PyTorch environment. The hosted evidence workflow uses CPU-only PyTorch and one
 thread. A local PyTorch import exceeded a two-minute wait and was stopped;
 tensor validation for this checkpoint ran on GitHub, not as a local model job.
+
+## Demo evidence checkpoint
+
+The public `app.py` at `17fe6dfddad8fb2a99ca9a89e00c3fdf55f7cacf`
+still displayed the withdrawn +131.5% and 94.2% claims. Its missing-log branch
+constructed exponential training curves; ablation accuracies were literals.
+`load_topo_stats()` also supplied invented fallback statistics or displayed
+unbound `thesis_stats.json` contents. These were display paths, not new experiments.
+
+The corrected app removes those substitutions and unsupported narrative claims.
+Training and ablation panels now render **unavailable** placeholders with no
+data curves or bars. Local JSON files are not automatically promoted to evidence.
+The standalone `generate_braintop_viz.py` renderer remains outside this checkpoint;
+the app no longer imports it or directs users to its output as learned geometry.
+
+`MixtureState.sigma` is a Gaussian standard deviation, and `MixtureState.p` is a
+categorical probability tensor. The corrected live labels reflect those definitions:
+no curvature estimate, pairwise affinity, or geometric-quality verdict is inferred.
+The open-interval sigma count `(0.5, 2.0)` is retained only as an explicitly
+arbitrary descriptive counter, not a target or “MFR” result.
+
+`src/igbundle/demo_evidence.py` computes observation-weighted summaries across
+layers and forward calls. It supports varying sequence lengths; repeated context
+is not deduplicated. Probability sums within 0.005 of one are normalized to account
+for low-precision softmax rounding; larger deviations, nonfinite values, invalid
+shapes, and nonpositive sigma are rejected. Zero categorical probabilities use
+the `0 log 0 = 0` convention.
+
+Only the first 4,096 sigma values are retained for the explicitly labeled prefix
+histogram. All observations contribute to aggregate counters; no unbounded
+generation history or activation arrays are kept. A generation lock separates
+requests, and capture is reset before each request. Missing states produce an
+unavailable message, not `NaN`, zero accuracy, or a quality badge.
+
+The headless tests use tiny arrays and isolated app functions. They render the
+plots, assert that unavailable panels contain no curves/bars, check variable-length
+aggregation, bounded storage, reset behavior and hook cleanup. A separate check
+constructs the real Gradio interface with a stubbed model and intercepted launch.
+The tests do not import Transformers, PEFT or Unsloth, start a server, load models,
+or exercise the real inference backend. Optional UI dependencies are listed in
+`requirements-demo.txt`; the CLI now requires an explicit checkpoint.
 
 ## Coverage and remaining blockers
 

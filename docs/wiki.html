@@ -104,7 +104,13 @@
             <p>Tiny synthetic checkpoints cover round-trip restoration, rejection without partial mutation, unchanged base weights, and execution of a restored adapter with gradients. Entry-point checks use isolated functions and stubs, not real Transformers/PEFT loading. Partial or differently prefixed historical checkpoints now fail explicitly.</p>
             <p>This does not identify a base model, validate archived companion weights, implement a GGUF geometry backend, or establish hypercomplex execution. Full-state mode restores only default-adapter tensors. <a href="https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/export-image-audit.md#default-adapter-restoration-checkpoint">Exact contract, file requirements and remaining limits</a>.</p>
 
-            <h2>7. What a stronger test needs</h2>
+            <h2 id="demo-evidence">7. Demo evidence and descriptive telemetry</h2>
+            <p>The public app no longer substitutes synthetic training curves, hard-coded ablation accuracies or invented statistics for missing evidence. Training and ablation panels now explicitly say unavailable. Withdrawn performance, significance and efficiency claims were removed from its UI.</p>
+            <p>Sigma is a Gaussian standard deviation, not curvature. The heatmap shows categorical probabilities, not pairwise affinities. Entropy and the arbitrary sigma interval counter are descriptive, not geometric faithfulness or quality scores. Missing telemetry is unavailable, not zero.</p>
+            <p>Observation-weighted summaries support varying decode lengths. Capture retains at most 4,096 sigma samples plus fixed-size summaries; the histogram is labeled as a prefix sample. Repeated context may be counted again. Requests are serialized and capture resets for each request.</p>
+            <p>Headless checks render tiny-array plots and verify aggregation, missing-data behavior, bounded storage and hook cleanup. A real Gradio interface is constructed with a stubbed model and intercepted launch; no server or inference backend is tested. <a href="https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/export-image-audit.md#demo-evidence-checkpoint">Exact scope and normalization policy</a>.</p>
+
+            <h2>8. What a stronger test needs</h2>
             <p>
                 A causal evaluation should match parameter budget and layer placement; compare against a vanilla adapter under the same data, objective, optimizer budget, decoding, and hardware; isolate the geometric operator; use multiple seeds and fixed task splits; and publish exact checkpoint provenance with per-task outputs. Operator diagnostics should remain distinct from downstream outcomes.
             </p>
