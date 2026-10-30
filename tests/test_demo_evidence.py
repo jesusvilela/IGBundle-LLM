@@ -1,11 +1,14 @@
 import ast
 import io
 import math
+import os
 from pathlib import Path
 import sys
 import threading
+import tempfile
+from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import matplotlib
 matplotlib.use("Agg")
@@ -89,6 +92,12 @@ class TelemetryTests(unittest.TestCase):
         self.assertIsNone(telemetry.probability_sum)
         self.assertEqual(telemetry.sigma_samples.size, 0)
 
+    def test_accumulator_overflow_is_explicit_and_does_not_mutate(self):
+        telemetry = DemoTelemetry()
+        with self.assertRaises((ValueError, FloatingPointError)):
+            telemetry.add(*observations(2, sigma=1.7e308))
+        self.assertIsNone(telemetry.summary())
+
 
 class DemoSurfaceTests(unittest.TestCase):
     def setUp(self):
@@ -97,9 +106,11 @@ class DemoSurfaceTests(unittest.TestCase):
             "_figure_image", "_unavailable_plot", "plot_dispersion", "plot_categorical",
             "plot_training_metrics", "plot_ablation_comparison", "load_topo_stats",
             "generate_with_viz",
+            "launch_app",
         }
         nodes = [node for node in self.tree.body
-                 if isinstance(node, ast.FunctionDef) and node.name in selected]
+                 if (isinstance(node, ast.FunctionDef) and node.name in selected)
+                 or (isinstance(node, ast.ClassDef) and node.name == "HookManager")]
         self.telemetry = DemoTelemetry()
         self.ns = dict(
             io=io, plt=plt, Image=Image, TELEMETRY=self.telemetry,
@@ -167,6 +178,66 @@ class DemoSurfaceTests(unittest.TestCase):
         for node in self.tree.body:
             if isinstance(node, ast.ImportFrom):
                 self.assertNotIn(node.module, ("unsloth", "generate_braintop_viz", "seaborn"))
+
+    def test_hook_capture_uses_sigma_and_p_and_converts_before_numpy(self):
+        sigma, p = observations()
+        sigma_tensor, p_tensor = Mock(), Mock()
+        sigma_tensor.detach.return_value.float.return_value.cpu.return_value.numpy.return_value = sigma
+        p_tensor.detach.return_value.float.return_value.cpu.return_value.numpy.return_value = p
+        manager = self.ns["HookManager"](Mock())
+        manager._capture(None, None, (None, SimpleNamespace(sigma=sigma_tensor, p=p_tensor)))
+        self.assertEqual(self.telemetry.summary()["sigma_count"], 1)
+        sigma_tensor.detach.return_value.float.assert_called_once()
+        p_tensor.detach.return_value.float.assert_called_once()
+
+    def test_hook_replacement_and_cleanup_do_not_accumulate_handles(self):
+        class FakeAdapter:
+            def register_forward_hook(self, hook):
+                return Mock()
+
+        instance = FakeAdapter()
+        manager = self.ns["HookManager"](SimpleNamespace(modules=lambda: [instance]))
+        with patch.dict(sys.modules, {
+            "igbundle.modules.adapter": SimpleNamespace(IGBundleAdapter=FakeAdapter)
+        }):
+            manager.attach()
+            first = manager.hooks[0]
+            manager.attach()
+            first.remove.assert_called_once()
+            self.assertEqual(len(manager.hooks), 1)
+            second = manager.hooks[0]
+            manager.detach()
+            manager.detach()
+            second.remove.assert_called_once()
+            with self.assertRaises(ValueError):
+                self.ns["HookManager"](SimpleNamespace(modules=lambda: [])).attach()
+
+    def test_real_gradio_ui_constructs_with_stubbed_model_and_no_server(self):
+        os.environ["GRADIO_ANALYTICS_ENABLED"] = "False"
+        import gradio as gr
+
+        self.ns["gr"] = gr
+        self.ns["EVIDENCE_URL"] = "https://jesusvilela.github.io/IGBundle-LLM/wiki.html"
+        self.ns["EXAMPLE_TASKS"] = {"Example": ["test"]}
+        self.ns["load_model"] = Mock(return_value=(object(), object()))
+        hooks = Mock()
+        self.ns["HookManager"] = Mock(return_value=hooks)
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.dict(os.environ, {"GRADIO_TEMP_DIR": directory}):
+                with patch.object(gr.Blocks, "launch", autospec=True) as launch:
+                    self.ns["launch_app"]("config", "checkpoint")
+                    launch.assert_called_once()
+                    demo = launch.call_args.args[0]
+                    try:
+                        tabs = [component["props"]["label"]
+                                for component in demo.config["components"]
+                                if component["type"] == "tabitem"]
+                        self.assertEqual(tabs, ["Inference", "Evidence availability", "Interpretation"])
+                        self.assertNotIn("131.5", repr(demo.config))
+                    finally:
+                        demo.close()
+        hooks.attach.assert_called_once()
+        hooks.detach.assert_called_once()
 
 
 if __name__ == "__main__":

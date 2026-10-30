@@ -214,7 +214,6 @@ def launch_app(config_path, checkpoint_path):
     global MODEL, TOKENIZER
     MODEL, TOKENIZER = load_model(config_path, checkpoint_path)
     hooks = HookManager(MODEL)
-    hooks.attach()
 
     with gr.Blocks(title="IGBundle research demo") as demo:
         gr.Markdown(f"""
@@ -285,6 +284,7 @@ def launch_app(config_path, checkpoint_path):
             [Evidence ledger]({EVIDENCE_URL})
             """)
 
+    hooks.attach()
     try:
         demo.queue(default_concurrency_limit=1).launch(share=False, server_name="0.0.0.0")
     finally:
