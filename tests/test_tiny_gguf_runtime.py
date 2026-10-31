@@ -1,5 +1,6 @@
 """Synthetic F32 Qwen2 execution, not archived-weight or adapter certification."""
 
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -172,6 +173,8 @@ class TinyGGUFRuntimeTests(unittest.TestCase):
                     torch.testing.assert_close(incremental, full, rtol=RTOL, atol=ATOL)
                     print("NATIVE_GGUF_RESULT " + json.dumps({
                         "tied_output": tied, "parameters": parameters, "file_bytes": path.stat().st_size,
+                        "file_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+                        "directory_prefix_sha256": report["prefix_sha256"],
                         "tokens": tokens, "logit_shape": list(full.shape),
                         "full_max_abs_error": (full - reference).abs().max().item(),
                         "incremental_max_abs_error": (incremental - reference).abs().max().item(),
@@ -210,6 +213,9 @@ class TinyGGUFRuntimeTests(unittest.TestCase):
             self.assertGreater(effect, 1e-3)
             print("NATIVE_GGUF_PAYLOAD_COUNTEREXAMPLE " + json.dumps({
                 "same_directory_report_except_filename": True, "output_weight_negated": True,
+                "directory_prefix_sha256": reports[0]["prefix_sha256"],
+                "original_file_sha256": hashlib.sha256(original.read_bytes()).hexdigest(),
+                "modified_file_sha256": hashlib.sha256(modified.read_bytes()).hexdigest(),
                 "max_abs_logit_change": effect,
                 "negation_max_abs_error": (second + first).abs().max().item(),
             }))
