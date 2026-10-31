@@ -45,6 +45,7 @@ jobs:
           python -m unittest discover -b -s tests -p test_checkpoint.py
           python -m unittest discover -b -s tests -p test_projection_display.py
           python -m unittest discover -b -s tests -p test_poincare_transport.py
+          python -m unittest discover -b -s tests -p test_legacy_geometric_adapter.py
           python scripts/transport_reference.py
       - name: Install small plotting test dependencies
         run: python -m pip install numpy==1.26.4 matplotlib==3.9.4 pillow==11.1.0 "gradio>=5.0,<6.0"
