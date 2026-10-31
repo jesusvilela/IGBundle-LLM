@@ -186,7 +186,30 @@
                 not certify the archived integrator, learned geometry or task benefit.
             </p>
 
-            <h2>13. What a stronger test needs</h2>
+            <h2 id="legacy-execution">13. Legacy adapter execution</h2>
+            <p>The separate GeometricIGBundleAdapter no longer constructs an unused
+                rank-four metric that caused multi-token forward calls to fail.
+                The repaired helper preserves the original coordinate smoothing:
+                s_0 = x_0, s_t = x_t - 0.1 * (x_t - x_(t-1)).
+                It uses the original predecessor, not the already smoothed value.
+                Parameter names, shapes and initialization are unchanged.
+            </p>
+            <p>Six tiny hosted CPU tests check identity/nonzero execution, gradients,
+                causal prefixes and exact strict module-state roundtrip. The
+                forward path does not call its neural connection or transport methods.
+                This is coordinate blending, not parallel transport; the diagonal
+                metric scaling and Euclidean refinement do not certify natural
+                gradients or a Riemannian mean.
+            </p>
+            <p>Independent one-token smoothing calls need previous-coordinate
+                history to match a full sequence. Cached generation, historical
+                restoration, default-loader coverage for this legacy class,
+                auxiliary losses, training and general numerical stability
+                remain unvalidated.
+                <a href="https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/export-image-audit.md#legacy-adapter-execution-checkpoint">Reproduced failure, exact hosted test scope and limits</a>.
+            </p>
+
+            <h2>14. What a stronger test needs</h2>
             <p>
                 A causal evaluation should match parameter budget and layer placement; compare against a vanilla adapter under the same data, objective, optimizer budget, decoding, and hardware; isolate the geometric operator; use multiple seeds and fixed task splits; and publish exact checkpoint provenance with per-task outputs. Operator diagnostics should remain distinct from downstream outcomes.
             </p>

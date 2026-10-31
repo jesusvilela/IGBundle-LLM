@@ -470,6 +470,60 @@ transport, not the archive's full exp/log/dynamics API. It is not imported by
 either adapter or GGUF runtime. Archive files remain unchanged. The metric is
 prescribed, not learned; this adds no hypercomplex multiplication or task result.
 
+### Legacy adapter execution checkpoint
+
+The public `GeometricIGBundleAdapter` had a multi-token execution failure:
+its transport-named helper constructed an unused metric slice of shape
+`(B, 1, D, D)`, while `RiemannianMetric` requires rank five. The
+[hosted baseline](https://github.com/jesusvilela/IGBundle-LLM/actions/runs/41178946976)
+at `c5d1c6b5613903bd713cce66a6c26efe0cc5dc4b` reproduced the rank-unpacking error.
+This is the separate legacy adapter, not the default `IGBundleAdapter`.
+
+The repair removes unused metric/path/vector construction and renames the private
+helper `_coordinate_smoothing_update`. Its vectorized formula preserves the
+original intended update exactly, using the original, not already smoothed,
+previous coordinate:
+
+```text
+s_0 = x_0
+s_t = x_t - 0.1 * (x_t - x_(t-1))
+```
+
+No parameter names, shapes, initialization or update coefficients changed.
+This is coordinate blending, not parallel transport. Forward uses diagonal
+metric scaling and Euclidean weighted refinement; those operations are not
+certified natural gradients or a Riemannian Frechet mean. Its neural section
+mixing establishes no lambda-calculus laws.
+
+The [repaired hosted run](https://github.com/jesusvilela/IGBundle-LLM/actions/runs/41179041632)
+at `e6c63d635abee44d909dea5d02e7311a9879d5b0` passed all six new execution tests
+and 128 tests across the bounded workflow. The new fixture uses seed 19,
+hidden width 12, bottleneck 6, coordinate dimension 3, two categories and two
+patches; one/two components and one/four tokens are checked. Each adapter has
+fewer than 100,000 parameters. CPU execution is single-threaded, in evaluation
+mode with autograd enabled where needed, with no pretrained weights or data.
+
+Identity and state-shape checks cover float32/float64. Float64 checks compare
+smoothing exactly against the original loop, leave input coordinates unchanged,
+and run finite-difference gradient checking. With explicitly nonzero output
+weights, the output changes by more than `1e-6`; input and present parameter
+gradients are finite, and selected projection/update/metric parameters receive
+nonzero gradients. Patched transport/connection methods raise if called, and
+the neural connection parameters receive no gradients.
+
+A tiny `weights_only=True`, CPU, `strict=True` module-state roundtrip reproduces
+nonzero outputs exactly. Perturbing future tokens and evaluating the prefix
+separately agree within `1e-12` absolute tolerance. A separate counterexample
+shows that independent one-token smoothing calls differ from full-sequence
+smoothing without previous-coordinate history.
+
+Run `python -m unittest discover -b -s tests -p test_legacy_geometric_adapter.py`
+in a compatible CPU PyTorch environment. This does not validate the public
+default-adapter loader for the legacy class, historical checkpoint compatibility,
+HF/GGUF integration, cached generation, auxiliary losses, a training pipeline
+or general numerical stability. The opt-in Poincare transport and exact algebra
+references remain unintegrated. No archive source was changed.
+
 Inventory visited 1,577 workspace directories while excluding dependencies, Git internals, reparse-point directories and duplicate audit checkouts. Vendored llama.cpp model folders were checked separately and contained tokenizer fixtures. Dataset pictures and UI/vendor graphics were not treated as scientific evidence. Only the nine selected PNGs above received visual review; this is not a certification of every image or document in the archive.
 
 No historical model payload, historical adapter pickle, full multi-gigabyte hash, pretrained-model inference, training job, or GPU workload was used. Tiny synthetic checkpoints and random-model CPU execution were checked on the hosted runner. No private cross-repository content was republished. The blockers to stronger claims remain exact checkpoint/runtime bindings, restoration of the actual historical companion, tested hypercomplex integration, and a resource-approved matched model experiment.

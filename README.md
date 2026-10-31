@@ -64,7 +64,8 @@ The historical value near -5.63 is not evidence of learned hyperbolicity. For `g
 | Default `IGBundleAdapter` / Poincare affinity | Radial projection, analytic origin distances, exact zero diagonal, symmetry, sampled triangle inequalities, finite/checked gradients, float32/bfloat16 small-tensor forward/backward, identity initialization | Trained-model quality, learned geometry, or all possible numerical inputs |
 | `arc_eval.py`, HF and GGUF ARC runners | Shared deterministic selection, strict grid equality, all test pairs, errors retained and run invalidated, explicit empty-run rejection, output overwrite protection | Backend model loading or restoration of separate runtime adapter weights; no new model evaluation was run |
 | Historical evidence | Recomputed NLL means and paired statistics; October accuracies, indices and McNemar tests; source hashes and first-pair ARC rescoring | Independent grading, dataset non-contamination, or complete reproduction from a fresh clone |
-| Legacy `geometry/riemannian.py`, `GeometricIGBundleAdapter`, training and experimental geometry modules | **Outside the validated core** | The metric is position-independent while connection coefficients come from an unrelated network; these do not establish Levi-Civita geometry, categorical laws, or sheaf laws. The legacy `train.py` entry point also contains an incomplete trainer block and is not a supported training command. |
+| Legacy `GeometricIGBundleAdapter` forward | Tiny identity/nonzero execution, gradients, causal prefixes and strict module-state roundtrip; repaired multi-token coordinate smoothing | No connection is used by this forward path. Not parallel transport, cached generation, historical checkpoint restoration or a supported training pipeline. |
+| Legacy `geometry/riemannian.py`, training and experimental geometry modules | **Outside the validated geometric core** | The metric is position-independent while connection coefficients come from an unrelated network; these do not establish Levi-Civita geometry, categorical laws, or sheaf laws. The legacy `train.py` entry point also contains an incomplete trainer block and is not a supported training command. |
 
 The Poincare affinity correction changes historical numerics; old checkpoint scores must not be attributed to the corrected implementation without reevaluation. The default adapter is now exactly residual-identity at initialization (both output weights and bias are zero). No new checkpoint or performance result is implied.
 
@@ -129,6 +130,7 @@ In an existing environment with PyTorch, the bounded operator checks are:
 python -m unittest discover -s tests -p test_geometry.py
 python -m unittest discover -s tests -p test_ig.py
 python -m unittest discover -b -s tests -p test_checkpoint.py
+python -m unittest discover -b -s tests -p test_legacy_geometric_adapter.py
 ```
 
 Use `CUDA_VISIBLE_DEVICES=""`, `OMP_NUM_THREADS=1`, `MKL_NUM_THREADS=1`, and `OPENBLAS_NUM_THREADS=1` to bound local resources. None of these commands loads a model, downloads data, or runs LLM training. Do not use blanket test discovery as a lightweight check: the legacy `test_pipeline.py` invokes the unsupported model-training entry point.
@@ -283,6 +285,26 @@ Run `python scripts\transport_reference.py` in a compatible PyTorch environment.
 This is a transport-only reference, not a drop-in dynamics replacement.
 It is **not wired into either adapter or GGUF**, does not repair the archived
 Hamiltonian integrator, and establishes no learned curvature or model benefit.
+
+### Legacy adapter execution
+
+The separate `GeometricIGBundleAdapter` no longer fails on multi-token inputs
+while constructing an unused rank-four metric slice. Its private helper now
+honestly names and preserves the historical coordinate-smoothing formula:
+`s_0 = x_0`, `s_t = x_t - 0.1 * (x_t - x_(t-1))`, using the original predecessor.
+Parameter names, shapes and initialization are unchanged.
+
+Six hosted CPU tests cover tiny forward/backward execution, identity initialization,
+a nonzero output effect, strict tensor-only module-state roundtrip, and causal
+prefixes. They also check that forward does not call the neural connection or
+transport methods. Independent one-token smoothing calls do **not** reproduce
+a full sequence without previous-coordinate history.
+
+This is **execution evidence, not geometric-law or training certification**.
+It does not extend the default-adapter checkpoint loader to this legacy class,
+certify historical weights, or validate cached generation, auxiliary losses or
+general numerical stability.
+[Regression, exact test scope and limits](docs/export-image-audit.md#legacy-adapter-execution-checkpoint).
 
 ## Research standard
 

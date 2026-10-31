@@ -19,8 +19,17 @@ Research documents generate hypotheses; implementation and operator tests establ
 | The archived downward paraboloid illustrates negative curvature | Its induced Gaussian curvature is analytically positive; the assigned negative heatmap is unrelated. | Incorrect label, corrected by an independent analytic reference. |
 | Hyperbolic and hypercomplex are interchangeable | A metric and an algebra product are different structures; inspected source-name scans and runtime trace establish no hypercomplex integration. | Do not transfer claims between structures or from separate repositories. |
 | Length-preserving scaling certifies hyperbolic parallel transport | The archived scale-only map telescopes to identity on every closed loop; a prescribed K=-1 triangle requires nonzero rotation. Independent gyration, Lorentz transport and angle-defect checks agree. | Scaling alone is insufficient. The new opt-in transport reference is not a model or integrator certification. |
+| The legacy adapter's forward path performs parallel transport | Its intended coordinate blending formula needs no metric or connection. An unused rank-four metric construction caused multi-token failure; the repaired path passes tiny execution checks without calling either transport or connection methods. | Execution repaired, not geometric laws certified. Chunked smoothing needs previous-coordinate history. |
 
 ## Published data
+
+**Legacy adapter execution:** six bounded CPU tests cover the repaired
+`GeometricIGBundleAdapter` forward, nonzero gradients/output, causal prefixes and
+a strict tensor-only module-state roundtrip. The preserved smoothing formula is
+not parallel transport and uses no connection.
+[Reproduced failure, hosted result and limits](export-image-audit.md#legacy-adapter-execution-checkpoint).
+This is not historical restoration, default-loader coverage, cached generation,
+auxiliary-loss or training-pipeline certification.
 
 **Qwen2 layout contract:** the two inspected GGUF directories pass 339/339 and
 290/290 shape checks against the pinned native dense-scalar profile. Optional
