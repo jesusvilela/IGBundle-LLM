@@ -524,6 +524,60 @@ HF/GGUF integration, cached generation, auxiliary losses, a training pipeline
 or general numerical stability. The opt-in Poincare transport and exact algebra
 references remain unintegrated. No archive source was changed.
 
+### Tiny native GGUF checkpoint
+
+The native boundary is now exercised with two newly generated, all-F32 Qwen2
+fixtures, not the surviving multi-gigabyte exports. A small C++ driver loads the
+actual pinned llama.cpp library and calls `llama_decode`; it is not a mocked
+backend. CMake requires native revision
+`067b8d7af3f4775b1ad39470d1860696a8a7b3a3` and rejects tracked source modifications.
+Compilation uses two hosted CPU workers; decoding and PyTorch use one thread.
+F32 key/value caches, disabled flash attention and no GPU offload are explicit.
+
+An independent Transformers 4.48.3 / PyTorch 2.6.0 Qwen2 supplies the reference
+logits and synthetic weights, with seed 23. Both models have hidden width 32,
+FFN width 64, four query heads, head dimension 8, vocabulary 259, context 32,
+RMS epsilon `1e-6` and RoPE base 10000. Q/K/V biases are explicitly nonzero.
+
+| Synthetic fixture | Layers / KV heads | Parameters | File bytes | Largest native/reference absolute error |
+|---|---|---:|---:|---:|
+| Separate output weight | 2 / 2 | 35,296 | 147,168 | `8.94e-8` |
+| Tied output, no `output.weight` tensor | 1 / 1 | 17,136 | 73,792 | `1.79e-7` |
+
+The supplied token IDs are `[0,1,2,5]` and `[11,9,8,7,6,4]`, yielding `[4,259]`
+and `[6,259]` logit arrays per model. Both full-sequence and one-token-at-a-time
+native calls agree with the reference at the predeclared
+`rtol=1e-4, atol=1e-5`; all argmax IDs agree. Native full/incremental differences
+were zero on the recorded run. This is not a universal bitwise-equivalence claim.
+No text encoder, autoregressive sampled continuation or task benchmark is run.
+
+Two malformed fixtures retain valid nonoverlapping byte extents but declare
+incorrect Q or K weight shapes. The inspector reports failure, and native
+loading returns the driver's explicit failure code 2 with the corresponding
+tensor-shape error, not a crash or successful empty output.
+
+A separate counterexample negates only `output.weight`. The two inspector
+reports agree after excluding the filename, including their prefix hashes.
+Native logits change by `0.7768616676` maximum absolute difference and become
+the exact negatives on that run. Their complete file hashes differ.
+This demonstrates the weight-identity gap in an executing runtime, not just
+a directory parser.
+
+[Recorded results, tolerances, run/source binding and full synthetic-file hashes](benchmark-results/native-gguf-reference.json).
+The synthetic writer reuses the test fixture serializer, mapping known Qwen2
+weights directly. It bypasses `export_gguf.py` and the native HF converter.
+The vocabulary is a synthetic byte alphabet; a Qwen2 pre-tokenizer label is
+not a tokenizer-semantics check when the driver consumes token IDs directly.
+
+Reproduce with the native build and test steps in
+[the bounded CPU workflow](https://github.com/jesusvilela/IGBundle-LLM/blob/main/.github/workflows/evidence.yml).
+`tests/test_tiny_gguf_runtime.py` requires the compiled driver through
+`IGBUNDLE_NATIVE_QWEN2_BINARY` and fails if it is unavailable.
+Fixtures are below one megabyte and generated in temporary directories.
+No historical weights, pretrained downloads, quantized kernels, adapter module
+or geometric/hypercomplex native operation is involved. The larger archived
+GGUFs still have directory-only evidence.
+
 Inventory visited 1,577 workspace directories while excluding dependencies, Git internals, reparse-point directories and duplicate audit checkouts. Vendored llama.cpp model folders were checked separately and contained tokenizer fixtures. Dataset pictures and UI/vendor graphics were not treated as scientific evidence. Only the nine selected PNGs above received visual review; this is not a certification of every image or document in the archive.
 
 No historical model payload, historical adapter pickle, full multi-gigabyte hash, pretrained-model inference, training job, or GPU workload was used. Tiny synthetic checkpoints and random-model CPU execution were checked on the hosted runner. No private cross-repository content was republished. The blockers to stronger claims remain exact checkpoint/runtime bindings, restoration of the actual historical companion, tested hypercomplex integration, and a resource-approved matched model experiment.

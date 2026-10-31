@@ -209,7 +209,29 @@
                 <a href="https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/export-image-audit.md#legacy-adapter-execution-checkpoint">Reproduced failure, exact hosted test scope and limits</a>.
             </p>
 
-            <h2>14. What a stronger test needs</h2>
+            <h2 id="native-gguf">14. Tiny native GGUF execution</h2>
+            <p>Two synthetic F32 Qwen2 files, with 17,136 and 35,296 parameters,
+                execute in pinned native llama.cpp on hosted CPU. They exercise
+                grouped-query attention, tied/untied output weights and supplied
+                token-ID sequences. Full/incremental logits match an independent
+                PyTorch reference at rtol=1e-4, atol=1e-5; the largest observed
+                absolute error was 1.79e-7, and all argmax IDs matched.
+            </p>
+            <p>Malformed Q/K tensor shapes fail both directory checks and native
+                loading. Negating only output weights instead leaves the
+                directory report unchanged except the filename, but changes native
+                logits by 0.77686. Complete file hashes differ: a prefix hash is
+                not a fingerprint of the executed model weights.
+                <a href="benchmark-results/native-gguf-reference.json">Recorded results and full synthetic-file hashes</a>.
+            </p>
+            <p>No archived exports, public converter, text tokenizer, quantized
+                kernels or geometric/hypercomplex adapter are exercised.
+                This is a tiny F32 runtime control, not learned geometry or a
+                task-performance result.
+                <a href="https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/export-image-audit.md#tiny-native-gguf-checkpoint">Exact configuration, source/run binding and exclusions</a>.
+            </p>
+
+            <h2>15. What a stronger test needs</h2>
             <p>
                 A causal evaluation should match parameter budget and layer placement; compare against a vanilla adapter under the same data, objective, optimizer budget, decoding, and hardware; isolate the geometric operator; use multiple seeds and fixed task splits; and publish exact checkpoint provenance with per-task outputs. Operator diagnostics should remain distinct from downstream outcomes.
             </p>

@@ -49,6 +49,12 @@
         </p>
 
         <section class="section" id="export-audit">
+            <p class="card-text"><strong>Tiny native GGUF check:</strong>
+                synthetic F32 Qwen2 logits match an independent PyTorch reference
+                within declared tolerance, while a payload change demonstrates
+                why directory hashes do not identify executed weights.
+                <a href="wiki.html#native-gguf">Native execution scope and numerical evidence</a>.
+            </p>
             <p class="card-text"><strong>Legacy execution repair:</strong>
                 multi-token coordinate smoothing now runs, with tiny nonzero-output,
                 gradient and strict module-state checks.

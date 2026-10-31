@@ -1,5 +1,6 @@
 import csv
 import json
+import math
 import shutil
 import sys
 import tempfile
@@ -23,6 +24,36 @@ class TestEvidence(unittest.TestCase):
         self.assertEqual(exact_mcnemar(0, 0), 1.0)
         self.assertEqual(exact_mcnemar(2, 0), 0.5)
         self.assertEqual(exact_mcnemar(3, 2), 1.0)
+
+    def test_native_gguf_recorded_witness(self):
+        path = ROOT / "docs" / "benchmark-results" / "native-gguf-reference.json"
+        record = json.loads(path.read_text(encoding="utf-8"))
+        self.assertEqual(record["protocol"], "native-qwen2-f32-v1")
+        cases = record["comparisons"]
+        self.assertEqual({(case["tied_output"], len(case["tokens"])) for case in cases},
+                         {(False, 4), (False, 6), (True, 4), (True, 6)})
+        self.assertEqual(len(cases), 4)
+        for case in cases:
+            self.assertEqual(case["logit_shape"], [len(case["tokens"]), 259])
+            self.assertEqual(len(case["argmax_ids"]), len(case["tokens"]))
+            self.assertLess(case["parameters"], record["acceptance"]["parameters_below"])
+            self.assertLess(case["file_bytes"], record["acceptance"]["fixture_bytes_below"])
+            for key in ("file_sha256", "directory_prefix_sha256"):
+                self.assertRegex(case[key], r"^[0-9a-f]{64}$")
+            for key in ("full_max_abs_error", "incremental_max_abs_error", "batch_max_abs_error"):
+                self.assertTrue(math.isfinite(case[key]) and 0 <= case[key] < record["acceptance"]["atol"])
+        counterexample = record["payload_counterexample"]
+        self.assertIs(counterexample["same_directory_report_except_filename"], True)
+        self.assertEqual(counterexample["original_file_sha256"], cases[0]["file_sha256"])
+        self.assertEqual(counterexample["directory_prefix_sha256"], cases[0]["directory_prefix_sha256"])
+        self.assertNotEqual(counterexample["original_file_sha256"], counterexample["modified_file_sha256"])
+        self.assertGreater(counterexample["max_abs_logit_change"],
+                           record["acceptance"]["payload_logit_change_above"])
+        self.assertEqual(counterexample["negation_max_abs_error"], 0)
+        self.assertEqual(len(record["malformed_shapes"]), 2)
+        for malformed in record["malformed_shapes"]:
+            self.assertEqual(malformed["inspector_status"], "failed")
+            self.assertEqual(malformed["native_exit_code"], 2)
 
     def test_tampered_pair_fails_closed(self):
         with tempfile.TemporaryDirectory() as directory:

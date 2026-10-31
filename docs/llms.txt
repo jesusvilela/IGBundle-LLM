@@ -19,6 +19,8 @@
 
 ## Pages
 
+Two synthetic F32 Qwen2 GGUFs (17,136 and 35,296 parameters) execute in pinned native llama.cpp on hosted CPU. Full/incremental logits match an independent PyTorch reference with maximum observed absolute error 1.79e-7; malformed Q/K shapes are rejected. Negating output weights preserves directory fingerprints while changing executed logits by 0.77686. Full synthetic-file hashes and tolerances are published in benchmark-results/native-gguf-reference.json. This does not execute the archived exports, public converter, text tokenizer, quantized kernels or any geometric/hypercomplex adapter.
+
 The separate legacy GeometricIGBundleAdapter has a repaired multi-token forward path, preserving its coordinate-smoothing formula rather than implementing parallel transport. Six hosted CPU tests check tiny identity/nonzero execution, gradients, causal prefixes and a strict module-state roundtrip. The forward path does not use its neural connection. Independent one-token smoothing lacks the previous-coordinate history needed for equivalence; cached generation, historical weights, default-loader support for this class, auxiliary losses and training remain unvalidated.
 
 The gguf-directory-v2 inspector checks dense scalar Qwen2 tensor names and dimensions against native llama.cpp 067b8d7af3f4775b1ad39470d1860696a8a7b3a3. Both surviving exports pass (339/339 and 290/290 shapes). Optional biases and tied output weights are explicit; ambiguous Q8_1 extents are rejected. No payloads were read. This is not tokenizer, native-loader, kernel, inference or geometric-execution certification.

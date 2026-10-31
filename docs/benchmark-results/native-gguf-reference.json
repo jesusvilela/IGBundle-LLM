@@ -1,0 +1,211 @@
+{
+  "protocol": "native-qwen2-f32-v1",
+  "scope": "Synthetic F32 native Qwen2 execution only; not archived weights, converter or geometric/hypercomplex integration.",
+  "provenance": {
+    "repository_revision": "98311edfda77f5779d025c7b7d35f1c1816863a9",
+    "native_revision": "067b8d7af3f4775b1ad39470d1860696a8a7b3a3",
+    "run_url": "https://github.com/jesusvilela/IGBundle-LLM/actions/runs/41180657529",
+    "recorded_date": "2026-10-31",
+    "torch": "2.6.0",
+    "transformers": "4.48.3",
+    "device": "CPU"
+  },
+  "configuration": {
+    "seed": 23,
+    "hidden_size": 32,
+    "intermediate_size": 64,
+    "query_heads": 4,
+    "head_dimension": 8,
+    "vocabulary_size": 259,
+    "context_length": 32,
+    "rms_norm_epsilon": 1e-06,
+    "rope_base": 10000.0,
+    "attention_bias_range": [
+      -0.03,
+      0.03
+    ],
+    "weight_and_kv_cache_dtype": "float32",
+    "reference_attention": "eager",
+    "native_flash_attention": false,
+    "gpu_offload": false,
+    "execution_threads": 1,
+    "native_build_workers": 2,
+    "untied_model": {
+      "layers": 2,
+      "kv_heads": 2
+    },
+    "tied_model": {
+      "layers": 1,
+      "kv_heads": 1
+    }
+  },
+  "acceptance": {
+    "rtol": 0.0001,
+    "atol": 1e-05,
+    "parameters_below": 100000,
+    "fixture_bytes_below": 1000000,
+    "all_argmax_ids_match": true,
+    "payload_logit_change_above": 0.001
+  },
+  "comparisons": [
+    {
+      "tied_output": false,
+      "parameters": 35296,
+      "file_bytes": 147168,
+      "file_sha256": "00217607a130384508c20fa1af7c3384208aec567d095ba7b749c0f1a6732580",
+      "directory_prefix_sha256": "495cdab63dfe7ddea8ed8084e2fe08c4c062ca95c57258fb362ba26ade54e6a8",
+      "tokens": [
+        0,
+        1,
+        2,
+        5
+      ],
+      "logit_shape": [
+        4,
+        259
+      ],
+      "full_max_abs_error": 8.940696716308594e-08,
+      "incremental_max_abs_error": 8.940696716308594e-08,
+      "batch_max_abs_error": 0.0,
+      "argmax_ids": [
+        78,
+        189,
+        191,
+        80
+      ]
+    },
+    {
+      "tied_output": false,
+      "parameters": 35296,
+      "file_bytes": 147168,
+      "file_sha256": "00217607a130384508c20fa1af7c3384208aec567d095ba7b749c0f1a6732580",
+      "directory_prefix_sha256": "495cdab63dfe7ddea8ed8084e2fe08c4c062ca95c57258fb362ba26ade54e6a8",
+      "tokens": [
+        11,
+        9,
+        8,
+        7,
+        6,
+        4
+      ],
+      "logit_shape": [
+        6,
+        259
+      ],
+      "full_max_abs_error": 8.940696716308594e-08,
+      "incremental_max_abs_error": 8.940696716308594e-08,
+      "batch_max_abs_error": 0.0,
+      "argmax_ids": [
+        231,
+        220,
+        182,
+        60,
+        20,
+        241
+      ]
+    },
+    {
+      "tied_output": true,
+      "parameters": 17136,
+      "file_bytes": 73792,
+      "file_sha256": "ba5d1caef2efb8c861b2e9b4de79fc68184307edffdeeb9ef4f924a4c635992f",
+      "directory_prefix_sha256": "a768fe3566a6b590dcd4cd6a7b7b20941cbf6c14e5f07225daa8f012fde361a8",
+      "tokens": [
+        0,
+        1,
+        2,
+        5
+      ],
+      "logit_shape": [
+        4,
+        259
+      ],
+      "full_max_abs_error": 1.7881393432617188e-07,
+      "incremental_max_abs_error": 1.7881393432617188e-07,
+      "batch_max_abs_error": 0.0,
+      "argmax_ids": [
+        0,
+        1,
+        2,
+        5
+      ]
+    },
+    {
+      "tied_output": true,
+      "parameters": 17136,
+      "file_bytes": 73792,
+      "file_sha256": "ba5d1caef2efb8c861b2e9b4de79fc68184307edffdeeb9ef4f924a4c635992f",
+      "directory_prefix_sha256": "a768fe3566a6b590dcd4cd6a7b7b20941cbf6c14e5f07225daa8f012fde361a8",
+      "tokens": [
+        11,
+        9,
+        8,
+        7,
+        6,
+        4
+      ],
+      "logit_shape": [
+        6,
+        259
+      ],
+      "full_max_abs_error": 1.7881393432617188e-07,
+      "incremental_max_abs_error": 1.7881393432617188e-07,
+      "batch_max_abs_error": 0.0,
+      "argmax_ids": [
+        11,
+        9,
+        8,
+        7,
+        6,
+        4
+      ]
+    }
+  ],
+  "malformed_shapes": [
+    {
+      "tensor": "blk.0.attn_q.weight",
+      "declared_ggml_shape": [
+        32,
+        31
+      ],
+      "required_ggml_shape": [
+        32,
+        32
+      ],
+      "inspector_status": "failed",
+      "native_exit_code": 2,
+      "native_error_contains": "tensor 'blk.0.attn_q.weight' has wrong shape"
+    },
+    {
+      "tensor": "blk.0.attn_k.weight",
+      "declared_ggml_shape": [
+        32,
+        15
+      ],
+      "required_ggml_shape": [
+        32,
+        16
+      ],
+      "inspector_status": "failed",
+      "native_exit_code": 2,
+      "native_error_contains": "tensor 'blk.0.attn_k.weight' has wrong shape"
+    }
+  ],
+  "payload_counterexample": {
+    "same_directory_report_except_filename": true,
+    "output_weight_negated": true,
+    "directory_prefix_sha256": "495cdab63dfe7ddea8ed8084e2fe08c4c062ca95c57258fb362ba26ade54e6a8",
+    "original_file_sha256": "00217607a130384508c20fa1af7c3384208aec567d095ba7b749c0f1a6732580",
+    "modified_file_sha256": "2f7b45c97f1d853e1b5061dd184cb5088a7dc15de04d80ad1f46f979166e75a9",
+    "max_abs_logit_change": 0.7768616676330566,
+    "negation_max_abs_error": 0.0
+  },
+  "limitations": [
+    "Direct synthetic tensor serialization bypasses the public exporter and HF converter.",
+    "The byte-alphabet vocabulary is initialized, but text tokenization is not exercised.",
+    "Inputs are supplied token IDs, not autoregressive sampled continuations or task benchmarks.",
+    "No archived payloads, pretrained weights, quantized kernels or adapters are executed.",
+    "Floating-point measurements and full fixture hashes describe the recorded environment, not every platform.",
+    "These checks do not establish learned geometry, hypercomplex integration or model benefit."
+  ]
+}

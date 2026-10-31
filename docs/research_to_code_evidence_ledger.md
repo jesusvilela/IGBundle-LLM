@@ -20,8 +20,18 @@ Research documents generate hypotheses; implementation and operator tests establ
 | Hyperbolic and hypercomplex are interchangeable | A metric and an algebra product are different structures; inspected source-name scans and runtime trace establish no hypercomplex integration. | Do not transfer claims between structures or from separate repositories. |
 | Length-preserving scaling certifies hyperbolic parallel transport | The archived scale-only map telescopes to identity on every closed loop; a prescribed K=-1 triangle requires nonzero rotation. Independent gyration, Lorentz transport and angle-defect checks agree. | Scaling alone is insufficient. The new opt-in transport reference is not a model or integrator certification. |
 | The legacy adapter's forward path performs parallel transport | Its intended coordinate blending formula needs no metric or connection. An unused rank-four metric construction caused multi-token failure; the repaired path passes tiny execution checks without calling either transport or connection methods. | Execution repaired, not geometric laws certified. Chunked smoothing needs previous-coordinate history. |
+| A GGUF directory fingerprint identifies the executed weights | Negating only the output weight in a tiny native-executed Qwen2 leaves its directory report unchanged except the filename, but changes logits by 0.77686. Complete file hashes differ. | Prefix fingerprints do not bind tensor values or model behavior. This counterexample does not load the archived exports. |
 
 ## Published data
+
+**Tiny native GGUF execution:** synthetic 17,136/35,296-parameter F32 Qwen2 files
+run in the pinned native library, with tied/untied outputs and grouped-query
+attention. Full/incremental logits match independent PyTorch results within
+declared tolerance (largest observed absolute error `1.79e-7`); malformed Q/K
+shapes are rejected. [Recorded results](benchmark-results/native-gguf-reference.json)
+and [runtime scope](export-image-audit.md#tiny-native-gguf-checkpoint).
+This is not archived-weight, converter, tokenizer, quantized-kernel or
+geometric/hypercomplex integration certification.
 
 **Legacy adapter execution:** six bounded CPU tests cover the repaired
 `GeometricIGBundleAdapter` forward, nonzero gradients/output, causal prefixes and

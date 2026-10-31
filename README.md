@@ -64,6 +64,7 @@ The historical value near -5.63 is not evidence of learned hyperbolicity. For `g
 | Default `IGBundleAdapter` / Poincare affinity | Radial projection, analytic origin distances, exact zero diagonal, symmetry, sampled triangle inequalities, finite/checked gradients, float32/bfloat16 small-tensor forward/backward, identity initialization | Trained-model quality, learned geometry, or all possible numerical inputs |
 | `arc_eval.py`, HF and GGUF ARC runners | Shared deterministic selection, strict grid equality, all test pairs, errors retained and run invalidated, explicit empty-run rejection, output overwrite protection | Backend model loading or restoration of separate runtime adapter weights; no new model evaluation was run |
 | Historical evidence | Recomputed NLL means and paired statistics; October accuracies, indices and McNemar tests; source hashes and first-pair ARC rescoring | Independent grading, dataset non-contamination, or complete reproduction from a fresh clone |
+| Synthetic F32 Qwen2 GGUFs | Native full/incremental logits compared with PyTorch, tied/untied output weights, grouped-query attention and malformed-shape rejection | Not the archived exports, tokenizer semantics, quantized kernels, public converter or geometric/hypercomplex integration |
 | Legacy `GeometricIGBundleAdapter` forward | Tiny identity/nonzero execution, gradients, causal prefixes and strict module-state roundtrip; repaired multi-token coordinate smoothing | No connection is used by this forward path. Not parallel transport, cached generation, historical checkpoint restoration or a supported training pipeline. |
 | Legacy `geometry/riemannian.py`, training and experimental geometry modules | **Outside the validated geometric core** | The metric is position-independent while connection coefficients come from an unrelated network; these do not establish Levi-Civita geometry, categorical laws, or sheaf laws. The legacy `train.py` entry point also contains an incomplete trainer block and is not a supported training command. |
 
@@ -135,7 +136,11 @@ python -m unittest discover -b -s tests -p test_legacy_geometric_adapter.py
 
 Use `CUDA_VISIBLE_DEVICES=""`, `OMP_NUM_THREADS=1`, `MKL_NUM_THREADS=1`, and `OPENBLAS_NUM_THREADS=1` to bound local resources. None of these commands loads a model, downloads data, or runs LLM training. Do not use blanket test discovery as a lightweight check: the legacy `test_pipeline.py` invokes the unsupported model-training entry point.
 
-The [CPU evidence workflow](.github/workflows/evidence.yml) runs only this bounded suite. Its green result means these contracts passed, not that the whole experimental repository or its scientific claims are certified.
+The [CPU evidence workflow](.github/workflows/evidence.yml) runs bounded arithmetic,
+operator, tiny HF and synthetic native-GGUF checks. The latter also compiles the
+pinned native dependency with two hosted CPU workers; it is not a lightweight
+local command. A green result means these contracts passed, not that the whole
+experimental repository or its scientific claims are certified.
 
 ### Fail-closed adapter restoration
 
@@ -215,7 +220,8 @@ It reserves fresh `<output>_hf` and `<output>.gguf` destinations; failures retai
 partial files and a retry must use a fresh prefix. The converter must support
 the HF-directory, `--outfile`, and `--outtype f16` interface and writing the
 reserved GGUF destination. Local preflight and mocked orchestration are checked;
-real model merge, converter compatibility and GGUF inference remain unverified.
+real model merge, converter compatibility and inference from this exporter remain
+unverified. The separate synthetic native check below bypasses this exporter.
 For declared Qwen2 output, the bounded directory name/shape profile must also
 pass. Other architectures receive generic extent checks, not this shape profile.
 
@@ -305,6 +311,27 @@ It does not extend the default-adapter checkpoint loader to this legacy class,
 certify historical weights, or validate cached generation, auxiliary losses or
 general numerical stability.
 [Regression, exact test scope and limits](docs/export-image-audit.md#legacy-adapter-execution-checkpoint).
+
+### Tiny native GGUF execution
+
+Two synthetic F32 Qwen2 files, with 17,136 and 35,296 parameters, now execute in
+the pinned native llama.cpp runtime on hosted CPU. Supplied token-ID sequences
+exercise grouped-query attention, tied/untied output weights and full/incremental
+logits. Against an independent PyTorch/Transformers computation, the largest
+observed absolute difference was `1.79e-7`; all argmax IDs matched.
+The acceptance tolerances are `rtol=1e-4, atol=1e-5`.
+
+Malformed Q/K tensor shapes are rejected by both the directory inspector and
+the native loader. Conversely, negating only output weights leaves the directory
+report unchanged except the filename, but changes native logits by `0.77686`.
+**A directory fingerprint is not an executed-weight fingerprint.**
+[Recorded results and complete synthetic-file hashes](docs/benchmark-results/native-gguf-reference.json)
+and [exact scope](docs/export-image-audit.md#tiny-native-gguf-checkpoint).
+
+This is a small F32 runtime control, not execution of the surviving archived
+exports, the public converter, text tokenization or quantized kernels.
+No adapter is installed; geometric/hypercomplex integration, learned geometry
+and task benefit remain unestablished.
 
 ## Research standard
 
