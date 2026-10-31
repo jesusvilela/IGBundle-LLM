@@ -28,7 +28,7 @@ from .kl import kl_diag_gauss, kl_categorical_logits
 @dataclass
 class GeometricState:
     """
-    Enhanced state representation with proper geometric structure.
+    Legacy tensor state; geometric field names do not certify mathematical laws.
 
     Attributes:
         mixture_state: Original mixture representation
@@ -114,7 +114,7 @@ class GeometricIGBundleAdapter(nn.Module):
 
     def forward(self, x: torch.Tensor, context: Optional[torch.Tensor] = None) -> Tuple[torch.Tensor, GeometricState]:
         """
-        Forward pass with geometrically rigorous operations.
+        Execute legacy neural updates and coordinate smoothing.
 
         Args:
             x: (B, T, H) - input hidden states
@@ -148,21 +148,21 @@ class GeometricIGBundleAdapter(nn.Module):
 
         # 5. Apply geometric transformations
 
-        # 5a. Lambda calculus operations on fiber bundle sections
+        # 5a. Neural section mixing
         transformed_sections = self._apply_lambda_operations(lambda_terms, fiber_sections)
 
-        # 5b. Parallel transport for geometric consistency
-        transported_coords = self._parallel_transport_update(base_coords, metric)
+        # 5b. Coordinate smoothing, not parallel transport
+        smoothed_coords = self._coordinate_smoothing_update(base_coords)
 
-        # 5c. Information-geometric updates using natural gradients
+        # 5c. Diagonal-metric-scaled neural updates
         updated_coords, updated_sections = self._information_geometric_update(
-            transported_coords, transformed_sections, metric
+            smoothed_coords, transformed_sections, metric
         )
 
         # 6. Aggregate across components using Riemannian structure
         weights = F.softmax(w_logits, dim=-1)  # (B, T, P)
 
-        # Weighted geometric mean on manifold
+        # Legacy Euclidean averaging
         aggregated_coords = self._riemannian_weighted_mean(updated_coords, weights, metric)
         aggregated_sections = torch.einsum('btp,btpk->btk', weights, updated_sections)
 
@@ -184,7 +184,7 @@ class GeometricIGBundleAdapter(nn.Module):
 
     def _apply_lambda_operations(self, lambda_terms: torch.Tensor,
                                 fiber_sections: torch.Tensor) -> torch.Tensor:
-        """Apply lambda calculus operations in the fiber bundle context."""
+        """Mix learned section encodings; no lambda-calculus laws are enforced."""
         B, T, P, _ = lambda_terms.shape
 
         transformed_sections = fiber_sections.clone()
@@ -205,46 +205,20 @@ class GeometricIGBundleAdapter(nn.Module):
 
         return transformed_sections
 
-    def _parallel_transport_update(self, base_coords: torch.Tensor,
-                                  metric: RiemannianMetric) -> torch.Tensor:
-        """Apply parallel transport to maintain geometric consistency."""
-        B, T, P, D = base_coords.shape
+    def _coordinate_smoothing_update(self, base_coords: torch.Tensor) -> torch.Tensor:
+        """Blend each coordinate with its predecessor, using no metric/connection.
 
-        if T <= 1:
+        A chunk boundary needs the previous unsmoothed coordinate to reproduce a
+        full-sequence call. This stateless helper does not maintain that history.
+        """
+        if base_coords.shape[1] <= 1:
             return base_coords
-
-        transported_coords = base_coords.clone()
-
-        # Transport coordinates along sequence dimension
-        for t in range(1, T):
-            prev_coords = base_coords[:, t-1, :, :]  # (B, P, D)
-            curr_coords = base_coords[:, t, :, :]    # (B, P, D)
-
-            # Create simple path (linear interpolation)
-            path = torch.stack([prev_coords, curr_coords], dim=-2)  # (B, P, 2, D)
-
-            # Identity "vector" to transport (could be enhanced)
-            identity_vec = torch.zeros_like(prev_coords)
-
-            # Apply parallel transport
-            # Note: This is a simplified version - full implementation would
-            # transport the actual geometric objects
-            for p in range(P):
-                path_p = path[:, p, :, :]  # (B, 2, D)
-
-                # Extract metric for this component
-                metric_p = RiemannianMetric(metric.metric_tensor[:, t-1, p:p+1, :, :])
-
-                # Would apply full parallel transport here
-                # For now, apply small geometric correction
-                correction = 0.1 * (curr_coords[:, p, :] - prev_coords[:, p, :])
-                transported_coords[:, t, p, :] = curr_coords[:, p, :] - correction
-
-        return transported_coords
+        current, previous = base_coords[:, 1:], base_coords[:, :-1]
+        return torch.cat((base_coords[:, :1], current - .1 * (current - previous)), dim=1)
 
     def _information_geometric_update(self, coords: torch.Tensor, sections: torch.Tensor,
                                     metric: RiemannianMetric) -> Tuple[torch.Tensor, torch.Tensor]:
-        """Apply information-geometric updates using natural gradients."""
+        """Apply diagonal metric scaling to learned coordinate updates."""
         B, T, P, D = coords.shape
 
         # Combine coordinates and sections for joint processing
@@ -273,7 +247,7 @@ class GeometricIGBundleAdapter(nn.Module):
 
     def _riemannian_weighted_mean(self, coords: torch.Tensor, weights: torch.Tensor,
                                  metric: RiemannianMetric) -> torch.Tensor:
-        """Compute Riemannian weighted mean (Frechet mean) of coordinates."""
+        """Euclidean weighted averaging with the historical refinement steps."""
         B, T, P, D = coords.shape
 
         # Initialize with Euclidean weighted mean
