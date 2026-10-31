@@ -5,7 +5,7 @@
 [![License: All Rights Reserved](https://img.shields.io/badge/License-All_Rights_Reserved-red.svg)](LICENSE)
 ![Status: Experimental Research](https://img.shields.io/badge/Status-Experimental%20Research-purple.svg)
 
-> **Evidence status (30 October 2026):** The geometric inductive-bias idea remains an open research hypothesis, but the available experiments do **not** establish a general task-performance advantage, learned hyperbolicity, or training/inference efficiency gains. Previously advertised accuracy, “MFR,” ablation, and efficiency claims are retracted. Recorded-result arithmetic is reproducible offline; historical model runs and graders have not been independently reproduced. See the [correction notice](docs/correction-notice.md), [evidence ledger](docs/research_to_code_evidence_ledger.md), and [verification output](docs/benchmark-results/verification.json).
+> **Evidence status (31 October 2026):** The geometric inductive-bias idea remains an open research hypothesis, but the available experiments do **not** establish a general task-performance advantage, learned hyperbolicity, or training/inference efficiency gains. Previously advertised accuracy, “MFR,” ablation, and efficiency claims are retracted. Recorded-result arithmetic is reproducible offline; historical model runs and graders have not been independently reproduced. See the [correction notice](docs/correction-notice.md), [evidence ledger](docs/research_to_code_evidence_ledger.md), and [verification output](docs/benchmark-results/verification.json).
 
 ## Research design
 
@@ -71,6 +71,14 @@ The Poincare affinity correction changes historical numerics; old checkpoint sco
 ## Expanded archive audit: GGUFs and images
 
 Two surviving model GGUFs were inspected without reading tensor payloads: the cp600-named Q8_0 export contains **339 ordinary Qwen2 tensors**; the 0.5B F16 export contains **290**. Their packaged fast path does not load the separate geometric adapter. These files are distinct from the October cp300 benchmark artifacts. Prefix fingerprints identify the inspected headers, **not the full checkpoints**.
+
+The directory audit now checks **339/339 and 290/290 tensor shapes**, not only
+names and byte extents, against a pinned native llama.cpp dense-Qwen2 profile.
+Grouped-query attention, feed-forward and vocabulary dimensions agree.
+Optional biases and tied output embeddings are handled explicitly.
+The exporter rejects failed Qwen2 layout checks; ambiguous Q8_1 extents are
+rejected rather than guessed. This is not native-loader, tokenizer, tensor-value
+or inference certification. [Profile and source revision](docs/export-image-audit.md#qwen2-directory-shape-contract).
 
 Nine research images were reviewed against their generators. The thesis loss, affinity and spectrum plots are synthetic and now labeled inside the public PNGs. An archived “negative curvature” drawing actually depicts a positive-curvature paraboloid; prescribed layouts and simulated convergence curves are not learned-geometry results.
 
@@ -206,6 +214,8 @@ partial files and a retry must use a fresh prefix. The converter must support
 the HF-directory, `--outfile`, and `--outtype f16` interface and writing the
 reserved GGUF destination. Local preflight and mocked orchestration are checked;
 real model merge, converter compatibility and GGUF inference remain unverified.
+For declared Qwen2 output, the bounded directory name/shape profile must also
+pass. Other architectures receive generic extent checks, not this shape profile.
 
 ### Exact hypercomplex reference
 

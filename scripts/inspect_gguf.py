@@ -19,7 +19,7 @@ TYPES = {
     0: ("F32", 1, 4), 1: ("F16", 1, 2),
     2: ("Q4_0", 32, 18), 3: ("Q4_1", 32, 20),
     6: ("Q5_0", 32, 22), 7: ("Q5_1", 32, 24),
-    8: ("Q8_0", 32, 34), 9: ("Q8_1", 32, 40),
+    8: ("Q8_0", 32, 34),
     10: ("Q2_K", 256, 84), 11: ("Q3_K", 256, 110),
     12: ("Q4_K", 256, 144), 13: ("Q5_K", 256, 176),
     14: ("Q6_K", 256, 210), 15: ("Q8_K", 256, 292),
@@ -31,7 +31,16 @@ SELECTED = {
     "qwen2.block_count", "qwen2.embedding_length", "qwen2.context_length",
     "qwen2.feed_forward_length", "qwen2.attention.head_count",
     "qwen2.attention.head_count_kv",
+    "qwen2.vocab_size", "qwen2.attention.key_length",
+    "qwen2.attention.value_length", "qwen2.rope.dimension_count",
 }
+QWEN2_REFERENCE = "067b8d7af3f4775b1ad39470d1860696a8a7b3a3"
+QWEN2_REQUIRED = (
+    "attn_norm.weight", "attn_q.weight", "attn_k.weight", "attn_v.weight",
+    "attn_output.weight", "ffn_norm.weight", "ffn_gate.weight",
+    "ffn_up.weight", "ffn_down.weight",
+)
+QWEN2_OPTIONAL = ("attn_q.bias", "attn_k.bias", "attn_v.bias")
 MARKERS = re.compile(
     r"igbundle|adapter|poincare|hyperbol|hypercomplex|quaternion|octonion|"
     r"cayley|clifford|metric_chol|hamilton|sheaf|fiber", re.IGNORECASE
@@ -74,7 +83,9 @@ class Reader:
             raise DirectoryError("Invalid UTF-8 in GGUF string") from error
         return text if retain else None
 
-    def value(self, kind, retain=False):
+    def value(self, kind, retain=False, *, array_info=False):
+        if array_info and kind != 9:
+            raise DirectoryError("Expected tokenizer token array")
         if kind == 7:
             value = self.number("B")
             if value not in (0, 1):
@@ -95,8 +106,101 @@ class Reader:
                 raise DirectoryError("Expected scalar metadata, got array")
             for _ in range(count):
                 self.value(subtype)
-            return None
+            return {"element_type": subtype, "count": count} if array_info else None
         raise DirectoryError(f"Unknown GGUF metadata type {kind}")
+
+
+def qwen2_layout(metadata, tensors, tokens):
+    """Check a scalar dense-Qwen2 profile, not tokenizer semantics or execution."""
+    blocks = metadata.get("qwen2.block_count")
+    if type(blocks) is not int or not 1 <= blocks <= 4096:
+        raise DirectoryError("Invalid qwen2 block count")
+    names = {row["name"] for row in tensors}
+    required = {"token_embd.weight", "output_norm.weight"} | {
+        f"blk.{i}.{suffix}" for i in range(blocks) for suffix in QWEN2_REQUIRED}
+    optional = {"output.weight", "output.bias"} | {
+        f"blk.{i}.{suffix}" for i in range(blocks) for suffix in QWEN2_OPTIONAL}
+    name_check = {
+        "missing": sorted(required - names),
+        "extra": sorted(names - required - optional),
+        "optional_missing": sorted(optional - names),
+        "output_weight_present": "output.weight" in names,
+        "scope": "Names only; not shape, checkpoint identity, or runtime validation",
+    }
+    errors = []
+    if name_check["missing"]:
+        errors.append("Missing required tensors")
+    if name_check["extra"]:
+        errors.append("Tensors outside the supported dense-Qwen2 profile")
+
+    def positive(key, default=None):
+        value = metadata.get(key, default)
+        if type(value) is not int or value <= 0:
+            errors.append(f"{key}: expected a positive integer")
+            return None
+        return value
+
+    width = positive("qwen2.embedding_length")
+    feed_forward = positive("qwen2.feed_forward_length")
+    heads = positive("qwen2.attention.head_count")
+    kv_heads = positive("qwen2.attention.head_count_kv", heads)
+    if tokens is not None and tokens["element_type"] != 8:
+        errors.append("tokenizer.ggml.tokens must be an array of strings")
+    token_count = tokens["count"] if tokens is not None else None
+    vocab = positive("qwen2.vocab_size", token_count)
+    if token_count is not None and vocab is not None and token_count != vocab:
+        errors.append("Vocabulary size disagrees with tokenizer token count")
+    head_dim = None
+    if width is not None and heads is not None:
+        if width % heads:
+            errors.append("Embedding length must be divisible by attention head count")
+        else:
+            head_dim = width // heads
+    if heads is not None and kv_heads is not None and heads % kv_heads:
+        errors.append("Attention head count must be divisible by KV head count")
+    for key in ("qwen2.attention.key_length", "qwen2.attention.value_length",
+                "qwen2.rope.dimension_count"):
+        if key in metadata and positive(key) != head_dim:
+            errors.append(f"{key}: outside the standard head-dimension profile")
+
+    dimensions = {
+        "embedding": width, "feed_forward": feed_forward, "heads": heads,
+        "kv_heads": kv_heads, "head_dimension": head_dim, "vocabulary": vocab,
+    }
+    checked = 0
+    mismatches = []
+    if all(value is not None for value in dimensions.values()):
+        kv_width = head_dim * kv_heads
+        expected = {
+            "token_embd.weight": [width, vocab], "output.weight": [width, vocab],
+            "output_norm.weight": [width], "output.bias": [vocab],
+        }
+        per_block = {
+            "attn_norm.weight": [width], "attn_q.weight": [width, width],
+            "attn_k.weight": [width, kv_width], "attn_v.weight": [width, kv_width],
+            "attn_output.weight": [width, width], "attn_q.bias": [width],
+            "attn_k.bias": [kv_width], "attn_v.bias": [kv_width],
+            "ffn_norm.weight": [width], "ffn_gate.weight": [width, feed_forward],
+            "ffn_up.weight": [width, feed_forward], "ffn_down.weight": [feed_forward, width],
+        }
+        expected.update({f"blk.{i}.{suffix}": shape for i in range(blocks)
+                         for suffix, shape in per_block.items()})
+        for tensor in tensors:
+            shape = expected.get(tensor["name"])
+            if shape is not None:
+                checked += 1
+                if tensor["shape"] != shape:
+                    mismatches.append({"name": tensor["name"], "actual": tensor["shape"],
+                                       "expected": shape})
+        if mismatches:
+            errors.append("Tensor shapes disagree with declared architecture")
+    return name_check, {
+        "profile": "qwen2-dense-scalar-v1", "reference_commit": QWEN2_REFERENCE,
+        "status": "failed" if errors else "passed",
+        "dimensions": dimensions, "checked_tensors": checked,
+        "shape_mismatches": mismatches, "errors": errors,
+        "scope": "Names and dimensions only; not token contents, tensor values, kernel support or inference",
+    }
 
 
 def inspect(path, budget=HEADER_BUDGET):
@@ -115,15 +219,18 @@ def inspect(path, budget=HEADER_BUDGET):
         count, kv_count = reader.number("Q"), reader.number("Q")
         if count > 100_000 or kv_count > 4096:
             raise DirectoryError("GGUF count limit exceeded")
-        metadata, keys = {}, set()
+        metadata, keys, tokens = {}, set(), None
         for _ in range(kv_count):
             key = reader.string()
             if key in keys:
                 raise DirectoryError(f"Duplicate metadata key: {key}")
             keys.add(key)
-            value = reader.value(reader.number("I"), key in SELECTED)
+            value = reader.value(reader.number("I"), key in SELECTED,
+                                 array_info=key == "tokenizer.ggml.tokens")
             if key in SELECTED:
                 metadata[key] = value
+            if key == "tokenizer.ggml.tokens":
+                tokens = value
         alignment = metadata.get("general.alignment", 32)
         if type(alignment) is not int or not 1 <= alignment <= 4096 or alignment & (alignment - 1):
             raise DirectoryError("Invalid GGUF alignment")
@@ -137,6 +244,8 @@ def inspect(path, budget=HEADER_BUDGET):
             kind, offset = reader.number("I"), reader.number("Q")
             if any(d == 0 for d in shape) or offset % alignment:
                 raise DirectoryError("Zero tensor dimension or unaligned offset")
+            if kind == 9:
+                raise DirectoryError("Q8_1 layout is not certified: native and Python block sizes disagree")
             if kind not in TYPES:
                 raise DirectoryError(f"Unsupported GGML tensor type {kind}; no extent certification")
             type_name, block, size = TYPES[kind]
@@ -161,25 +270,11 @@ def inspect(path, budget=HEADER_BUDGET):
         if (before.st_size, before.st_mtime_ns) != (after.st_size, after.st_mtime_ns):
             raise DirectoryError("GGUF changed during inspection")
 
-    standard_names = None
+    standard_names, shape_check = None, None
     if metadata.get("general.architecture") == "qwen2":
-        blocks = metadata.get("qwen2.block_count")
-        if type(blocks) is not int or not 1 <= blocks <= 4096:
-            raise DirectoryError("Invalid qwen2 block count")
-        suffixes = ("attn_norm.weight", "attn_q.weight", "attn_q.bias",
-                    "attn_k.weight", "attn_k.bias", "attn_v.weight", "attn_v.bias",
-                    "attn_output.weight", "ffn_norm.weight", "ffn_gate.weight",
-                    "ffn_up.weight", "ffn_down.weight")
-        required = {"token_embd.weight", "output_norm.weight"} | {
-            f"blk.{i}.{suffix}" for i in range(blocks) for suffix in suffixes}
-        standard_names = {
-            "missing": sorted(required - names),
-            "extra": sorted(names - required - {"output.weight"}),
-            "output_weight_present": "output.weight" in names,
-            "scope": "Names only; not shape, checkpoint identity, or runtime validation",
-        }
+        standard_names, shape_check = qwen2_layout(metadata, tensors, tokens)
     return {
-        "protocol": "gguf-directory-v1", "file_name": path.name,
+        "protocol": "gguf-directory-v2", "file_name": path.name,
         "file_bytes": before.st_size, "gguf_version": version,
         "metadata": metadata, "metadata_keys": sorted(keys),
         "tensor_count": count, "type_counts": dict(sorted(Counter(t["type"] for t in tensors).items())),
@@ -189,7 +284,8 @@ def inspect(path, budget=HEADER_BUDGET):
         "marker_pattern": MARKERS.pattern,
         "marker_tensor_names": sorted(name for name in names if MARKERS.search(name)),
         "marker_metadata_keys": sorted(key for key in keys if MARKERS.search(key)),
-        "qwen2_standard_names": standard_names, "tensors": tensors,
+        "tokenizer_tokens": tokens, "qwen2_standard_names": standard_names,
+        "qwen2_shape_check": shape_check, "tensors": tensors,
         "limitations": [
             "Prefix SHA256 excludes all weights and cannot identify the full checkpoint.",
             "Names and dimensions do not establish learned geometry or hypercomplex algebra.",

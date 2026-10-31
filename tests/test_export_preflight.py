@@ -9,7 +9,7 @@ from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import export_gguf
-from test_gguf_inspection import fixture
+from test_gguf_inspection import fixture, qwen_fixture
 
 
 class ExportPreflightTests(unittest.TestCase):
@@ -143,6 +143,34 @@ class ExportPreflightTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 export_gguf.export_to_gguf_ready(
                     "example/base", self.root, self.output, **self.kwargs)
+
+    def test_qwen_shape_mismatch_is_not_export_success(self):
+        *_, modules = self.fake_backends()
+        malformed = qwen_fixture(tensor_shapes={"blk.0.attn_q.weight": [4, 3]})[0]
+
+        def convert(command, **kwargs):
+            Path(command[command.index("--outfile") + 1]).write_bytes(malformed)
+
+        with patch.dict(sys.modules, modules), patch.object(export_gguf.subprocess, "run", side_effect=convert):
+            with self.assertRaisesRegex(ValueError, "Converter Qwen2 layout failed"):
+                export_gguf.export_to_gguf_ready(
+                    "example/base", self.root, self.output, **self.kwargs)
+        self.assertEqual(Path(f"{self.output}.gguf").read_bytes(), malformed)
+
+    def test_qwen_shape_success_is_reported_without_runtime_claim(self):
+        *_, modules = self.fake_backends()
+        valid = qwen_fixture()[0]
+
+        def convert(command, **kwargs):
+            Path(command[command.index("--outfile") + 1]).write_bytes(valid)
+
+        with patch.dict(sys.modules, modules), patch.object(export_gguf.subprocess, "run", side_effect=convert):
+            result = export_gguf.export_to_gguf_ready(
+                "example/base", self.root, self.output, **self.kwargs)
+        check = result["directory_inspection"]["qwen2_shape_check"]
+        self.assertEqual(check["status"], "passed")
+        self.assertEqual(check["checked_tensors"], 11)
+        self.assertFalse(result["runtime_geometric_adapter_exported"])
 
 
 if __name__ == "__main__":

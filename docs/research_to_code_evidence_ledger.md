@@ -22,6 +22,14 @@ Research documents generate hypotheses; implementation and operator tests establ
 
 ## Published data
 
+**Qwen2 layout contract:** the two inspected GGUF directories pass 339/339 and
+290/290 shape checks against the pinned native dense-scalar profile. Optional
+biases and output tying are explicit; malformed Qwen2 output is rejected by the
+exporter and ambiguous Q8_1 extents are not certified.
+[Profile, source revision and exclusions](export-image-audit.md#qwen2-directory-shape-contract).
+This adds structural evidence, not tensor-value, native-loader or geometric
+runtime certification; prefix hashes still exclude all weights.
+
 **Hyperbolic transport:** a small opt-in reference provides full gyration and
 dual cotangent transport. The fixed loop rotates by -0.238857852 radians,
 where the archived scale-only formula returns zero.

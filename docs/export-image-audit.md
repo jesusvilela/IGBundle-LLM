@@ -1,6 +1,6 @@
 # GGUF exports, research images, and the geometry boundary
 
-**Inspection: 30 October 2026.** This extends the evidence audit beyond the public README into the local research archive. It establishes properties of the inspected files and generators, not a new model benchmark. The archive's active research checkout was left unchanged.
+**Initial inspection: 30 October 2026; Qwen2 shape-contract rescan: 31 October 2026.** This extends the evidence audit beyond the public README into the local research archive. It establishes properties of the inspected files and generators, not a new model benchmark. The archive's active research checkout was left unchanged.
 
 ## What survives in the two inspected GGUFs
 
@@ -14,6 +14,75 @@ Both use GGUF v3. Their names match the expected ordinary Qwen2 tensor-name sets
 The inspector read **5,953,216 + 5,947,510 bytes** of metadata and tensor directories, and **zero tensor-payload bytes**. [cp600-named directory](benchmark-results/gguf-dist-directory.json) · [0.5B directory](benchmark-results/gguf-arc-directory.json). Each report includes every tensor descriptor and a SHA256 of the precise prefix read. **These are not full-model checksums.** Weights with identical headers can differ.
 
 These are not the October cp300 Q4_K_M benchmark artifacts. A metadata name is not immutable checkpoint provenance. Ordinary weights may retain effects of LoRA or other training; the absence of extra names neither disproves such effects nor proves geometry is executed at inference.
+
+### Qwen2 directory shape contract
+
+Protocol `gguf-directory-v2` adds the deliberately restricted
+`qwen2-dense-scalar-v1` profile. It uses the native tensor declarations in
+[llama.cpp 067b8d7](https://github.com/ggml-org/llama.cpp/commit/067b8d7af3f4775b1ad39470d1860696a8a7b3a3),
+not filenames or guessed model labels:
+
+- [Native tensor names, dimensions and optional tensors](https://github.com/ggml-org/llama.cpp/blob/067b8d7af3f4775b1ad39470d1860696a8a7b3a3/src/llama-model.cpp#L3565-L3602).
+- [Head-count, head-dimension and vocabulary defaults](https://github.com/ggml-org/llama.cpp/blob/067b8d7af3f4775b1ad39470d1860696a8a7b3a3/src/llama-model.cpp#L563-L627).
+- [Qwen2 graph head/RoPE constraints](https://github.com/ggml-org/llama.cpp/blob/067b8d7af3f4775b1ad39470d1860696a8a7b3a3/src/models/qwen2.cpp#L3-L7).
+
+The rescan reproduced both previous prefix hashes and read the same total
+11,900,726 bytes, with zero payload reads. Every listed tensor passed:
+
+| Export | Tensors checked | Width / FFN | Query heads / KV heads | Head dimension | Vocabulary count |
+|---|---:|---|---|---:|---:|
+| cp600-named Q8_0 | 339 / 339 | 3584 / 18944 | 28 / 4 | 128 | 152064 |
+| 0.5B F16 | 290 / 290 | 896 / 4864 | 14 / 2 | 64 | 151936 |
+
+For width `E`, feed-forward width `F`, head count `H`, KV-head count `Hkv`
+and vocabulary `V`, the profile requires `E % H == 0`, `H % Hkv == 0`,
+and derives `D = E/H`. Shapes below use **GGML dimension order**, not
+PyTorch's printed matrix shape:
+
+```text
+token_embd, output: [E, V]       output_norm: [E]
+attn_q, attn_output: [E, E]     attn_k, attn_v: [E, D*Hkv]
+ffn_gate, ffn_up: [E, F]        ffn_down: [F, E]
+attn_norm, ffn_norm: [E]
+q bias: [E]                    k/v bias: [D*Hkv]
+output bias: [V]
+```
+
+Q/K/V biases, `output.weight` and `output.bias` are optional in the pinned
+native loader. The previous name-only checker incorrectly required all Q/K/V
+biases; the updated checker records absent optional tensors separately.
+An absent output weight is compatible with native input/output weight tying,
+not evidence of a corrupt or incomplete export.
+Missing KV-head count defaults to query-head count. Vocabulary comes from
+explicit `qwen2.vocab_size` or the tokenizer token-array length; when both
+exist they must agree. Only count/type are retained, not token strings.
+Present key/value/RoPE dimensions must equal `D` within this profile.
+
+Unsupported per-layer dimension arrays and malformed scalar fields fail
+explicitly. Missing/extra names, inconsistent dimensions and tensor shape
+mismatches produce `qwen2_shape_check.status="failed"` with details.
+The inspection CLI emits that diagnostic report; the public exporter rejects
+such a result rather than treating it as successful Qwen2 output.
+Non-Qwen2 architectures have `qwen2_shape_check=null`, not a Qwen2 pass.
+
+The same source revision defines Q8_1 as 36 bytes per 32 values in
+[native code](https://github.com/ggml-org/llama.cpp/blob/067b8d7af3f4775b1ad39470d1860696a8a7b3a3/ggml/src/ggml-common.h#L225-L237),
+but its [Python size table](https://github.com/ggml-org/llama.cpp/blob/067b8d7af3f4775b1ad39470d1860696a8a7b3a3/gguf-py/gguf/constants.py#L3632)
+says 40 bytes. The inspector now rejects GGML type 9 instead of certifying an
+extent from an ambiguous table. Neither inspected export contains Q8_1.
+
+Synthetic fixtures check wrong shapes despite valid names and extents,
+optional/tied tensors, grouped-query and vocabulary inconsistencies, invalid
+scalar/array metadata, Q8_1 rejection, and a read guard against crossing the
+directory boundary. A payload-only mutation leaves the report unchanged,
+demonstrating why these hashes cannot identify weights. Published shape
+reports are recomputed from their bundled descriptors in CI; that is not a
+fresh inspection of the archived model files.
+
+This profile does not validate all native metadata requirements, tokenizer
+contents or IDs, quantization kernel support, tensor values, converter
+equivalence, native loading, inference or learned geometry. It is a structural
+check for dense scalar Qwen2, not a universal GGUF conformance certificate.
 
 ### Export/runtime trace
 
@@ -36,11 +105,12 @@ omitted. `--dry-run` performs only the stdlib preflight; it creates no outputs a
 imports no model backend. Execution reserves fresh output paths, uses PEFT safe
 merge, and runs the supplied converter with explicit arguments. Conversion errors
 propagate; partial outputs are retained, not silently deleted or reused.
-Successful conversion must also pass the existing bounded GGUF directory
-inspection and contain tensors. This checks structure and extents, not tensor
+Successful conversion must also pass the bounded GGUF directory
+inspection, contain tensors, and pass the Qwen2 name/shape profile when the
+declared architecture is Qwen2. This checks structure and extents, not tensor
 values, checkpoint identity, numerical equivalence or runtime behavior.
 
-Nine dependency-free tests use fake model APIs and tiny synthetic GGUF data.
+Eleven dependency-free exporter tests use fake model APIs and tiny synthetic GGUF data.
 They establish preflight, argument wiring, failure propagation and output guards.
 No actual PEFT model was merged and no external converter or model runtime was
 validated. The archived packaged runner remains unchanged and uncertified.

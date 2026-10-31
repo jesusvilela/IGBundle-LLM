@@ -91,6 +91,9 @@ def export_to_gguf_ready(base_model_id, checkpoint_path, output_dir, *,
     directory = inspect(plan["gguf"])
     if directory["tensor_count"] == 0:
         raise ValueError("Converter output has no tensors")
+    shape_check = directory["qwen2_shape_check"]
+    if shape_check is not None and shape_check["status"] != "passed":
+        raise ValueError(f"Converter Qwen2 layout failed: {shape_check['errors']}")
     plan["directory_inspection"] = directory
     print(f"LoRA-only export produced: {plan['gguf']} (runtime execution unverified)")
     return plan

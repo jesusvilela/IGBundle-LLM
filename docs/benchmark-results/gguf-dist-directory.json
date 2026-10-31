@@ -50,10 +50,30 @@
   ],
   "prefix_bytes": 5953216,
   "prefix_sha256": "cb50616fca5a893bbc454d448d871b1e1b64a492adf19a7523b7389746619143",
-  "protocol": "gguf-directory-v1",
+  "protocol": "gguf-directory-v2",
+  "qwen2_shape_check": {
+    "checked_tensors": 339,
+    "dimensions": {
+      "embedding": 3584,
+      "feed_forward": 18944,
+      "head_dimension": 128,
+      "heads": 28,
+      "kv_heads": 4,
+      "vocabulary": 152064
+    },
+    "errors": [],
+    "profile": "qwen2-dense-scalar-v1",
+    "reference_commit": "067b8d7af3f4775b1ad39470d1860696a8a7b3a3",
+    "scope": "Names and dimensions only; not token contents, tensor values, kernel support or inference",
+    "shape_mismatches": [],
+    "status": "passed"
+  },
   "qwen2_standard_names": {
     "extra": [],
     "missing": [],
+    "optional_missing": [
+      "output.bias"
+    ],
     "output_weight_present": true,
     "scope": "Names only; not shape, checkpoint identity, or runtime validation"
   },
@@ -3312,6 +3332,10 @@
       "type": "Q8_0"
     }
   ],
+  "tokenizer_tokens": {
+    "count": 152064,
+    "element_type": 8
+  },
   "type_counts": {
     "F32": 141,
     "Q8_0": 198
