@@ -57,3 +57,20 @@ jobs:
         run: python -m pip install -r requirements-test-hf.txt
       - name: Tiny real HF integration
         run: python -m unittest discover -b -s tests -p test_tiny_hf_integration.py
+      - name: Build pinned CPU-only native GGUF check
+        run: |
+          git init "$RUNNER_TEMP/native-source"
+          git -C "$RUNNER_TEMP/native-source" remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C "$RUNNER_TEMP/native-source" fetch --depth 1 origin 067b8d7af3f4775b1ad39470d1860696a8a7b3a3
+          git -C "$RUNNER_TEMP/native-source" checkout --detach FETCH_HEAD
+          cmake -S tests/native -B "$RUNNER_TEMP/native-build" \
+            -DLLAMA_CPP_SOURCE="$RUNNER_TEMP/native-source" -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_SHARED_LIBS=OFF -DGGML_NATIVE=OFF -DGGML_CUDA=OFF \
+            -DGGML_VULKAN=OFF -DGGML_BLAS=OFF -DGGML_OPENMP=OFF -DGGML_LLAMAFILE=OFF \
+            -DLLAMA_BUILD_COMMON=OFF -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF \
+            -DLLAMA_BUILD_TOOLS=OFF -DLLAMA_BUILD_SERVER=OFF -DLLAMA_HTTPLIB=OFF
+          cmake --build "$RUNNER_TEMP/native-build" --target native-qwen2 --parallel 2
+      - name: Tiny native GGUF logits and rejection
+        env:
+          IGBUNDLE_NATIVE_QWEN2_BINARY: ${{ runner.temp }}/native-build/bin/native-qwen2
+        run: python -m unittest discover -v -s tests -p test_tiny_gguf_runtime.py
