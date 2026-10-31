@@ -231,7 +231,35 @@
                 <a href="https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/export-image-audit.md#tiny-native-gguf-checkpoint">Exact configuration, source/run binding and exclusions</a>.
             </p>
 
-            <h2>15. What a stronger test needs</h2>
+            <h2 id="companion-metadata">15. Archived companion metadata</h2>
+            <p>A restricted, non-executing ZIP/pickle reader records 226 tensor
+                descriptors across four archived companions, reading 52,399
+                metadata bytes in a complete pass and opening no tensor-storage
+                members. Genuine tiny PyTorch saves independently exercise
+                dtype, shape, stride, alias, offset and module-version decoding.
+            </p>
+            <p><strong>The ARC package has a direct hidden-width mismatch:</strong>
+                arc_adapter.pt expects and returns width 3584, while the surviving
+                ARC GGUF has width 896. The standalone projector maps 1152 visual
+                features to a 896-wide adapter bottleneck. Its eleven shapes match
+                the embedded projector, but its bfloat16 dtype differs from the
+                adapter's float32. This is not a compatible-base or vision-alignment
+                certificate.
+            </p>
+            <p>The dist and varied adapters also declare width 3584. Matching core
+                dimensions do not prove restoration: the inspected dist runner's
+                defaults disable modules corresponding to 17 saved vision and five
+                geodesic-attention keys, and loading is non-strict. No archived
+                weights were executed or changed.
+                <a href="benchmark-results/companion-state-metadata.json">Full metadata and source excerpts</a>.
+            </p>
+            <p>These fingerprints exclude tensor values. Storage checksums,
+                trained-state provenance, geometric laws and model benefit remain
+                unverified.
+                <a href="https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/export-image-audit.md#archived-companion-metadata-checkpoint">Exact inspection profile, hosted controls and compatibility analysis</a>.
+            </p>
+
+            <h2>16. What a stronger test needs</h2>
             <p>
                 A causal evaluation should match parameter budget and layer placement; compare against a vanilla adapter under the same data, objective, optimizer budget, decoding, and hardware; isolate the geometric operator; use multiple seeds and fixed task splits; and publish exact checkpoint provenance with per-task outputs. Operator diagnostics should remain distinct from downstream outcomes.
             </p>

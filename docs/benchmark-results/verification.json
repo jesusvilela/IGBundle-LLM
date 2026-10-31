@@ -152,7 +152,7 @@
     "adapter": 0.5486348122866894,
     "base": 0.5486348122866894
   },
-  "local_site_links_checked": 59,
+  "local_site_links_checked": 61,
   "artifact_sha256": {
     "aa-index-2026-10-27.csv": "baa95712550b4912a4aa6ee1ebe67d3f4f9de448d7650d4afd4b5e7e49a0d58f",
     "aa-paired-outcomes-2026-10-27.csv": "012c61d5a39f34fc6a7fd38d3dc46ba08556583c899996b09727e8a8a4d43dc1",
@@ -162,6 +162,7 @@
     "arc-challenge-adapter-2026-01.json": "be00fbd2661f36623e0aab86e04124a31a5ba6a0f793f097d21d4e4ee293f677",
     "arc-challenge-base-2026-01.json": "ae58fff0c9e56a777959b8b88f86919f0c4892c748fbb8b703dcddd17d61538b",
     "artifact-audit.json": "24cc5f29e4b07643530a7dd0b8cd6ff594026533ed745bedfee07ad441cf1b80",
+    "companion-state-metadata.json": "4a78fd8ea5e70d471c13c5a4685ac21749460bebad73608f704a663a00a91994",
     "faithfulness-audit-A.json": "6056d1ccf475c5c42ff1bdf5889657cbe7c585eccd80c489524cb94fd8ed99c8",
     "gguf-arc-directory.json": "207666f5e11d7fadcd9de00ecb23dede7c3e10f02244768d82430c10cf080ca9",
     "gguf-dist-directory.json": "2dcc3547106fc069f318c86d0aed1f0a7ba504d596642d1a71ec8ad754b05d81",

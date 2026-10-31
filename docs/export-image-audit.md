@@ -88,7 +88,7 @@ check for dense scalar Qwen2, not a universal GGUF conformance certificate.
 
 The inspected `export_refined_package.py` converts a cp600 HF directory to Q8_0 and copies `adapter_refined.pt` separately. The packaged `dist/run_inference_integrated.py` fast path calls `llama_cpp.Llama` without loading that adapter. Its alternative PyTorch path is a different loader: it permits missing weights and non-strict loading and hardcodes a base-model identifier. It is not a verified restoration contract.
 
-The ARC package's README describes a 7B export, but its surviving GGUF directory reports width 896 and 24 blocks, consistent with the named 0.5B artifact. A nearby 7B adapter/projector does not resolve that mismatch. No pickle checkpoint was deserialized to guess compatibility.
+The ARC package's README describes a 7B export, but its surviving GGUF directory reports width 896 and 24 blocks, consistent with the named 0.5B artifact. The companion metadata inspection below now establishes a direct adapter/base hidden-width mismatch. The projector's bottleneck width must not be mistaken for an adapter/base compatibility check. No checkpoint was unpickled.
 
 The repository's `export_gguf.py` merges PEFT/LoRA weights. It is **not** an exporter for arbitrary nonlinear geometric modules. GGUF is a container; runtime architecture support determines which operations execute. A custom geometry-aware runtime is possible, but none is established by these two files and their inspected fast path.
 
@@ -114,6 +114,101 @@ Eleven dependency-free exporter tests use fake model APIs and tiny synthetic GGU
 They establish preflight, argument wiring, failure propagation and output guards.
 No actual PEFT model was merged and no external converter or model runtime was
 validated. The archived packaged runner remains unchanged and uncertified.
+
+## Archived companion metadata checkpoint
+
+Four named checkpoint candidates were inspected read-only under the
+`torch-state-metadata-v1` profile. Their ZIP directories and `data.pkl` records
+describe **226 tensors**, using **52,399 cumulative metadata-read bytes** in one
+complete four-file pass, including repeated header/footer reads. No tensor-storage
+member was opened. These are declared tensor elements, not a count of trainable
+parameters:
+
+| Archive-relative file | Tensor descriptors | Declared tensor elements | Core dimensions |
+|---|---:|---:|---|
+| `igbundle-llm/dist/adapter_refined.pt` | 81 | 31,630,110 | H=3584, bottleneck=896, P=8, D=64, K=16 |
+| `igbundle_arc_deployment/adapter/arc_adapter.pt` | 73 | 14,602,409 | H=3584, bottleneck=896, P=4, D=32, K=8 |
+| `igbundle_arc_deployment/adapter/arc_projector.pt` | 11 | 5,285,504 | Visual input=1152, intermediate=1792, output=896 |
+| `igbundle_deployment_final/adapter/adapter_weights.pt` | 61 | 22,894,494 | H=3584, bottleneck=896, P=8, D=64, K=16 |
+
+The [complete metadata record](benchmark-results/companion-state-metadata.json)
+contains shapes, strides, dtype, storage references/offsets, saved device labels,
+module versions, metadata fingerprints and line-numbered source excerpts.
+All three adapter files declare float32 tensors; the standalone projector is
+bfloat16. Saved flags do not establish how tensors were trained or used.
+
+### What the shapes establish
+
+PyTorch linear weights use `[output, input]` order. The ARC adapter has
+`input_proj.weight=[896,3584]` and `output_proj.weight=[3584,40]`.
+It therefore cannot be directly inserted at the hidden-state interface of the
+surviving width-896 ARC GGUF. That is a concrete incompatibility of these declared
+interfaces, not proof that no alternative bridge or compatible base exists.
+No such bridge was validated.
+
+The standalone projector's weights are `[1792,1152]`, then `[896,1792]`.
+All eleven shapes match the ARC adapter's embedded `vision_projector.*` subset,
+but their saved dtypes differ (bfloat16 versus float32), and values were not read.
+The inspected `VisionProjector` maps visual features into the adapter
+**bottleneck**, not automatically into a base model's residual stream.
+Its output width of 896 is therefore not evidence that the whole companion
+works with the 0.5B base. Neither vision-feature provenance nor alignment was tested.
+
+The dist adapter's core dimensions agree with its packaged runner's declared
+H=3584/P=8/D=64/K=16 configuration and the dist GGUF's width. This is only partial
+shape agreement. Under the inspected packaged class/default configuration, the
+runner leaves vision and geodesic attention disabled, while the checkpoint
+contains **17 vision and 5 geodesic-attention tensor keys** for those modules.
+It uses `strict=False`, permits missing weights and hardcodes a base identifier.
+It provides no exact-restoration guarantee. The varied adapter has the same
+listed core dimensions but a different 61-key state; its training description
+was not independently verified. The archive files and loaders remain unchanged.
+
+### Reader contract and independent controls
+
+`scripts/inspect_torch_checkpoint.py` uses a byte-budgeted ZIP reader and
+`pickletools` opcode disassembly. It does not invoke an unpickler, import
+pickle-declared globals or call encoded constructors. The accepted profile is
+limited to protocol-2 flat tensor maps, known dense storage tags, nonnegative
+strides, supported module-version metadata, and comment-free single-disk ZIP
+or canonical ZIP64 containers. Metadata may be stored or DEFLATE-compressed.
+Unknown constructs fail explicitly; there is no permissive fallback.
+
+Each central directory and pickle is capped at 1 MiB; total reads are capped at
+2 MiB + 8 KiB per file. Member counts, local headers, opcode/stack/memo growth
+and tensor-view spans are bounded. Referenced storage members must exist and
+their **declared uncompressed sizes** must agree with dtype/element counts.
+Stat-visible file changes and existing output paths are rejected. The
+before/after identity, size and mtime comparison is not an atomic snapshot.
+This is not a general pickle interpreter, a storage-extent validator, or a guarantee that
+a file is safe to load with another tool.
+
+At [reader source 3246a2f](https://github.com/jesusvilela/IGBundle-LLM/commit/3246a2f2f3bc235c38e498643e2f87ef75f622da),
+[hosted run 41183313428](https://github.com/jesusvilela/IGBundle-LLM/actions/runs/41183313428)
+passed 152 bounded tests, including 17 stdlib reader tests and three genuine
+PyTorch 2.6.0 CPU comparisons. The latter save tiny actual tensors and compare
+shapes, strides, offsets, aliases, gradient flags, ten dtypes, module versions
+and 300-entry memo usage. Whole modules and parameter-object reductions are
+explicitly rejected. No archived checkpoint is loaded by CI.
+
+Synthetic corruption checks cover invalid DEFLATE, CRC failures in metadata,
+overlapping/oversized metadata, missing/inconsistent storage declarations and
+unsupported pickle operations. A storage-payload-only mutation leaves the
+report unchanged even though its storage CRC is then wrong: **payload
+checksums and values are not checked**. ZIP/pickle fingerprints are not full
+checkpoint identities. No finite-value, restored-output, learned-hyperbolicity,
+Hamiltonian, hypercomplex-algebra or task-performance claim follows.
+
+For a new report, using Python's standard library only:
+
+```powershell
+python scripts\inspect_torch_checkpoint.py "<checkpoint.pt>" --output "<fresh-report.json>"
+python -m unittest discover -b -s tests -p test_checkpoint_metadata.py
+```
+
+The published record is a snapshot of the four named files and inspected source,
+not a redistributable copy of their weights or immutable save/run provenance.
+CI checks its internal consistency; it cannot rescan private archive files.
 
 ## Images: illustration, synthetic data, or measurement?
 

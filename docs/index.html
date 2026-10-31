@@ -49,6 +49,13 @@
         </p>
 
         <section class="section" id="export-audit">
+            <p class="card-text"><strong>Companion compatibility finding:</strong>
+                the archived ARC adapter declares hidden width 3584, but its
+                surviving GGUF has width 896. A 896-wide visual bottleneck does
+                not resolve that mismatch. Four companion files were inspected
+                without opening tensor-storage members.
+                <a href="wiki.html#companion-metadata">Metadata evidence and restoration limits</a>.
+            </p>
             <p class="card-text"><strong>Tiny native GGUF check:</strong>
                 synthetic F32 Qwen2 logits match an independent PyTorch reference
                 within declared tolerance, while a payload change demonstrates

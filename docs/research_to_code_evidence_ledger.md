@@ -21,8 +21,19 @@ Research documents generate hypotheses; implementation and operator tests establ
 | Length-preserving scaling certifies hyperbolic parallel transport | The archived scale-only map telescopes to identity on every closed loop; a prescribed K=-1 triangle requires nonzero rotation. Independent gyration, Lorentz transport and angle-defect checks agree. | Scaling alone is insufficient. The new opt-in transport reference is not a model or integrator certification. |
 | The legacy adapter's forward path performs parallel transport | Its intended coordinate blending formula needs no metric or connection. An unused rank-four metric construction caused multi-token failure; the repaired path passes tiny execution checks without calling either transport or connection methods. | Execution repaired, not geometric laws certified. Chunked smoothing needs previous-coordinate history. |
 | A GGUF directory fingerprint identifies the executed weights | Negating only the output weight in a tiny native-executed Qwen2 leaves its directory report unchanged except the filename, but changes logits by 0.77686. Complete file hashes differ. | Prefix fingerprints do not bind tensor values or model behavior. This counterexample does not load the archived exports. |
+| The ARC companions fit the surviving 0.5B GGUF | Non-executing metadata inspection finds adapter input/output width 3584, versus GGUF width 896. The separate projector's 896-wide output matches the adapter bottleneck, not its external hidden-state interface. | Direct insertion is incompatible. Shapes do not establish a replacement bridge, vision alignment, exact restoration or learned geometry. |
 
 ## Published data
+
+**Archived companion metadata:** four named files yield 226 descriptors with
+52,399 metadata-read bytes per complete pass and no tensor-storage member opens.
+The ARC width mismatch is explicit; dist/varied core widths alone do not certify
+restoration. Under the inspected packaged defaults, the dist runner disables
+modules corresponding to 22 saved vision/geodesic-attention keys and uses
+non-strict loading. [Metadata and source excerpts](benchmark-results/companion-state-metadata.json) ·
+[Reader controls and compatibility limits](export-image-audit.md#archived-companion-metadata-checkpoint).
+Tiny genuine PyTorch saves check the restricted decoder; archived payloads,
+storage checksums, trained-state provenance and geometric laws are not checked.
 
 **Tiny native GGUF execution:** synthetic 17,136/35,296-parameter F32 Qwen2 files
 run in the pinned native library, with tied/untied outputs and grouped-query

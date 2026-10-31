@@ -19,6 +19,8 @@
 
 ## Pages
 
+Four archived companions were inspected using a bounded ZIP reader and symbolic protocol-2 pickle decoder, without unpickling or opening tensor-storage members. A complete pass reads 52,399 metadata bytes and records 226 tensor descriptors. arc_adapter.pt expects/returns hidden width 3584, incompatible with direct insertion into the surviving width-896 ARC GGUF. Its standalone projector's 896-wide output is an adapter bottleneck, not evidence of base compatibility; all eleven projector shapes match the embedded subset, with different saved dtypes (bfloat16 versus float32). Dist/varied adapters also declare width 3584. Under inspected packaged defaults, the dist runner disables modules corresponding to 17 vision and five geodesic-attention keys and loads non-strictly. Tiny hosted PyTorch comparisons validate the restricted metadata decoder, not archived restoration, values, payload integrity, provenance, learned geometry or task benefit.
+
 Two synthetic F32 Qwen2 GGUFs (17,136 and 35,296 parameters) execute in pinned native llama.cpp on hosted CPU. Full/incremental logits match an independent PyTorch reference with maximum observed absolute error 1.79e-7; malformed Q/K shapes are rejected. Negating output weights preserves directory fingerprints while changing executed logits by 0.77686. Full synthetic-file hashes and tolerances are published in benchmark-results/native-gguf-reference.json. This does not execute the archived exports, public converter, text tokenizer, quantized kernels or any geometric/hypercomplex adapter.
 
 The separate legacy GeometricIGBundleAdapter has a repaired multi-token forward path, preserving its coordinate-smoothing formula rather than implementing parallel transport. Six hosted CPU tests check tiny identity/nonzero execution, gradients, causal prefixes and a strict module-state roundtrip. The forward path does not use its neural connection. Independent one-token smoothing lacks the previous-coordinate history needed for equivalence; cached generation, historical weights, default-loader support for this class, auxiliary losses and training remain unvalidated.
@@ -61,5 +63,6 @@ Default-adapter restoration now fails on missing, extra, malformed or nonfinite 
 - [cp600-named GGUF directory](https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/benchmark-results/gguf-dist-directory.json)
 - [0.5B GGUF directory](https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/benchmark-results/gguf-arc-directory.json)
 - [Image/source fingerprints and excerpts](https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/benchmark-results/artifact-audit.json)
+- [Companion metadata and source excerpts](https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/benchmark-results/companion-state-metadata.json)
 
 Older claims of accuracy gains, “MFR,” learned curvature, ablation effects, or efficiency are withdrawn or unsupported. Read archived thesis PDFs with the correction notice. The repository is experimental code, not a supported inference product; its license is all rights reserved.

@@ -65,6 +65,7 @@ The historical value near -5.63 is not evidence of learned hyperbolicity. For `g
 | `arc_eval.py`, HF and GGUF ARC runners | Shared deterministic selection, strict grid equality, all test pairs, errors retained and run invalidated, explicit empty-run rejection, output overwrite protection | Backend model loading or restoration of separate runtime adapter weights; no new model evaluation was run |
 | Historical evidence | Recomputed NLL means and paired statistics; October accuracies, indices and McNemar tests; source hashes and first-pair ARC rescoring | Independent grading, dataset non-contamination, or complete reproduction from a fresh clone |
 | Synthetic F32 Qwen2 GGUFs | Native full/incremental logits compared with PyTorch, tied/untied output weights, grouped-query attention and malformed-shape rejection | Not the archived exports, tokenizer semantics, quantized kernels, public converter or geometric/hypercomplex integration |
+| Four archived companion files | Bounded, non-executing metadata inspection records 226 tensor descriptors; ARC adapter hidden width 3584 conflicts with its surviving width-896 GGUF | No tensor values, payload integrity, complete restoration, trained-state provenance or geometric laws are certified |
 | Legacy `GeometricIGBundleAdapter` forward | Tiny identity/nonzero execution, gradients, causal prefixes and strict module-state roundtrip; repaired multi-token coordinate smoothing | No connection is used by this forward path. Not parallel transport, cached generation, historical checkpoint restoration or a supported training pipeline. |
 | Legacy `geometry/riemannian.py`, training and experimental geometry modules | **Outside the validated geometric core** | The metric is position-independent while connection coefficients come from an unrelated network; these do not establish Levi-Civita geometry, categorical laws, or sheaf laws. The legacy `train.py` entry point also contains an incomplete trainer block and is not a supported training command. |
 
@@ -81,6 +82,16 @@ Optional biases and tied output embeddings are handled explicitly.
 The exporter rejects failed Qwen2 layout checks; ambiguous Q8_1 extents are
 rejected rather than guessed. This is not native-loader, tokenizer, tensor-value
 or inference certification. [Profile and source revision](docs/export-image-audit.md#qwen2-directory-shape-contract).
+
+**Companion mismatch:** restricted ZIP/pickle metadata inspection finds that
+`arc_adapter.pt` expects and returns hidden width **3584**, not the surviving
+ARC GGUF's **896**. Its standalone projector maps 1152 visual features to a
+896-wide **adapter bottleneck**; that does not repair the external hidden-width
+mismatch. The dist and varied adapters also declare width 3584. Their matching
+core dimensions do not establish complete restoration. A four-file inspection
+reads 52,399 metadata bytes and opens no tensor-storage members.
+[Descriptors, source excerpts and limits](docs/benchmark-results/companion-state-metadata.json) ·
+[Compatibility analysis](docs/export-image-audit.md#archived-companion-metadata-checkpoint).
 
 Nine research images were reviewed against their generators. The thesis loss, affinity and spectrum plots are synthetic and now labeled inside the public PNGs. An archived “negative curvature” drawing actually depicts a positive-curvature paraboloid; prescribed layouts and simulated convergence curves are not learned-geometry results.
 
@@ -122,6 +133,7 @@ python scripts/verify_evidence.py
 python -m unittest discover -s tests -p test_evidence.py
 python -m unittest discover -s tests -p test_arc_eval.py
 python -m unittest discover -s tests -p test_gguf_inspection.py
+python -m unittest discover -b -s tests -p test_checkpoint_metadata.py
 python -m unittest discover -s tests -p test_artifact_audit.py
 ```
 
@@ -131,6 +143,7 @@ In an existing environment with PyTorch, the bounded operator checks are:
 python -m unittest discover -s tests -p test_geometry.py
 python -m unittest discover -s tests -p test_ig.py
 python -m unittest discover -b -s tests -p test_checkpoint.py
+python -m unittest discover -b -s tests -p test_torch_checkpoint_metadata.py
 python -m unittest discover -b -s tests -p test_legacy_geometric_adapter.py
 ```
 

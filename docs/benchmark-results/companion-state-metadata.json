@@ -1,0 +1,5179 @@
+{
+  "protocol": "companion-state-audit-v1",
+  "scope": "Four archived tensor-map ZIP/pickle metadata records only; no torch import, unpickling, tensor-storage member reads or archive writes.",
+  "reader_source_revision": "3246a2f2f3bc235c38e498643e2f87ef75f622da",
+  "reader_hosted_run": "https://github.com/jesusvilela/IGBundle-LLM/actions/runs/41183313428",
+  "total_metadata_read_bytes": 52399,
+  "total_tensor_descriptors": 226,
+  "checkpoints": [
+    {
+      "archive_relative_path": "igbundle-llm/dist/adapter_refined.pt",
+      "protocol": "torch-state-metadata-v1",
+      "file_name": "adapter_refined.pt",
+      "file_bytes": 126549899,
+      "zip_members": 85,
+      "zip_directory_bytes": 5873,
+      "zip_directory_sha256": "38cd3acc2edfb8b0d003b44cb7d50c1f4582a99682c3312fa619154b29796c01",
+      "metadata_member": "adapter_weights/data.pkl",
+      "metadata_bytes": 12698,
+      "metadata_sha256": "730d45cbf5555ffa8613a0791fd032498a4796a35d726f30f5ccfa73e46dd59b",
+      "metadata_read_bytes": 18861,
+      "tensor_storage_members_opened": 0,
+      "pickle_globals": [
+        "collections OrderedDict",
+        "torch FloatStorage",
+        "torch._utils _rebuild_tensor_v2"
+      ],
+      "tensor_count": 81,
+      "storage_count": 81,
+      "sum_tensor_elements": 31630110,
+      "tensors": [
+        {
+          "name": "patch_centers",
+          "dtype": "float32",
+          "shape": [
+            4,
+            64
+          ],
+          "stride": [
+            64,
+            1
+          ],
+          "storage_key": "0",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "riemannian_geometry.metric_chol",
+          "dtype": "float32",
+          "shape": [
+            8,
+            64,
+            64
+          ],
+          "stride": [
+            4096,
+            64,
+            1
+          ],
+          "storage_key": "1",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "riemannian_geometry.christoffel_net.0.weight",
+          "dtype": "float32",
+          "shape": [
+            64,
+            64
+          ],
+          "stride": [
+            64,
+            1
+          ],
+          "storage_key": "2",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "riemannian_geometry.christoffel_net.0.bias",
+          "dtype": "float32",
+          "shape": [
+            64
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "3",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "riemannian_geometry.christoffel_net.2.weight",
+          "dtype": "float32",
+          "shape": [
+            262144,
+            64
+          ],
+          "stride": [
+            64,
+            1
+          ],
+          "storage_key": "4",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "riemannian_geometry.christoffel_net.2.bias",
+          "dtype": "float32",
+          "shape": [
+            262144
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "5",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.lambda_encoder.0.weight",
+          "dtype": "float32",
+          "shape": [
+            128,
+            80
+          ],
+          "stride": [
+            80,
+            1
+          ],
+          "storage_key": "6",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.lambda_encoder.0.bias",
+          "dtype": "float32",
+          "shape": [
+            128
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "7",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.lambda_encoder.2.weight",
+          "dtype": "float32",
+          "shape": [
+            80,
+            128
+          ],
+          "stride": [
+            128,
+            1
+          ],
+          "storage_key": "8",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.lambda_encoder.2.bias",
+          "dtype": "float32",
+          "shape": [
+            80
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "9",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.application_net.0.weight",
+          "dtype": "float32",
+          "shape": [
+            256,
+            160
+          ],
+          "stride": [
+            160,
+            1
+          ],
+          "storage_key": "10",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.application_net.0.bias",
+          "dtype": "float32",
+          "shape": [
+            256
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "11",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.application_net.2.weight",
+          "dtype": "float32",
+          "shape": [
+            80,
+            256
+          ],
+          "stride": [
+            256,
+            1
+          ],
+          "storage_key": "12",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.application_net.2.bias",
+          "dtype": "float32",
+          "shape": [
+            80
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "13",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.fiber_compose.0.weight",
+          "dtype": "float32",
+          "shape": [
+            64,
+            32
+          ],
+          "stride": [
+            32,
+            1
+          ],
+          "storage_key": "14",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.fiber_compose.0.bias",
+          "dtype": "float32",
+          "shape": [
+            64
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "15",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.fiber_compose.2.weight",
+          "dtype": "float32",
+          "shape": [
+            16,
+            64
+          ],
+          "stride": [
+            64,
+            1
+          ],
+          "storage_key": "16",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.fiber_compose.2.bias",
+          "dtype": "float32",
+          "shape": [
+            16
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "17",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "input_proj.weight",
+          "dtype": "float32",
+          "shape": [
+            896,
+            3584
+          ],
+          "stride": [
+            3584,
+            1
+          ],
+          "storage_key": "18",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "input_proj.bias",
+          "dtype": "float32",
+          "shape": [
+            896
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "19",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "output_proj.weight",
+          "dtype": "float32",
+          "shape": [
+            3584,
+            80
+          ],
+          "stride": [
+            80,
+            1
+          ],
+          "storage_key": "20",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "output_proj.bias",
+          "dtype": "float32",
+          "shape": [
+            3584
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "21",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "base_coord_proj.weight",
+          "dtype": "float32",
+          "shape": [
+            512,
+            896
+          ],
+          "stride": [
+            896,
+            1
+          ],
+          "storage_key": "22",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "base_coord_proj.bias",
+          "dtype": "float32",
+          "shape": [
+            512
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "23",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "fiber_section_proj.weight",
+          "dtype": "float32",
+          "shape": [
+            128,
+            896
+          ],
+          "stride": [
+            896,
+            1
+          ],
+          "storage_key": "24",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "fiber_section_proj.bias",
+          "dtype": "float32",
+          "shape": [
+            128
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "25",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_term_proj.weight",
+          "dtype": "float32",
+          "shape": [
+            640,
+            896
+          ],
+          "stride": [
+            896,
+            1
+          ],
+          "storage_key": "26",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_term_proj.bias",
+          "dtype": "float32",
+          "shape": [
+            640
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "27",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "mixture_proj_w.weight",
+          "dtype": "float32",
+          "shape": [
+            8,
+            896
+          ],
+          "stride": [
+            896,
+            1
+          ],
+          "storage_key": "28",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "mixture_proj_w.bias",
+          "dtype": "float32",
+          "shape": [
+            8
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "29",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "mixture_proj_m.weight",
+          "dtype": "float32",
+          "shape": [
+            512,
+            896
+          ],
+          "stride": [
+            896,
+            1
+          ],
+          "storage_key": "30",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "mixture_proj_m.bias",
+          "dtype": "float32",
+          "shape": [
+            512
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "31",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "mixture_proj_s.weight",
+          "dtype": "float32",
+          "shape": [
+            512,
+            896
+          ],
+          "stride": [
+            896,
+            1
+          ],
+          "storage_key": "32",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "mixture_proj_s.bias",
+          "dtype": "float32",
+          "shape": [
+            512
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "33",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "mixture_proj_u.weight",
+          "dtype": "float32",
+          "shape": [
+            128,
+            896
+          ],
+          "stride": [
+            896,
+            1
+          ],
+          "storage_key": "34",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "mixture_proj_u.bias",
+          "dtype": "float32",
+          "shape": [
+            128
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "35",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "base_update_net.0.weight",
+          "dtype": "float32",
+          "shape": [
+            64,
+            80
+          ],
+          "stride": [
+            80,
+            1
+          ],
+          "storage_key": "36",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "base_update_net.0.bias",
+          "dtype": "float32",
+          "shape": [
+            64
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "37",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "base_update_net.2.weight",
+          "dtype": "float32",
+          "shape": [
+            64,
+            64
+          ],
+          "stride": [
+            64,
+            1
+          ],
+          "storage_key": "38",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "base_update_net.2.bias",
+          "dtype": "float32",
+          "shape": [
+            64
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "39",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "fiber_update_net.0.weight",
+          "dtype": "float32",
+          "shape": [
+            64,
+            80
+          ],
+          "stride": [
+            80,
+            1
+          ],
+          "storage_key": "40",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "fiber_update_net.0.bias",
+          "dtype": "float32",
+          "shape": [
+            64
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "41",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "fiber_update_net.2.weight",
+          "dtype": "float32",
+          "shape": [
+            16,
+            64
+          ],
+          "stride": [
+            64,
+            1
+          ],
+          "storage_key": "42",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "fiber_update_net.2.bias",
+          "dtype": "float32",
+          "shape": [
+            16
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "43",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "vision_projector.visual_bias",
+          "dtype": "float32",
+          "shape": [
+            1,
+            1,
+            896
+          ],
+          "stride": [
+            896,
+            896,
+            1
+          ],
+          "storage_key": "44",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "vision_projector.input_proj.weight",
+          "dtype": "float32",
+          "shape": [
+            1792,
+            1152
+          ],
+          "stride": [
+            1152,
+            1
+          ],
+          "storage_key": "45",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "vision_projector.input_proj.bias",
+          "dtype": "float32",
+          "shape": [
+            1792
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "46",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "vision_projector.norm1.weight",
+          "dtype": "float32",
+          "shape": [
+            1792
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "47",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "vision_projector.norm1.bias",
+          "dtype": "float32",
+          "shape": [
+            1792
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "48",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "vision_projector.gate_proj.weight",
+          "dtype": "float32",
+          "shape": [
+            896,
+            1792
+          ],
+          "stride": [
+            1792,
+            1
+          ],
+          "storage_key": "49",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "vision_projector.gate_proj.bias",
+          "dtype": "float32",
+          "shape": [
+            896
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "50",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "vision_projector.feat_proj.weight",
+          "dtype": "float32",
+          "shape": [
+            896,
+            1792
+          ],
+          "stride": [
+            1792,
+            1
+          ],
+          "storage_key": "51",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "vision_projector.feat_proj.bias",
+          "dtype": "float32",
+          "shape": [
+            896
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "52",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "vision_projector.norm2.weight",
+          "dtype": "float32",
+          "shape": [
+            896
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "53",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "vision_projector.norm2.bias",
+          "dtype": "float32",
+          "shape": [
+            896
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "54",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "vision_attn.in_proj_weight",
+          "dtype": "float32",
+          "shape": [
+            2688,
+            896
+          ],
+          "stride": [
+            896,
+            1
+          ],
+          "storage_key": "55",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "vision_attn.in_proj_bias",
+          "dtype": "float32",
+          "shape": [
+            2688
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "56",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "vision_attn.out_proj.weight",
+          "dtype": "float32",
+          "shape": [
+            896,
+            896
+          ],
+          "stride": [
+            896,
+            1
+          ],
+          "storage_key": "57",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "vision_attn.out_proj.bias",
+          "dtype": "float32",
+          "shape": [
+            896
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "58",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "vision_norm.weight",
+          "dtype": "float32",
+          "shape": [
+            896
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "59",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "vision_norm.bias",
+          "dtype": "float32",
+          "shape": [
+            896
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "60",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "dynamics.potential_net.0.weight",
+          "dtype": "float32",
+          "shape": [
+            32,
+            64
+          ],
+          "stride": [
+            64,
+            1
+          ],
+          "storage_key": "61",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "dynamics.potential_net.0.bias",
+          "dtype": "float32",
+          "shape": [
+            32
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "62",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "dynamics.potential_net.2.weight",
+          "dtype": "float32",
+          "shape": [
+            1,
+            32
+          ],
+          "stride": [
+            32,
+            1
+          ],
+          "storage_key": "63",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "dynamics.potential_net.2.bias",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "64",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "geodesic_attn.temperature",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "65",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "geodesic_attn.v_proj.weight",
+          "dtype": "float32",
+          "shape": [
+            64,
+            64
+          ],
+          "stride": [
+            64,
+            1
+          ],
+          "storage_key": "66",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "geodesic_attn.v_proj.bias",
+          "dtype": "float32",
+          "shape": [
+            64
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "67",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "geodesic_attn.out_proj.weight",
+          "dtype": "float32",
+          "shape": [
+            64,
+            64
+          ],
+          "stride": [
+            64,
+            1
+          ],
+          "storage_key": "68",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "geodesic_attn.out_proj.bias",
+          "dtype": "float32",
+          "shape": [
+            64
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "69",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "compiler.decoder.0.weight",
+          "dtype": "float32",
+          "shape": [
+            128,
+            64
+          ],
+          "stride": [
+            64,
+            1
+          ],
+          "storage_key": "70",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "compiler.decoder.0.bias",
+          "dtype": "float32",
+          "shape": [
+            128
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "71",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "compiler.decoder.2.weight",
+          "dtype": "float32",
+          "shape": [
+            20,
+            128
+          ],
+          "stride": [
+            128,
+            1
+          ],
+          "storage_key": "72",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "compiler.decoder.2.bias",
+          "dtype": "float32",
+          "shape": [
+            20
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "73",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "phase_memory.memory_vector",
+          "dtype": "float32",
+          "shape": [
+            1,
+            64
+          ],
+          "stride": [
+            64,
+            1
+          ],
+          "storage_key": "74",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "phase_memory.phase_gate.weight",
+          "dtype": "float32",
+          "shape": [
+            64,
+            64
+          ],
+          "stride": [
+            64,
+            1
+          ],
+          "storage_key": "75",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "phase_memory.phase_gate.bias",
+          "dtype": "float32",
+          "shape": [
+            64
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "76",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "consensus.communication_weights",
+          "dtype": "float32",
+          "shape": [
+            8,
+            8
+          ],
+          "stride": [
+            8,
+            1
+          ],
+          "storage_key": "77",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "fiber_store.s",
+          "dtype": "float32",
+          "shape": [
+            8,
+            64
+          ],
+          "stride": [
+            64,
+            1
+          ],
+          "storage_key": "78",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "fiber_gate_proj.0.weight",
+          "dtype": "float32",
+          "shape": [
+            3584,
+            64
+          ],
+          "stride": [
+            64,
+            1
+          ],
+          "storage_key": "79",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "fiber_gate_proj.0.bias",
+          "dtype": "float32",
+          "shape": [
+            3584
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "80",
+          "storage_offset": 0,
+          "requires_grad": false
+        }
+      ],
+      "storages": [
+        {
+          "key": "0",
+          "dtype": "float32",
+          "elements": 256,
+          "declared_bytes": 1024,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "1",
+          "dtype": "float32",
+          "elements": 32768,
+          "declared_bytes": 131072,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "2",
+          "dtype": "float32",
+          "elements": 4096,
+          "declared_bytes": 16384,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "3",
+          "dtype": "float32",
+          "elements": 64,
+          "declared_bytes": 256,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "4",
+          "dtype": "float32",
+          "elements": 16777216,
+          "declared_bytes": 67108864,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "5",
+          "dtype": "float32",
+          "elements": 262144,
+          "declared_bytes": 1048576,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "6",
+          "dtype": "float32",
+          "elements": 10240,
+          "declared_bytes": 40960,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "7",
+          "dtype": "float32",
+          "elements": 128,
+          "declared_bytes": 512,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "8",
+          "dtype": "float32",
+          "elements": 10240,
+          "declared_bytes": 40960,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "9",
+          "dtype": "float32",
+          "elements": 80,
+          "declared_bytes": 320,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "10",
+          "dtype": "float32",
+          "elements": 40960,
+          "declared_bytes": 163840,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "11",
+          "dtype": "float32",
+          "elements": 256,
+          "declared_bytes": 1024,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "12",
+          "dtype": "float32",
+          "elements": 20480,
+          "declared_bytes": 81920,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "13",
+          "dtype": "float32",
+          "elements": 80,
+          "declared_bytes": 320,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "14",
+          "dtype": "float32",
+          "elements": 2048,
+          "declared_bytes": 8192,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "15",
+          "dtype": "float32",
+          "elements": 64,
+          "declared_bytes": 256,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "16",
+          "dtype": "float32",
+          "elements": 1024,
+          "declared_bytes": 4096,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "17",
+          "dtype": "float32",
+          "elements": 16,
+          "declared_bytes": 64,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "18",
+          "dtype": "float32",
+          "elements": 3211264,
+          "declared_bytes": 12845056,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "19",
+          "dtype": "float32",
+          "elements": 896,
+          "declared_bytes": 3584,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "20",
+          "dtype": "float32",
+          "elements": 286720,
+          "declared_bytes": 1146880,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "21",
+          "dtype": "float32",
+          "elements": 3584,
+          "declared_bytes": 14336,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "22",
+          "dtype": "float32",
+          "elements": 458752,
+          "declared_bytes": 1835008,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "23",
+          "dtype": "float32",
+          "elements": 512,
+          "declared_bytes": 2048,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "24",
+          "dtype": "float32",
+          "elements": 114688,
+          "declared_bytes": 458752,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "25",
+          "dtype": "float32",
+          "elements": 128,
+          "declared_bytes": 512,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "26",
+          "dtype": "float32",
+          "elements": 573440,
+          "declared_bytes": 2293760,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "27",
+          "dtype": "float32",
+          "elements": 640,
+          "declared_bytes": 2560,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "28",
+          "dtype": "float32",
+          "elements": 7168,
+          "declared_bytes": 28672,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "29",
+          "dtype": "float32",
+          "elements": 8,
+          "declared_bytes": 32,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "30",
+          "dtype": "float32",
+          "elements": 458752,
+          "declared_bytes": 1835008,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "31",
+          "dtype": "float32",
+          "elements": 512,
+          "declared_bytes": 2048,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "32",
+          "dtype": "float32",
+          "elements": 458752,
+          "declared_bytes": 1835008,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "33",
+          "dtype": "float32",
+          "elements": 512,
+          "declared_bytes": 2048,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "34",
+          "dtype": "float32",
+          "elements": 114688,
+          "declared_bytes": 458752,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "35",
+          "dtype": "float32",
+          "elements": 128,
+          "declared_bytes": 512,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "36",
+          "dtype": "float32",
+          "elements": 5120,
+          "declared_bytes": 20480,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "37",
+          "dtype": "float32",
+          "elements": 64,
+          "declared_bytes": 256,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "38",
+          "dtype": "float32",
+          "elements": 4096,
+          "declared_bytes": 16384,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "39",
+          "dtype": "float32",
+          "elements": 64,
+          "declared_bytes": 256,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "40",
+          "dtype": "float32",
+          "elements": 5120,
+          "declared_bytes": 20480,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "41",
+          "dtype": "float32",
+          "elements": 64,
+          "declared_bytes": 256,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "42",
+          "dtype": "float32",
+          "elements": 1024,
+          "declared_bytes": 4096,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "43",
+          "dtype": "float32",
+          "elements": 16,
+          "declared_bytes": 64,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "44",
+          "dtype": "float32",
+          "elements": 896,
+          "declared_bytes": 3584,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "45",
+          "dtype": "float32",
+          "elements": 2064384,
+          "declared_bytes": 8257536,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "46",
+          "dtype": "float32",
+          "elements": 1792,
+          "declared_bytes": 7168,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "47",
+          "dtype": "float32",
+          "elements": 1792,
+          "declared_bytes": 7168,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "48",
+          "dtype": "float32",
+          "elements": 1792,
+          "declared_bytes": 7168,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "49",
+          "dtype": "float32",
+          "elements": 1605632,
+          "declared_bytes": 6422528,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "50",
+          "dtype": "float32",
+          "elements": 896,
+          "declared_bytes": 3584,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "51",
+          "dtype": "float32",
+          "elements": 1605632,
+          "declared_bytes": 6422528,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "52",
+          "dtype": "float32",
+          "elements": 896,
+          "declared_bytes": 3584,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "53",
+          "dtype": "float32",
+          "elements": 896,
+          "declared_bytes": 3584,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "54",
+          "dtype": "float32",
+          "elements": 896,
+          "declared_bytes": 3584,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "55",
+          "dtype": "float32",
+          "elements": 2408448,
+          "declared_bytes": 9633792,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "56",
+          "dtype": "float32",
+          "elements": 2688,
+          "declared_bytes": 10752,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "57",
+          "dtype": "float32",
+          "elements": 802816,
+          "declared_bytes": 3211264,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "58",
+          "dtype": "float32",
+          "elements": 896,
+          "declared_bytes": 3584,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "59",
+          "dtype": "float32",
+          "elements": 896,
+          "declared_bytes": 3584,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "60",
+          "dtype": "float32",
+          "elements": 896,
+          "declared_bytes": 3584,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "61",
+          "dtype": "float32",
+          "elements": 2048,
+          "declared_bytes": 8192,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "62",
+          "dtype": "float32",
+          "elements": 32,
+          "declared_bytes": 128,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "63",
+          "dtype": "float32",
+          "elements": 32,
+          "declared_bytes": 128,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "64",
+          "dtype": "float32",
+          "elements": 1,
+          "declared_bytes": 4,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "65",
+          "dtype": "float32",
+          "elements": 1,
+          "declared_bytes": 4,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "66",
+          "dtype": "float32",
+          "elements": 4096,
+          "declared_bytes": 16384,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "67",
+          "dtype": "float32",
+          "elements": 64,
+          "declared_bytes": 256,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "68",
+          "dtype": "float32",
+          "elements": 4096,
+          "declared_bytes": 16384,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "69",
+          "dtype": "float32",
+          "elements": 64,
+          "declared_bytes": 256,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "70",
+          "dtype": "float32",
+          "elements": 8192,
+          "declared_bytes": 32768,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "71",
+          "dtype": "float32",
+          "elements": 128,
+          "declared_bytes": 512,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "72",
+          "dtype": "float32",
+          "elements": 2560,
+          "declared_bytes": 10240,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "73",
+          "dtype": "float32",
+          "elements": 20,
+          "declared_bytes": 80,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "74",
+          "dtype": "float32",
+          "elements": 64,
+          "declared_bytes": 256,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "75",
+          "dtype": "float32",
+          "elements": 4096,
+          "declared_bytes": 16384,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "76",
+          "dtype": "float32",
+          "elements": 64,
+          "declared_bytes": 256,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "77",
+          "dtype": "float32",
+          "elements": 64,
+          "declared_bytes": 256,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "78",
+          "dtype": "float32",
+          "elements": 512,
+          "declared_bytes": 2048,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "79",
+          "dtype": "float32",
+          "elements": 229376,
+          "declared_bytes": 917504,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "80",
+          "dtype": "float32",
+          "elements": 3584,
+          "declared_bytes": 14336,
+          "saved_device": "cuda:0"
+        }
+      ],
+      "module_versions": {
+        "": 1,
+        "riemannian_geometry": 1,
+        "riemannian_geometry.christoffel_net": 1,
+        "riemannian_geometry.christoffel_net.0": 1,
+        "riemannian_geometry.christoffel_net.1": 1,
+        "riemannian_geometry.christoffel_net.2": 1,
+        "lambda_calculus": 1,
+        "lambda_calculus.lambda_encoder": 1,
+        "lambda_calculus.lambda_encoder.0": 1,
+        "lambda_calculus.lambda_encoder.1": 1,
+        "lambda_calculus.lambda_encoder.2": 1,
+        "lambda_calculus.application_net": 1,
+        "lambda_calculus.application_net.0": 1,
+        "lambda_calculus.application_net.1": 1,
+        "lambda_calculus.application_net.2": 1,
+        "lambda_calculus.fiber_compose": 1,
+        "lambda_calculus.fiber_compose.0": 1,
+        "lambda_calculus.fiber_compose.1": 1,
+        "lambda_calculus.fiber_compose.2": 1,
+        "input_proj": 1,
+        "output_proj": 1,
+        "base_coord_proj": 1,
+        "fiber_section_proj": 1,
+        "lambda_term_proj": 1,
+        "mixture_proj_w": 1,
+        "mixture_proj_m": 1,
+        "mixture_proj_s": 1,
+        "mixture_proj_u": 1,
+        "base_update_net": 1,
+        "base_update_net.0": 1,
+        "base_update_net.1": 1,
+        "base_update_net.2": 1,
+        "fiber_update_net": 1,
+        "fiber_update_net.0": 1,
+        "fiber_update_net.1": 1,
+        "fiber_update_net.2": 1,
+        "dropout": 1,
+        "vision_projector": 1,
+        "vision_projector.input_proj": 1,
+        "vision_projector.norm1": 1,
+        "vision_projector.activation": 1,
+        "vision_projector.gate_proj": 1,
+        "vision_projector.feat_proj": 1,
+        "vision_projector.norm2": 1,
+        "vision_projector.dropout": 1,
+        "vision_attn": 1,
+        "vision_attn.out_proj": 1,
+        "vision_norm": 1,
+        "dynamics": 1,
+        "dynamics.potential_net": 1,
+        "dynamics.potential_net.0": 1,
+        "dynamics.potential_net.1": 1,
+        "dynamics.potential_net.2": 1,
+        "geodesic_attn": 1,
+        "geodesic_attn.dropout": 1,
+        "geodesic_attn.v_proj": 1,
+        "geodesic_attn.out_proj": 1,
+        "compiler": 1,
+        "compiler.decoder": 1,
+        "compiler.decoder.0": 1,
+        "compiler.decoder.1": 1,
+        "compiler.decoder.2": 1,
+        "phase_memory": 1,
+        "phase_memory.phase_gate": 1,
+        "consensus": 1,
+        "fiber_store": 1,
+        "fiber_gate_proj": 1,
+        "fiber_gate_proj.0": 1,
+        "fiber_gate_proj.1": 1
+      },
+      "limitations": [
+        "Only a restricted protocol-2 flat tensor-map metadata profile is supported.",
+        "Pickle-declared globals are symbolic; no encoded callable or torch loader is executed.",
+        "No tensor storage values or payload checksums are read or verified.",
+        "Metadata fingerprints do not identify the complete checkpoint.",
+        "Shapes and saved flags do not certify restoration, training history or geometric laws."
+      ]
+    },
+    {
+      "archive_relative_path": "igbundle_arc_deployment/adapter/arc_adapter.pt",
+      "protocol": "torch-state-metadata-v1",
+      "file_name": "arc_adapter.pt",
+      "file_bytes": 58435759,
+      "zip_members": 77,
+      "zip_directory_bytes": 5013,
+      "zip_directory_sha256": "15d03c84c868a61bfd13b3a461fbf055c831c38810bbdb9f0bdfa12dfbe4a04e",
+      "metadata_member": "arc_adapter/data.pkl",
+      "metadata_bytes": 11370,
+      "metadata_sha256": "cb64e84c375992bccb789f936666619f844ca8b7cf1674b0fe8ff2ed84e6e6a9",
+      "metadata_read_bytes": 16673,
+      "tensor_storage_members_opened": 0,
+      "pickle_globals": [
+        "collections OrderedDict",
+        "torch FloatStorage",
+        "torch._utils _rebuild_tensor_v2"
+      ],
+      "tensor_count": 73,
+      "storage_count": 73,
+      "sum_tensor_elements": 14602409,
+      "tensors": [
+        {
+          "name": "patch_centers",
+          "dtype": "float32",
+          "shape": [
+            4,
+            32
+          ],
+          "stride": [
+            32,
+            1
+          ],
+          "storage_key": "0",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "riemannian_geometry.metric_chol",
+          "dtype": "float32",
+          "shape": [
+            4,
+            32,
+            32
+          ],
+          "stride": [
+            1024,
+            32,
+            1
+          ],
+          "storage_key": "1",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "riemannian_geometry.christoffel_net.0.weight",
+          "dtype": "float32",
+          "shape": [
+            64,
+            32
+          ],
+          "stride": [
+            32,
+            1
+          ],
+          "storage_key": "2",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "riemannian_geometry.christoffel_net.0.bias",
+          "dtype": "float32",
+          "shape": [
+            64
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "3",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "riemannian_geometry.christoffel_net.2.weight",
+          "dtype": "float32",
+          "shape": [
+            32768,
+            64
+          ],
+          "stride": [
+            64,
+            1
+          ],
+          "storage_key": "4",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "riemannian_geometry.christoffel_net.2.bias",
+          "dtype": "float32",
+          "shape": [
+            32768
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "5",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.lambda_encoder.0.weight",
+          "dtype": "float32",
+          "shape": [
+            128,
+            40
+          ],
+          "stride": [
+            40,
+            1
+          ],
+          "storage_key": "6",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.lambda_encoder.0.bias",
+          "dtype": "float32",
+          "shape": [
+            128
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "7",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.lambda_encoder.2.weight",
+          "dtype": "float32",
+          "shape": [
+            40,
+            128
+          ],
+          "stride": [
+            128,
+            1
+          ],
+          "storage_key": "8",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.lambda_encoder.2.bias",
+          "dtype": "float32",
+          "shape": [
+            40
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "9",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.application_net.0.weight",
+          "dtype": "float32",
+          "shape": [
+            256,
+            80
+          ],
+          "stride": [
+            80,
+            1
+          ],
+          "storage_key": "10",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.application_net.0.bias",
+          "dtype": "float32",
+          "shape": [
+            256
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "11",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.application_net.2.weight",
+          "dtype": "float32",
+          "shape": [
+            40,
+            256
+          ],
+          "stride": [
+            256,
+            1
+          ],
+          "storage_key": "12",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.application_net.2.bias",
+          "dtype": "float32",
+          "shape": [
+            40
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "13",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.fiber_compose.0.weight",
+          "dtype": "float32",
+          "shape": [
+            64,
+            16
+          ],
+          "stride": [
+            16,
+            1
+          ],
+          "storage_key": "14",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.fiber_compose.0.bias",
+          "dtype": "float32",
+          "shape": [
+            64
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "15",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.fiber_compose.2.weight",
+          "dtype": "float32",
+          "shape": [
+            8,
+            64
+          ],
+          "stride": [
+            64,
+            1
+          ],
+          "storage_key": "16",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.fiber_compose.2.bias",
+          "dtype": "float32",
+          "shape": [
+            8
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "17",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "input_proj.weight",
+          "dtype": "float32",
+          "shape": [
+            896,
+            3584
+          ],
+          "stride": [
+            3584,
+            1
+          ],
+          "storage_key": "18",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "input_proj.bias",
+          "dtype": "float32",
+          "shape": [
+            896
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "19",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "output_proj.weight",
+          "dtype": "float32",
+          "shape": [
+            3584,
+            40
+          ],
+          "stride": [
+            40,
+            1
+          ],
+          "storage_key": "20",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "output_proj.bias",
+          "dtype": "float32",
+          "shape": [
+            3584
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "21",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "base_coord_proj.weight",
+          "dtype": "float32",
+          "shape": [
+            128,
+            896
+          ],
+          "stride": [
+            896,
+            1
+          ],
+          "storage_key": "22",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "base_coord_proj.bias",
+          "dtype": "float32",
+          "shape": [
+            128
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "23",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "fiber_section_proj.weight",
+          "dtype": "float32",
+          "shape": [
+            32,
+            896
+          ],
+          "stride": [
+            896,
+            1
+          ],
+          "storage_key": "24",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "fiber_section_proj.bias",
+          "dtype": "float32",
+          "shape": [
+            32
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "25",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_term_proj.weight",
+          "dtype": "float32",
+          "shape": [
+            160,
+            896
+          ],
+          "stride": [
+            896,
+            1
+          ],
+          "storage_key": "26",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_term_proj.bias",
+          "dtype": "float32",
+          "shape": [
+            160
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "27",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "mixture_proj_w.weight",
+          "dtype": "float32",
+          "shape": [
+            4,
+            896
+          ],
+          "stride": [
+            896,
+            1
+          ],
+          "storage_key": "28",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "mixture_proj_w.bias",
+          "dtype": "float32",
+          "shape": [
+            4
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "29",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "mixture_proj_m.weight",
+          "dtype": "float32",
+          "shape": [
+            128,
+            896
+          ],
+          "stride": [
+            896,
+            1
+          ],
+          "storage_key": "30",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "mixture_proj_m.bias",
+          "dtype": "float32",
+          "shape": [
+            128
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "31",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "mixture_proj_s.weight",
+          "dtype": "float32",
+          "shape": [
+            128,
+            896
+          ],
+          "stride": [
+            896,
+            1
+          ],
+          "storage_key": "32",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "mixture_proj_s.bias",
+          "dtype": "float32",
+          "shape": [
+            128
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "33",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "mixture_proj_u.weight",
+          "dtype": "float32",
+          "shape": [
+            32,
+            896
+          ],
+          "stride": [
+            896,
+            1
+          ],
+          "storage_key": "34",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "mixture_proj_u.bias",
+          "dtype": "float32",
+          "shape": [
+            32
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "35",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "base_update_net.0.weight",
+          "dtype": "float32",
+          "shape": [
+            64,
+            40
+          ],
+          "stride": [
+            40,
+            1
+          ],
+          "storage_key": "36",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "base_update_net.0.bias",
+          "dtype": "float32",
+          "shape": [
+            64
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "37",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "base_update_net.2.weight",
+          "dtype": "float32",
+          "shape": [
+            32,
+            64
+          ],
+          "stride": [
+            64,
+            1
+          ],
+          "storage_key": "38",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "base_update_net.2.bias",
+          "dtype": "float32",
+          "shape": [
+            32
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "39",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "fiber_update_net.0.weight",
+          "dtype": "float32",
+          "shape": [
+            64,
+            40
+          ],
+          "stride": [
+            40,
+            1
+          ],
+          "storage_key": "40",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "fiber_update_net.0.bias",
+          "dtype": "float32",
+          "shape": [
+            64
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "41",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "fiber_update_net.2.weight",
+          "dtype": "float32",
+          "shape": [
+            8,
+            64
+          ],
+          "stride": [
+            64,
+            1
+          ],
+          "storage_key": "42",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "fiber_update_net.2.bias",
+          "dtype": "float32",
+          "shape": [
+            8
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "43",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "vision_projector.visual_bias",
+          "dtype": "float32",
+          "shape": [
+            1,
+            1,
+            896
+          ],
+          "stride": [
+            896,
+            896,
+            1
+          ],
+          "storage_key": "44",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "vision_projector.input_proj.weight",
+          "dtype": "float32",
+          "shape": [
+            1792,
+            1152
+          ],
+          "stride": [
+            1152,
+            1
+          ],
+          "storage_key": "45",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "vision_projector.input_proj.bias",
+          "dtype": "float32",
+          "shape": [
+            1792
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "46",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "vision_projector.norm1.weight",
+          "dtype": "float32",
+          "shape": [
+            1792
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "47",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "vision_projector.norm1.bias",
+          "dtype": "float32",
+          "shape": [
+            1792
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "48",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "vision_projector.gate_proj.weight",
+          "dtype": "float32",
+          "shape": [
+            896,
+            1792
+          ],
+          "stride": [
+            1792,
+            1
+          ],
+          "storage_key": "49",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "vision_projector.gate_proj.bias",
+          "dtype": "float32",
+          "shape": [
+            896
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "50",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "vision_projector.feat_proj.weight",
+          "dtype": "float32",
+          "shape": [
+            896,
+            1792
+          ],
+          "stride": [
+            1792,
+            1
+          ],
+          "storage_key": "51",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "vision_projector.feat_proj.bias",
+          "dtype": "float32",
+          "shape": [
+            896
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "52",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "vision_projector.norm2.weight",
+          "dtype": "float32",
+          "shape": [
+            896
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "53",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "vision_projector.norm2.bias",
+          "dtype": "float32",
+          "shape": [
+            896
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "54",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "vision_attn.in_proj_weight",
+          "dtype": "float32",
+          "shape": [
+            2688,
+            896
+          ],
+          "stride": [
+            896,
+            1
+          ],
+          "storage_key": "55",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "vision_attn.in_proj_bias",
+          "dtype": "float32",
+          "shape": [
+            2688
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "56",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "vision_attn.out_proj.weight",
+          "dtype": "float32",
+          "shape": [
+            896,
+            896
+          ],
+          "stride": [
+            896,
+            1
+          ],
+          "storage_key": "57",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "vision_attn.out_proj.bias",
+          "dtype": "float32",
+          "shape": [
+            896
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "58",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "vision_norm.weight",
+          "dtype": "float32",
+          "shape": [
+            896
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "59",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "vision_norm.bias",
+          "dtype": "float32",
+          "shape": [
+            896
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "60",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "dynamics.potential_net.0.weight",
+          "dtype": "float32",
+          "shape": [
+            16,
+            32
+          ],
+          "stride": [
+            32,
+            1
+          ],
+          "storage_key": "61",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "dynamics.potential_net.0.bias",
+          "dtype": "float32",
+          "shape": [
+            16
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "62",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "dynamics.potential_net.2.weight",
+          "dtype": "float32",
+          "shape": [
+            1,
+            16
+          ],
+          "stride": [
+            16,
+            1
+          ],
+          "storage_key": "63",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "dynamics.potential_net.2.bias",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "64",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "compiler.decoder.0.weight",
+          "dtype": "float32",
+          "shape": [
+            64,
+            32
+          ],
+          "stride": [
+            32,
+            1
+          ],
+          "storage_key": "65",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "compiler.decoder.0.bias",
+          "dtype": "float32",
+          "shape": [
+            64
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "66",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "compiler.decoder.2.weight",
+          "dtype": "float32",
+          "shape": [
+            20,
+            64
+          ],
+          "stride": [
+            64,
+            1
+          ],
+          "storage_key": "67",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "compiler.decoder.2.bias",
+          "dtype": "float32",
+          "shape": [
+            20
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "68",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "phase_memory.memory_vector",
+          "dtype": "float32",
+          "shape": [
+            1,
+            32
+          ],
+          "stride": [
+            32,
+            1
+          ],
+          "storage_key": "69",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "phase_memory.phase_gate.weight",
+          "dtype": "float32",
+          "shape": [
+            32,
+            32
+          ],
+          "stride": [
+            32,
+            1
+          ],
+          "storage_key": "70",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "phase_memory.phase_gate.bias",
+          "dtype": "float32",
+          "shape": [
+            32
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "71",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "consensus.communication_weights",
+          "dtype": "float32",
+          "shape": [
+            4,
+            4
+          ],
+          "stride": [
+            4,
+            1
+          ],
+          "storage_key": "72",
+          "storage_offset": 0,
+          "requires_grad": false
+        }
+      ],
+      "storages": [
+        {
+          "key": "0",
+          "dtype": "float32",
+          "elements": 128,
+          "declared_bytes": 512,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "1",
+          "dtype": "float32",
+          "elements": 4096,
+          "declared_bytes": 16384,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "2",
+          "dtype": "float32",
+          "elements": 2048,
+          "declared_bytes": 8192,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "3",
+          "dtype": "float32",
+          "elements": 64,
+          "declared_bytes": 256,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "4",
+          "dtype": "float32",
+          "elements": 2097152,
+          "declared_bytes": 8388608,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "5",
+          "dtype": "float32",
+          "elements": 32768,
+          "declared_bytes": 131072,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "6",
+          "dtype": "float32",
+          "elements": 5120,
+          "declared_bytes": 20480,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "7",
+          "dtype": "float32",
+          "elements": 128,
+          "declared_bytes": 512,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "8",
+          "dtype": "float32",
+          "elements": 5120,
+          "declared_bytes": 20480,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "9",
+          "dtype": "float32",
+          "elements": 40,
+          "declared_bytes": 160,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "10",
+          "dtype": "float32",
+          "elements": 20480,
+          "declared_bytes": 81920,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "11",
+          "dtype": "float32",
+          "elements": 256,
+          "declared_bytes": 1024,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "12",
+          "dtype": "float32",
+          "elements": 10240,
+          "declared_bytes": 40960,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "13",
+          "dtype": "float32",
+          "elements": 40,
+          "declared_bytes": 160,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "14",
+          "dtype": "float32",
+          "elements": 1024,
+          "declared_bytes": 4096,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "15",
+          "dtype": "float32",
+          "elements": 64,
+          "declared_bytes": 256,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "16",
+          "dtype": "float32",
+          "elements": 512,
+          "declared_bytes": 2048,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "17",
+          "dtype": "float32",
+          "elements": 8,
+          "declared_bytes": 32,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "18",
+          "dtype": "float32",
+          "elements": 3211264,
+          "declared_bytes": 12845056,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "19",
+          "dtype": "float32",
+          "elements": 896,
+          "declared_bytes": 3584,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "20",
+          "dtype": "float32",
+          "elements": 143360,
+          "declared_bytes": 573440,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "21",
+          "dtype": "float32",
+          "elements": 3584,
+          "declared_bytes": 14336,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "22",
+          "dtype": "float32",
+          "elements": 114688,
+          "declared_bytes": 458752,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "23",
+          "dtype": "float32",
+          "elements": 128,
+          "declared_bytes": 512,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "24",
+          "dtype": "float32",
+          "elements": 28672,
+          "declared_bytes": 114688,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "25",
+          "dtype": "float32",
+          "elements": 32,
+          "declared_bytes": 128,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "26",
+          "dtype": "float32",
+          "elements": 143360,
+          "declared_bytes": 573440,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "27",
+          "dtype": "float32",
+          "elements": 160,
+          "declared_bytes": 640,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "28",
+          "dtype": "float32",
+          "elements": 3584,
+          "declared_bytes": 14336,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "29",
+          "dtype": "float32",
+          "elements": 4,
+          "declared_bytes": 16,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "30",
+          "dtype": "float32",
+          "elements": 114688,
+          "declared_bytes": 458752,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "31",
+          "dtype": "float32",
+          "elements": 128,
+          "declared_bytes": 512,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "32",
+          "dtype": "float32",
+          "elements": 114688,
+          "declared_bytes": 458752,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "33",
+          "dtype": "float32",
+          "elements": 128,
+          "declared_bytes": 512,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "34",
+          "dtype": "float32",
+          "elements": 28672,
+          "declared_bytes": 114688,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "35",
+          "dtype": "float32",
+          "elements": 32,
+          "declared_bytes": 128,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "36",
+          "dtype": "float32",
+          "elements": 2560,
+          "declared_bytes": 10240,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "37",
+          "dtype": "float32",
+          "elements": 64,
+          "declared_bytes": 256,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "38",
+          "dtype": "float32",
+          "elements": 2048,
+          "declared_bytes": 8192,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "39",
+          "dtype": "float32",
+          "elements": 32,
+          "declared_bytes": 128,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "40",
+          "dtype": "float32",
+          "elements": 2560,
+          "declared_bytes": 10240,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "41",
+          "dtype": "float32",
+          "elements": 64,
+          "declared_bytes": 256,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "42",
+          "dtype": "float32",
+          "elements": 512,
+          "declared_bytes": 2048,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "43",
+          "dtype": "float32",
+          "elements": 8,
+          "declared_bytes": 32,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "44",
+          "dtype": "float32",
+          "elements": 896,
+          "declared_bytes": 3584,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "45",
+          "dtype": "float32",
+          "elements": 2064384,
+          "declared_bytes": 8257536,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "46",
+          "dtype": "float32",
+          "elements": 1792,
+          "declared_bytes": 7168,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "47",
+          "dtype": "float32",
+          "elements": 1792,
+          "declared_bytes": 7168,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "48",
+          "dtype": "float32",
+          "elements": 1792,
+          "declared_bytes": 7168,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "49",
+          "dtype": "float32",
+          "elements": 1605632,
+          "declared_bytes": 6422528,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "50",
+          "dtype": "float32",
+          "elements": 896,
+          "declared_bytes": 3584,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "51",
+          "dtype": "float32",
+          "elements": 1605632,
+          "declared_bytes": 6422528,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "52",
+          "dtype": "float32",
+          "elements": 896,
+          "declared_bytes": 3584,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "53",
+          "dtype": "float32",
+          "elements": 896,
+          "declared_bytes": 3584,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "54",
+          "dtype": "float32",
+          "elements": 896,
+          "declared_bytes": 3584,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "55",
+          "dtype": "float32",
+          "elements": 2408448,
+          "declared_bytes": 9633792,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "56",
+          "dtype": "float32",
+          "elements": 2688,
+          "declared_bytes": 10752,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "57",
+          "dtype": "float32",
+          "elements": 802816,
+          "declared_bytes": 3211264,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "58",
+          "dtype": "float32",
+          "elements": 896,
+          "declared_bytes": 3584,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "59",
+          "dtype": "float32",
+          "elements": 896,
+          "declared_bytes": 3584,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "60",
+          "dtype": "float32",
+          "elements": 896,
+          "declared_bytes": 3584,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "61",
+          "dtype": "float32",
+          "elements": 512,
+          "declared_bytes": 2048,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "62",
+          "dtype": "float32",
+          "elements": 16,
+          "declared_bytes": 64,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "63",
+          "dtype": "float32",
+          "elements": 16,
+          "declared_bytes": 64,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "64",
+          "dtype": "float32",
+          "elements": 1,
+          "declared_bytes": 4,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "65",
+          "dtype": "float32",
+          "elements": 2048,
+          "declared_bytes": 8192,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "66",
+          "dtype": "float32",
+          "elements": 64,
+          "declared_bytes": 256,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "67",
+          "dtype": "float32",
+          "elements": 1280,
+          "declared_bytes": 5120,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "68",
+          "dtype": "float32",
+          "elements": 20,
+          "declared_bytes": 80,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "69",
+          "dtype": "float32",
+          "elements": 32,
+          "declared_bytes": 128,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "70",
+          "dtype": "float32",
+          "elements": 1024,
+          "declared_bytes": 4096,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "71",
+          "dtype": "float32",
+          "elements": 32,
+          "declared_bytes": 128,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "72",
+          "dtype": "float32",
+          "elements": 16,
+          "declared_bytes": 64,
+          "saved_device": "cuda:0"
+        }
+      ],
+      "module_versions": {
+        "": 1,
+        "riemannian_geometry": 1,
+        "riemannian_geometry.christoffel_net": 1,
+        "riemannian_geometry.christoffel_net.0": 1,
+        "riemannian_geometry.christoffel_net.1": 1,
+        "riemannian_geometry.christoffel_net.2": 1,
+        "lambda_calculus": 1,
+        "lambda_calculus.lambda_encoder": 1,
+        "lambda_calculus.lambda_encoder.0": 1,
+        "lambda_calculus.lambda_encoder.1": 1,
+        "lambda_calculus.lambda_encoder.2": 1,
+        "lambda_calculus.application_net": 1,
+        "lambda_calculus.application_net.0": 1,
+        "lambda_calculus.application_net.1": 1,
+        "lambda_calculus.application_net.2": 1,
+        "lambda_calculus.fiber_compose": 1,
+        "lambda_calculus.fiber_compose.0": 1,
+        "lambda_calculus.fiber_compose.1": 1,
+        "lambda_calculus.fiber_compose.2": 1,
+        "input_proj": 1,
+        "output_proj": 1,
+        "base_coord_proj": 1,
+        "fiber_section_proj": 1,
+        "lambda_term_proj": 1,
+        "mixture_proj_w": 1,
+        "mixture_proj_m": 1,
+        "mixture_proj_s": 1,
+        "mixture_proj_u": 1,
+        "base_update_net": 1,
+        "base_update_net.0": 1,
+        "base_update_net.1": 1,
+        "base_update_net.2": 1,
+        "fiber_update_net": 1,
+        "fiber_update_net.0": 1,
+        "fiber_update_net.1": 1,
+        "fiber_update_net.2": 1,
+        "dropout": 1,
+        "vision_projector": 1,
+        "vision_projector.input_proj": 1,
+        "vision_projector.norm1": 1,
+        "vision_projector.activation": 1,
+        "vision_projector.gate_proj": 1,
+        "vision_projector.feat_proj": 1,
+        "vision_projector.norm2": 1,
+        "vision_projector.dropout": 1,
+        "vision_attn": 1,
+        "vision_attn.out_proj": 1,
+        "vision_norm": 1,
+        "dynamics": 1,
+        "dynamics.potential_net": 1,
+        "dynamics.potential_net.0": 1,
+        "dynamics.potential_net.1": 1,
+        "dynamics.potential_net.2": 1,
+        "compiler": 1,
+        "compiler.decoder": 1,
+        "compiler.decoder.0": 1,
+        "compiler.decoder.1": 1,
+        "compiler.decoder.2": 1,
+        "phase_memory": 1,
+        "phase_memory.phase_gate": 1,
+        "consensus": 1
+      },
+      "limitations": [
+        "Only a restricted protocol-2 flat tensor-map metadata profile is supported.",
+        "Pickle-declared globals are symbolic; no encoded callable or torch loader is executed.",
+        "No tensor storage values or payload checksums are read or verified.",
+        "Metadata fingerprints do not identify the complete checkpoint.",
+        "Shapes and saved flags do not certify restoration, training history or geometric laws."
+      ]
+    },
+    {
+      "archive_relative_path": "igbundle_arc_deployment/adapter/arc_projector.pt",
+      "protocol": "torch-state-metadata-v1",
+      "file_name": "arc_projector.pt",
+      "file_bytes": 10575247,
+      "zip_members": 15,
+      "zip_directory_bytes": 1013,
+      "zip_directory_sha256": "c916f6acc0cb3363913ec60bcd3ef21522c555ee859b0cbce28955f628a1a9d5",
+      "metadata_member": "arc_projector/data.pkl",
+      "metadata_bytes": 1261,
+      "metadata_sha256": "ea9357bae4877e14ef73893139ba445295af3114950f55dde6b9725fc6334e2e",
+      "metadata_read_bytes": 2564,
+      "tensor_storage_members_opened": 0,
+      "pickle_globals": [
+        "collections OrderedDict",
+        "torch BFloat16Storage",
+        "torch._utils _rebuild_tensor_v2"
+      ],
+      "tensor_count": 11,
+      "storage_count": 11,
+      "sum_tensor_elements": 5285504,
+      "tensors": [
+        {
+          "name": "visual_bias",
+          "dtype": "bfloat16",
+          "shape": [
+            1,
+            1,
+            896
+          ],
+          "stride": [
+            896,
+            896,
+            1
+          ],
+          "storage_key": "0",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "input_proj.weight",
+          "dtype": "bfloat16",
+          "shape": [
+            1792,
+            1152
+          ],
+          "stride": [
+            1152,
+            1
+          ],
+          "storage_key": "1",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "input_proj.bias",
+          "dtype": "bfloat16",
+          "shape": [
+            1792
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "2",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "norm1.weight",
+          "dtype": "bfloat16",
+          "shape": [
+            1792
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "3",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "norm1.bias",
+          "dtype": "bfloat16",
+          "shape": [
+            1792
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "4",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "gate_proj.weight",
+          "dtype": "bfloat16",
+          "shape": [
+            896,
+            1792
+          ],
+          "stride": [
+            1792,
+            1
+          ],
+          "storage_key": "5",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "gate_proj.bias",
+          "dtype": "bfloat16",
+          "shape": [
+            896
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "6",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "feat_proj.weight",
+          "dtype": "bfloat16",
+          "shape": [
+            896,
+            1792
+          ],
+          "stride": [
+            1792,
+            1
+          ],
+          "storage_key": "7",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "feat_proj.bias",
+          "dtype": "bfloat16",
+          "shape": [
+            896
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "8",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "norm2.weight",
+          "dtype": "bfloat16",
+          "shape": [
+            896
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "9",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "norm2.bias",
+          "dtype": "bfloat16",
+          "shape": [
+            896
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "10",
+          "storage_offset": 0,
+          "requires_grad": false
+        }
+      ],
+      "storages": [
+        {
+          "key": "0",
+          "dtype": "bfloat16",
+          "elements": 896,
+          "declared_bytes": 1792,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "1",
+          "dtype": "bfloat16",
+          "elements": 2064384,
+          "declared_bytes": 4128768,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "2",
+          "dtype": "bfloat16",
+          "elements": 1792,
+          "declared_bytes": 3584,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "3",
+          "dtype": "bfloat16",
+          "elements": 1792,
+          "declared_bytes": 3584,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "4",
+          "dtype": "bfloat16",
+          "elements": 1792,
+          "declared_bytes": 3584,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "5",
+          "dtype": "bfloat16",
+          "elements": 1605632,
+          "declared_bytes": 3211264,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "6",
+          "dtype": "bfloat16",
+          "elements": 896,
+          "declared_bytes": 1792,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "7",
+          "dtype": "bfloat16",
+          "elements": 1605632,
+          "declared_bytes": 3211264,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "8",
+          "dtype": "bfloat16",
+          "elements": 896,
+          "declared_bytes": 1792,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "9",
+          "dtype": "bfloat16",
+          "elements": 896,
+          "declared_bytes": 1792,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "10",
+          "dtype": "bfloat16",
+          "elements": 896,
+          "declared_bytes": 1792,
+          "saved_device": "cuda:0"
+        }
+      ],
+      "module_versions": {
+        "": 1,
+        "input_proj": 1,
+        "norm1": 1,
+        "activation": 1,
+        "gate_proj": 1,
+        "feat_proj": 1,
+        "norm2": 1,
+        "dropout": 1
+      },
+      "limitations": [
+        "Only a restricted protocol-2 flat tensor-map metadata profile is supported.",
+        "Pickle-declared globals are symbolic; no encoded callable or torch loader is executed.",
+        "No tensor storage values or payload checksums are read or verified.",
+        "Metadata fingerprints do not identify the complete checkpoint.",
+        "Shapes and saved flags do not certify restoration, training history or geometric laws."
+      ]
+    },
+    {
+      "archive_relative_path": "igbundle_deployment_final/adapter/adapter_weights.pt",
+      "protocol": "torch-state-metadata-v1",
+      "file_name": "adapter_weights.pt",
+      "file_bytes": 91600295,
+      "zip_members": 65,
+      "zip_directory_bytes": 4493,
+      "zip_directory_sha256": "82d424e5c37694b5a6c782c5f6b353d94bf3e2fdf21910347c441da60f524444",
+      "metadata_member": "adapter_weights/data.pkl",
+      "metadata_bytes": 9518,
+      "metadata_sha256": "dc889e497b35279b0b184975b4db85e0024a009760259593b5099c6e03daeddb",
+      "metadata_read_bytes": 14301,
+      "tensor_storage_members_opened": 0,
+      "pickle_globals": [
+        "collections OrderedDict",
+        "torch FloatStorage",
+        "torch._utils _rebuild_tensor_v2"
+      ],
+      "tensor_count": 61,
+      "storage_count": 61,
+      "sum_tensor_elements": 22894494,
+      "tensors": [
+        {
+          "name": "patch_centers",
+          "dtype": "float32",
+          "shape": [
+            4,
+            64
+          ],
+          "stride": [
+            64,
+            1
+          ],
+          "storage_key": "0",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "riemannian_geometry.metric_chol",
+          "dtype": "float32",
+          "shape": [
+            8,
+            64,
+            64
+          ],
+          "stride": [
+            4096,
+            64,
+            1
+          ],
+          "storage_key": "1",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "riemannian_geometry.christoffel_net.0.weight",
+          "dtype": "float32",
+          "shape": [
+            64,
+            64
+          ],
+          "stride": [
+            64,
+            1
+          ],
+          "storage_key": "2",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "riemannian_geometry.christoffel_net.0.bias",
+          "dtype": "float32",
+          "shape": [
+            64
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "3",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "riemannian_geometry.christoffel_net.2.weight",
+          "dtype": "float32",
+          "shape": [
+            262144,
+            64
+          ],
+          "stride": [
+            64,
+            1
+          ],
+          "storage_key": "4",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "riemannian_geometry.christoffel_net.2.bias",
+          "dtype": "float32",
+          "shape": [
+            262144
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "5",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.lambda_encoder.0.weight",
+          "dtype": "float32",
+          "shape": [
+            128,
+            80
+          ],
+          "stride": [
+            80,
+            1
+          ],
+          "storage_key": "6",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.lambda_encoder.0.bias",
+          "dtype": "float32",
+          "shape": [
+            128
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "7",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.lambda_encoder.2.weight",
+          "dtype": "float32",
+          "shape": [
+            80,
+            128
+          ],
+          "stride": [
+            128,
+            1
+          ],
+          "storage_key": "8",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.lambda_encoder.2.bias",
+          "dtype": "float32",
+          "shape": [
+            80
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "9",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.application_net.0.weight",
+          "dtype": "float32",
+          "shape": [
+            256,
+            160
+          ],
+          "stride": [
+            160,
+            1
+          ],
+          "storage_key": "10",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.application_net.0.bias",
+          "dtype": "float32",
+          "shape": [
+            256
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "11",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.application_net.2.weight",
+          "dtype": "float32",
+          "shape": [
+            80,
+            256
+          ],
+          "stride": [
+            256,
+            1
+          ],
+          "storage_key": "12",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.application_net.2.bias",
+          "dtype": "float32",
+          "shape": [
+            80
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "13",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.fiber_compose.0.weight",
+          "dtype": "float32",
+          "shape": [
+            64,
+            32
+          ],
+          "stride": [
+            32,
+            1
+          ],
+          "storage_key": "14",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.fiber_compose.0.bias",
+          "dtype": "float32",
+          "shape": [
+            64
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "15",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.fiber_compose.2.weight",
+          "dtype": "float32",
+          "shape": [
+            16,
+            64
+          ],
+          "stride": [
+            64,
+            1
+          ],
+          "storage_key": "16",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_calculus.fiber_compose.2.bias",
+          "dtype": "float32",
+          "shape": [
+            16
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "17",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "input_proj.weight",
+          "dtype": "float32",
+          "shape": [
+            896,
+            3584
+          ],
+          "stride": [
+            3584,
+            1
+          ],
+          "storage_key": "18",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "input_proj.bias",
+          "dtype": "float32",
+          "shape": [
+            896
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "19",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "output_proj.weight",
+          "dtype": "float32",
+          "shape": [
+            3584,
+            80
+          ],
+          "stride": [
+            80,
+            1
+          ],
+          "storage_key": "20",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "output_proj.bias",
+          "dtype": "float32",
+          "shape": [
+            3584
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "21",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "base_coord_proj.weight",
+          "dtype": "float32",
+          "shape": [
+            512,
+            896
+          ],
+          "stride": [
+            896,
+            1
+          ],
+          "storage_key": "22",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "base_coord_proj.bias",
+          "dtype": "float32",
+          "shape": [
+            512
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "23",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "fiber_section_proj.weight",
+          "dtype": "float32",
+          "shape": [
+            128,
+            896
+          ],
+          "stride": [
+            896,
+            1
+          ],
+          "storage_key": "24",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "fiber_section_proj.bias",
+          "dtype": "float32",
+          "shape": [
+            128
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "25",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_term_proj.weight",
+          "dtype": "float32",
+          "shape": [
+            640,
+            896
+          ],
+          "stride": [
+            896,
+            1
+          ],
+          "storage_key": "26",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "lambda_term_proj.bias",
+          "dtype": "float32",
+          "shape": [
+            640
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "27",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "mixture_proj_w.weight",
+          "dtype": "float32",
+          "shape": [
+            8,
+            896
+          ],
+          "stride": [
+            896,
+            1
+          ],
+          "storage_key": "28",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "mixture_proj_w.bias",
+          "dtype": "float32",
+          "shape": [
+            8
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "29",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "mixture_proj_m.weight",
+          "dtype": "float32",
+          "shape": [
+            512,
+            896
+          ],
+          "stride": [
+            896,
+            1
+          ],
+          "storage_key": "30",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "mixture_proj_m.bias",
+          "dtype": "float32",
+          "shape": [
+            512
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "31",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "mixture_proj_s.weight",
+          "dtype": "float32",
+          "shape": [
+            512,
+            896
+          ],
+          "stride": [
+            896,
+            1
+          ],
+          "storage_key": "32",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "mixture_proj_s.bias",
+          "dtype": "float32",
+          "shape": [
+            512
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "33",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "mixture_proj_u.weight",
+          "dtype": "float32",
+          "shape": [
+            128,
+            896
+          ],
+          "stride": [
+            896,
+            1
+          ],
+          "storage_key": "34",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "mixture_proj_u.bias",
+          "dtype": "float32",
+          "shape": [
+            128
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "35",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "base_update_net.0.weight",
+          "dtype": "float32",
+          "shape": [
+            64,
+            80
+          ],
+          "stride": [
+            80,
+            1
+          ],
+          "storage_key": "36",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "base_update_net.0.bias",
+          "dtype": "float32",
+          "shape": [
+            64
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "37",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "base_update_net.2.weight",
+          "dtype": "float32",
+          "shape": [
+            64,
+            64
+          ],
+          "stride": [
+            64,
+            1
+          ],
+          "storage_key": "38",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "base_update_net.2.bias",
+          "dtype": "float32",
+          "shape": [
+            64
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "39",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "fiber_update_net.0.weight",
+          "dtype": "float32",
+          "shape": [
+            64,
+            80
+          ],
+          "stride": [
+            80,
+            1
+          ],
+          "storage_key": "40",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "fiber_update_net.0.bias",
+          "dtype": "float32",
+          "shape": [
+            64
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "41",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "fiber_update_net.2.weight",
+          "dtype": "float32",
+          "shape": [
+            16,
+            64
+          ],
+          "stride": [
+            64,
+            1
+          ],
+          "storage_key": "42",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "fiber_update_net.2.bias",
+          "dtype": "float32",
+          "shape": [
+            16
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "43",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "dynamics.potential_net.0.weight",
+          "dtype": "float32",
+          "shape": [
+            32,
+            64
+          ],
+          "stride": [
+            64,
+            1
+          ],
+          "storage_key": "44",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "dynamics.potential_net.0.bias",
+          "dtype": "float32",
+          "shape": [
+            32
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "45",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "dynamics.potential_net.2.weight",
+          "dtype": "float32",
+          "shape": [
+            1,
+            32
+          ],
+          "stride": [
+            32,
+            1
+          ],
+          "storage_key": "46",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "dynamics.potential_net.2.bias",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "47",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "geodesic_attn.temperature",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "48",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "geodesic_attn.v_proj.weight",
+          "dtype": "float32",
+          "shape": [
+            64,
+            64
+          ],
+          "stride": [
+            64,
+            1
+          ],
+          "storage_key": "49",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "geodesic_attn.v_proj.bias",
+          "dtype": "float32",
+          "shape": [
+            64
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "50",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "geodesic_attn.out_proj.weight",
+          "dtype": "float32",
+          "shape": [
+            64,
+            64
+          ],
+          "stride": [
+            64,
+            1
+          ],
+          "storage_key": "51",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "geodesic_attn.out_proj.bias",
+          "dtype": "float32",
+          "shape": [
+            64
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "52",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "compiler.decoder.0.weight",
+          "dtype": "float32",
+          "shape": [
+            128,
+            64
+          ],
+          "stride": [
+            64,
+            1
+          ],
+          "storage_key": "53",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "compiler.decoder.0.bias",
+          "dtype": "float32",
+          "shape": [
+            128
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "54",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "compiler.decoder.2.weight",
+          "dtype": "float32",
+          "shape": [
+            20,
+            128
+          ],
+          "stride": [
+            128,
+            1
+          ],
+          "storage_key": "55",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "compiler.decoder.2.bias",
+          "dtype": "float32",
+          "shape": [
+            20
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "56",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "phase_memory.memory_vector",
+          "dtype": "float32",
+          "shape": [
+            1,
+            64
+          ],
+          "stride": [
+            64,
+            1
+          ],
+          "storage_key": "57",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "phase_memory.phase_gate.weight",
+          "dtype": "float32",
+          "shape": [
+            64,
+            64
+          ],
+          "stride": [
+            64,
+            1
+          ],
+          "storage_key": "58",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "phase_memory.phase_gate.bias",
+          "dtype": "float32",
+          "shape": [
+            64
+          ],
+          "stride": [
+            1
+          ],
+          "storage_key": "59",
+          "storage_offset": 0,
+          "requires_grad": false
+        },
+        {
+          "name": "consensus.communication_weights",
+          "dtype": "float32",
+          "shape": [
+            8,
+            8
+          ],
+          "stride": [
+            8,
+            1
+          ],
+          "storage_key": "60",
+          "storage_offset": 0,
+          "requires_grad": false
+        }
+      ],
+      "storages": [
+        {
+          "key": "0",
+          "dtype": "float32",
+          "elements": 256,
+          "declared_bytes": 1024,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "1",
+          "dtype": "float32",
+          "elements": 32768,
+          "declared_bytes": 131072,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "2",
+          "dtype": "float32",
+          "elements": 4096,
+          "declared_bytes": 16384,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "3",
+          "dtype": "float32",
+          "elements": 64,
+          "declared_bytes": 256,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "4",
+          "dtype": "float32",
+          "elements": 16777216,
+          "declared_bytes": 67108864,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "5",
+          "dtype": "float32",
+          "elements": 262144,
+          "declared_bytes": 1048576,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "6",
+          "dtype": "float32",
+          "elements": 10240,
+          "declared_bytes": 40960,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "7",
+          "dtype": "float32",
+          "elements": 128,
+          "declared_bytes": 512,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "8",
+          "dtype": "float32",
+          "elements": 10240,
+          "declared_bytes": 40960,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "9",
+          "dtype": "float32",
+          "elements": 80,
+          "declared_bytes": 320,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "10",
+          "dtype": "float32",
+          "elements": 40960,
+          "declared_bytes": 163840,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "11",
+          "dtype": "float32",
+          "elements": 256,
+          "declared_bytes": 1024,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "12",
+          "dtype": "float32",
+          "elements": 20480,
+          "declared_bytes": 81920,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "13",
+          "dtype": "float32",
+          "elements": 80,
+          "declared_bytes": 320,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "14",
+          "dtype": "float32",
+          "elements": 2048,
+          "declared_bytes": 8192,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "15",
+          "dtype": "float32",
+          "elements": 64,
+          "declared_bytes": 256,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "16",
+          "dtype": "float32",
+          "elements": 1024,
+          "declared_bytes": 4096,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "17",
+          "dtype": "float32",
+          "elements": 16,
+          "declared_bytes": 64,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "18",
+          "dtype": "float32",
+          "elements": 3211264,
+          "declared_bytes": 12845056,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "19",
+          "dtype": "float32",
+          "elements": 896,
+          "declared_bytes": 3584,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "20",
+          "dtype": "float32",
+          "elements": 286720,
+          "declared_bytes": 1146880,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "21",
+          "dtype": "float32",
+          "elements": 3584,
+          "declared_bytes": 14336,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "22",
+          "dtype": "float32",
+          "elements": 458752,
+          "declared_bytes": 1835008,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "23",
+          "dtype": "float32",
+          "elements": 512,
+          "declared_bytes": 2048,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "24",
+          "dtype": "float32",
+          "elements": 114688,
+          "declared_bytes": 458752,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "25",
+          "dtype": "float32",
+          "elements": 128,
+          "declared_bytes": 512,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "26",
+          "dtype": "float32",
+          "elements": 573440,
+          "declared_bytes": 2293760,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "27",
+          "dtype": "float32",
+          "elements": 640,
+          "declared_bytes": 2560,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "28",
+          "dtype": "float32",
+          "elements": 7168,
+          "declared_bytes": 28672,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "29",
+          "dtype": "float32",
+          "elements": 8,
+          "declared_bytes": 32,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "30",
+          "dtype": "float32",
+          "elements": 458752,
+          "declared_bytes": 1835008,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "31",
+          "dtype": "float32",
+          "elements": 512,
+          "declared_bytes": 2048,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "32",
+          "dtype": "float32",
+          "elements": 458752,
+          "declared_bytes": 1835008,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "33",
+          "dtype": "float32",
+          "elements": 512,
+          "declared_bytes": 2048,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "34",
+          "dtype": "float32",
+          "elements": 114688,
+          "declared_bytes": 458752,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "35",
+          "dtype": "float32",
+          "elements": 128,
+          "declared_bytes": 512,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "36",
+          "dtype": "float32",
+          "elements": 5120,
+          "declared_bytes": 20480,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "37",
+          "dtype": "float32",
+          "elements": 64,
+          "declared_bytes": 256,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "38",
+          "dtype": "float32",
+          "elements": 4096,
+          "declared_bytes": 16384,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "39",
+          "dtype": "float32",
+          "elements": 64,
+          "declared_bytes": 256,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "40",
+          "dtype": "float32",
+          "elements": 5120,
+          "declared_bytes": 20480,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "41",
+          "dtype": "float32",
+          "elements": 64,
+          "declared_bytes": 256,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "42",
+          "dtype": "float32",
+          "elements": 1024,
+          "declared_bytes": 4096,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "43",
+          "dtype": "float32",
+          "elements": 16,
+          "declared_bytes": 64,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "44",
+          "dtype": "float32",
+          "elements": 2048,
+          "declared_bytes": 8192,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "45",
+          "dtype": "float32",
+          "elements": 32,
+          "declared_bytes": 128,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "46",
+          "dtype": "float32",
+          "elements": 32,
+          "declared_bytes": 128,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "47",
+          "dtype": "float32",
+          "elements": 1,
+          "declared_bytes": 4,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "48",
+          "dtype": "float32",
+          "elements": 1,
+          "declared_bytes": 4,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "49",
+          "dtype": "float32",
+          "elements": 4096,
+          "declared_bytes": 16384,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "50",
+          "dtype": "float32",
+          "elements": 64,
+          "declared_bytes": 256,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "51",
+          "dtype": "float32",
+          "elements": 4096,
+          "declared_bytes": 16384,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "52",
+          "dtype": "float32",
+          "elements": 64,
+          "declared_bytes": 256,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "53",
+          "dtype": "float32",
+          "elements": 8192,
+          "declared_bytes": 32768,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "54",
+          "dtype": "float32",
+          "elements": 128,
+          "declared_bytes": 512,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "55",
+          "dtype": "float32",
+          "elements": 2560,
+          "declared_bytes": 10240,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "56",
+          "dtype": "float32",
+          "elements": 20,
+          "declared_bytes": 80,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "57",
+          "dtype": "float32",
+          "elements": 64,
+          "declared_bytes": 256,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "58",
+          "dtype": "float32",
+          "elements": 4096,
+          "declared_bytes": 16384,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "59",
+          "dtype": "float32",
+          "elements": 64,
+          "declared_bytes": 256,
+          "saved_device": "cuda:0"
+        },
+        {
+          "key": "60",
+          "dtype": "float32",
+          "elements": 64,
+          "declared_bytes": 256,
+          "saved_device": "cuda:0"
+        }
+      ],
+      "module_versions": {
+        "": 1,
+        "riemannian_geometry": 1,
+        "riemannian_geometry.christoffel_net": 1,
+        "riemannian_geometry.christoffel_net.0": 1,
+        "riemannian_geometry.christoffel_net.1": 1,
+        "riemannian_geometry.christoffel_net.2": 1,
+        "lambda_calculus": 1,
+        "lambda_calculus.lambda_encoder": 1,
+        "lambda_calculus.lambda_encoder.0": 1,
+        "lambda_calculus.lambda_encoder.1": 1,
+        "lambda_calculus.lambda_encoder.2": 1,
+        "lambda_calculus.application_net": 1,
+        "lambda_calculus.application_net.0": 1,
+        "lambda_calculus.application_net.1": 1,
+        "lambda_calculus.application_net.2": 1,
+        "lambda_calculus.fiber_compose": 1,
+        "lambda_calculus.fiber_compose.0": 1,
+        "lambda_calculus.fiber_compose.1": 1,
+        "lambda_calculus.fiber_compose.2": 1,
+        "input_proj": 1,
+        "output_proj": 1,
+        "base_coord_proj": 1,
+        "fiber_section_proj": 1,
+        "lambda_term_proj": 1,
+        "mixture_proj_w": 1,
+        "mixture_proj_m": 1,
+        "mixture_proj_s": 1,
+        "mixture_proj_u": 1,
+        "base_update_net": 1,
+        "base_update_net.0": 1,
+        "base_update_net.1": 1,
+        "base_update_net.2": 1,
+        "fiber_update_net": 1,
+        "fiber_update_net.0": 1,
+        "fiber_update_net.1": 1,
+        "fiber_update_net.2": 1,
+        "dropout": 1,
+        "dynamics": 1,
+        "dynamics.potential_net": 1,
+        "dynamics.potential_net.0": 1,
+        "dynamics.potential_net.1": 1,
+        "dynamics.potential_net.2": 1,
+        "geodesic_attn": 1,
+        "geodesic_attn.dropout": 1,
+        "geodesic_attn.v_proj": 1,
+        "geodesic_attn.out_proj": 1,
+        "compiler": 1,
+        "compiler.decoder": 1,
+        "compiler.decoder.0": 1,
+        "compiler.decoder.1": 1,
+        "compiler.decoder.2": 1,
+        "phase_memory": 1,
+        "phase_memory.phase_gate": 1,
+        "consensus": 1
+      },
+      "limitations": [
+        "Only a restricted protocol-2 flat tensor-map metadata profile is supported.",
+        "Pickle-declared globals are symbolic; no encoded callable or torch loader is executed.",
+        "No tensor storage values or payload checksums are read or verified.",
+        "Metadata fingerprints do not identify the complete checkpoint.",
+        "Shapes and saved flags do not certify restoration, training history or geometric laws."
+      ]
+    }
+  ],
+  "inspected_sources": [
+    {
+      "archive_relative_path": "igbundle-llm/dist/run_inference_integrated.py",
+      "file_bytes": 6437,
+      "sha256": "56d67f14d3fc842efd696c9c8f4ab0ec9f675a36ed4c3ead9e651ff066fd8aaa",
+      "excerpts": [
+        {
+          "first_line": 5,
+          "last_line": 9,
+          "text": "\n# Add the local library path\ncurrent_dir = os.path.dirname(os.path.abspath(__file__))\nlib_path = os.path.join(current_dir, \"igbundle_lib\")\nsys.path.append(lib_path)"
+        },
+        {
+          "first_line": 18,
+          "last_line": 26,
+          "text": "        sys.exit(1)\n\n    print(f\"Loading GGUF model from {model_path}...\")\n    llm = Llama(\n        model_path=model_path,\n        n_ctx=2048,\n        n_gpu_layers=-1, # Offload all to GPU\n        verbose=False\n    )"
+        },
+        {
+          "first_line": 63,
+          "last_line": 91,
+          "text": "    )\n    \n    tokenizer = AutoTokenizer.from_pretrained(\"Qwen/Qwen2.5-7B-Instruct\", trust_remote_code=True)\n    if tokenizer.pad_token is None: tokenizer.pad_token = tokenizer.eos_token\n        \n    model = AutoModelForCausalLM.from_pretrained(\n        \"Qwen/Qwen2.5-7B-Instruct\", \n        quantization_config=bnb_config,\n        device_map=\"auto\",\n        trust_remote_code=True\n    )\n    model.config.use_cache = False # Required for some adapter gradients, but inference? Safe to keep false for correctness.\n    \n    # 2. Initialize Adapter\n    print(\"Loading Geometric Fiber Adapter...\")\n    config = IGBundleConfig(\n        hidden_size=3584,\n        num_components=8,\n        latent_dim=64,\n        num_categories=16,\n        use_dynamics=True\n    )\n    adapter = create_geometric_adapter(config).to(device)\n    \n    if os.path.exists(adapter_weight_path):\n        adapter.load_state_dict(torch.load(adapter_weight_path), strict=False)\n        print(\"Adapter weights loaded successfully.\")\n    else:\n        print(f\"Warning: Adapter weights not found at {adapter_weight_path}. Using random init.\")"
+        }
+      ]
+    },
+    {
+      "archive_relative_path": "igbundle-llm/dist/igbundle_lib/igbundle/core/config.py",
+      "file_bytes": 2307,
+      "sha256": "772abf538a7bedbc9d4b6aa3a36492065d232642cad6872265d4b7e708106803",
+      "excerpts": [
+        {
+          "first_line": 5,
+          "last_line": 26,
+          "text": "    model_type = \"igbundle\"\n    \n    def __init__(\n        self,\n        base_model_name_or_path: str = \"unsloth/Qwen2.5-7B-Instruct\",\n        hidden_size: int = 4096,\n        adapter_dim: int = 128,\n        manifold_type: str = \"riemannian\",\n        latent_dim: int = 32,\n        num_components: int = 4,\n        num_categories: int = 8,\n        curvature: float = 1.0,\n        version: str = \"2.0.0\",\n        supported_modalities: List[str] = [\"text\"],\n        rlvr_enabled: bool = False,\n        use_dynamics: bool = False,\n        use_geodesic_attn: bool = False,\n        vision_dim: int = 1152,\n        adapter_scale: float = 1.0,\n        dropout: float = 0.1,\n        eta_b: float = 0.01,\n        eta_f: float = 0.01,"
+        }
+      ]
+    },
+    {
+      "archive_relative_path": "igbundle-llm/dist/igbundle_lib/igbundle/modules/geometric_adapter.py",
+      "file_bytes": 44213,
+      "sha256": "daf49ffc9273357dd2abee0c6df61324fe0410be9ca734541ec25236827ae03d",
+      "excerpts": [
+        {
+          "first_line": 91,
+          "last_line": 99,
+          "text": "        self.cfg = config\n\n        # Dimensions\n        self.H = config.hidden_size\n        self.P = config.num_components\n        self.K = config.num_categories\n        self.D = config.latent_dim\n        self.D_bot = getattr(config, 'bottleneck_dim', self.H // 4)\n"
+        },
+        {
+          "first_line": 147,
+          "last_line": 158,
+          "text": "        self.input_proj = nn.Linear(self.H, self.D_bot)\n        self.output_proj = nn.Linear(self.D + self.K, self.H)\n\n        # Base manifold coordinate projection\n        self.base_coord_proj = nn.Linear(self.D_bot, self.P * self.D)\n\n        # Fiber bundle section projection\n        self.fiber_section_proj = nn.Linear(self.D_bot, self.P * self.K)\n\n        # Lambda calculus term encoding\n        self.lambda_term_proj = nn.Linear(self.D_bot, self.P * (self.D + self.K))\n"
+        },
+        {
+          "first_line": 194,
+          "last_line": 229,
+          "text": "        # EPIC 5: Multimodal Genesis (Vision)\n        # ------------------------------------------------------------------\n        if \"vision\" in getattr(config, \"supported_modalities\", []):\n            print(\"GeometricIGBundle: Initializing Vision Projector (Epic 5)\")\n            vision_dim = getattr(config, \"vision_dim\", 1152) \n            self.vision_projector = VisionProjector(\n                vision_dim=vision_dim, \n                bottleneck_dim=self.D_bot,\n                dropout=config.dropout\n            )\n            # Cross-Attention: Text (Query) attends to Vision (Key/Value)\n            self.vision_attn = nn.MultiheadAttention(\n                embed_dim=self.D_bot,\n                num_heads=4, \n                dropout=config.dropout,\n                batch_first=True\n            )\n            self.vision_norm = nn.LayerNorm(self.D_bot)\n        else:\n            self.vision_projector = None\n            self.vision_attn = None\n\n        # EPIC 1: Hamiltonian Dynamics (Moved to Phase 2 block above)\n        self.use_dynamics = getattr(config, 'use_dynamics', False)\n\n        # EPIC 2: Geodesic Attention\n        self.use_geodesic_attn = getattr(config, 'use_geodesic_attn', False)\n        if self.use_geodesic_attn:\n            self.geodesic_attn = PoincareAttention(self.D)\n\n        # EPIC 3: Task Compiler\n        self.compiler = ManifoldDecompiler(self.D)\n\n        # EPIC 6: Quantum Cognition (Memory)\n        self.phase_memory = GeometricPhaseMemory(self.D)\n        "
+        },
+        {
+          "first_line": 967,
+          "last_line": 969,
+          "text": "def create_geometric_adapter(config) -> GeometricIGBundleAdapter:\n    \"\"\"Factory function to create geometrically rigorous adapter.\"\"\"\n    return GeometricIGBundleAdapter(config)"
+        }
+      ]
+    },
+    {
+      "archive_relative_path": "igbundle-llm/dist/igbundle_lib/igbundle/modules/vision.py",
+      "file_bytes": 2294,
+      "sha256": "bc83c956436d12618b92bc59ef73e739fd8e50481ffca7b1fee108eba939765e",
+      "excerpts": [
+        {
+          "first_line": 15,
+          "last_line": 63,
+          "text": "    \"\"\"\n    def __init__(self, vision_dim: int, bottleneck_dim: int, dropout: float = 0.1):\n        super().__init__()\n        self.vision_dim = vision_dim\n        self.bottleneck_dim = bottleneck_dim\n        \n        # 1. Initial Projection\n        self.input_proj = nn.Linear(vision_dim, bottleneck_dim * 2)\n        self.norm1 = nn.LayerNorm(bottleneck_dim * 2)\n        self.activation = nn.GELU()\n        \n        # 2. Gated Residual Integration\n        # Transforms visual concepts to align with \"Text\" manifold space\n        self.gate_proj = nn.Linear(bottleneck_dim * 2, bottleneck_dim) # Determine \"relevance\"\n        self.feat_proj = nn.Linear(bottleneck_dim * 2, bottleneck_dim) # Transform content\n        \n        self.norm2 = nn.LayerNorm(bottleneck_dim)\n        self.dropout = nn.Dropout(dropout)\n        \n        # 3. Geometric Bias (Optional)\n        # Learnable \"Center\" for visual concept cluster\n        self.visual_bias = nn.Parameter(torch.zeros(1, 1, bottleneck_dim))\n\n    def forward(self, vision_features: torch.Tensor) -> torch.Tensor:\n        \"\"\"\n        Args:\n            vision_features: (B, N, V_dim)\n        Returns:\n            projected: (B, N, D_bot)\n        \"\"\"\n        B, N, _ = vision_features.shape\n        \n        # 1. Project to intermediate space\n        x = self.input_proj(vision_features) # (B, N, D*2)\n        x = self.norm1(x)\n        x = self.activation(x)\n        \n        # 2. Gated Projection\n        gate = torch.sigmoid(self.gate_proj(x)) # (B, N, D)\n        feat = self.feat_proj(x)               # (B, N, D)\n        \n        out = gate * feat # Gated feature flow\n        out = self.norm2(out)\n        out = self.dropout(out)\n        \n        # 3. Add Bias\n        out = out + self.visual_bias\n        \n        return out"
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Metadata and source fingerprints are not full-checkpoint or training-run identities.",
+    "ZIP storage sizes are declarations; payload values, checksums and storage extents are not verified.",
+    "Source excerpts describe the inspected files, not an immutable record of the original save or execution.",
+    "Width/shape agreement does not certify restoration, vision alignment, task benefit or geometric/hypercomplex laws."
+  ]
+}

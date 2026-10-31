@@ -25,6 +25,54 @@ class TestEvidence(unittest.TestCase):
         self.assertEqual(exact_mcnemar(2, 0), 0.5)
         self.assertEqual(exact_mcnemar(3, 2), 1.0)
 
+    def test_recorded_companion_metadata(self):
+        directory = ROOT / "docs" / "benchmark-results"
+        record = json.loads((directory / "companion-state-metadata.json").read_text(encoding="utf-8"))
+        self.assertEqual(record["protocol"], "companion-state-audit-v1")
+        reports = {report["file_name"]: report for report in record["checkpoints"]}
+        self.assertEqual(len(reports), 4)
+        self.assertEqual(record["total_tensor_descriptors"], 226)
+        self.assertEqual(record["total_metadata_read_bytes"], 52399)
+        self.assertEqual(sum(report["metadata_read_bytes"] for report in reports.values()), 52399)
+        for filename, count in (("adapter_refined.pt", 81), ("arc_adapter.pt", 73),
+                                ("arc_projector.pt", 11), ("adapter_weights.pt", 61)):
+            report = reports[filename]
+            self.assertEqual(report["protocol"], "torch-state-metadata-v1")
+            self.assertEqual(report["tensor_count"], count)
+            self.assertEqual(len(report["tensors"]), count)
+            self.assertEqual(report["storage_count"], count)
+            stores = {storage["key"]: storage for storage in report["storages"]}
+            self.assertEqual(len(stores), count)
+            self.assertEqual(report["tensor_storage_members_opened"], 0)
+            self.assertLessEqual(report["metadata_bytes"], 1024 * 1024)
+            self.assertLessEqual(report["zip_directory_bytes"], 1024 * 1024)
+            self.assertEqual(report["sum_tensor_elements"], sum(math.prod(t["shape"]) for t in report["tensors"]))
+            for key in ("metadata_sha256", "zip_directory_sha256"):
+                self.assertRegex(report[key], r"^[0-9a-f]{64}$")
+            for tensor in report["tensors"]:
+                storage = stores[tensor["storage_key"]]
+                self.assertEqual(tensor["dtype"], storage["dtype"])
+                itemsize = {"float32": 4, "bfloat16": 2}[storage["dtype"]]
+                self.assertEqual(storage["declared_bytes"], storage["elements"] * itemsize)
+                self.assertEqual(len(tensor["shape"]), len(tensor["stride"]))
+                span = 1 + sum((size - 1) * step for size, step in zip(tensor["shape"], tensor["stride"]))
+                self.assertLessEqual(tensor["storage_offset"] + span, storage["elements"])
+        arc = {tensor["name"]: tensor for tensor in reports["arc_adapter.pt"]["tensors"]}
+        gguf = json.loads((directory / "gguf-arc-directory.json").read_text(encoding="utf-8"))
+        self.assertEqual(arc["input_proj.weight"]["shape"], [896, 3584])
+        self.assertEqual(arc["output_proj.weight"]["shape"], [3584, 40])
+        self.assertEqual(gguf["metadata"]["qwen2.embedding_length"], 896)
+        self.assertNotEqual(arc["input_proj.weight"]["shape"][1], gguf["metadata"]["qwen2.embedding_length"])
+        for tensor in reports["arc_projector.pt"]["tensors"]:
+            embedded = arc["vision_projector." + tensor["name"]]
+            self.assertEqual(tensor["shape"], embedded["shape"])
+            self.assertEqual(tensor["dtype"], "bfloat16")
+            self.assertEqual(embedded["dtype"], "float32")
+        dist = reports["adapter_refined.pt"]["tensors"]
+        self.assertEqual(sum(t["name"].startswith(("vision_projector.", "vision_attn.", "vision_norm."))
+                             for t in dist), 17)
+        self.assertEqual(sum(t["name"].startswith("geodesic_attn.") for t in dist), 5)
+
     def test_native_gguf_recorded_witness(self):
         path = ROOT / "docs" / "benchmark-results" / "native-gguf-reference.json"
         record = json.loads(path.read_text(encoding="utf-8"))
