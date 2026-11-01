@@ -64,8 +64,13 @@ runtime certification; prefix hashes still exclude all weights.
 dual cotangent transport. The fixed loop rotates by -0.238857852 radians,
 where the archived scale-only formula returns zero.
 [Numerical witness](benchmark-results/transport-reference.json).
-The metric is prescribed and no adapter/GGUF path uses this reference.
-The archived momentum caller is not repaired or certified by these tests.
+Source inspection also confirms that the archived leapfrog computes
+`p^T g^-1 p / 2` but applies tangent-only transport to that covector. On the
+prescribed edge `(.3,0) -> (0,.4)` at `c=1`, this substitution yields a
+kinetic-energy ratio of 0.7260249991; dual transport preserves it within
+float64 roundoff. This is a bounded operator counterexample, not a complete
+integrator repair or certification. The metric is prescribed and no
+adapter/GGUF path uses this reference.
 
 **Declared-LoRA coverage:** six public load/merge paths verify exact serialized
 keys and restored values. Tiny real PEFT checks cover nonzero wrapped-save state

@@ -292,6 +292,13 @@ and cotangent transport for the **prescribed** metric
 It includes gyration, the rotation missing from the archive's scale-only method.
 Momentum uses the dual map, not the tangent map.
 
+The archived `LeapfrogIntegrator` computes kinetic energy with the inverse
+metric, so its momentum is a covector, but transports that momentum with the
+tangent-only map. On the edge `(.3,0) -> (0,.4)` at `c=1`, that substitution
+gives a kinetic-energy ratio of `0.7260249991`; the dual map preserves it within
+float64 roundoff. This is a source-level operator counterexample, not a repair
+or full certification of the archived integrator.
+
 For the geodesic triangle `(0,0) -> (.3,0) -> (0,.4) -> (0,0)` at `c=1`,
 the returned tangent rotates by `-0.238857852` radians, matching the negative
 angle defect; scale-only transport returns zero rotation.
