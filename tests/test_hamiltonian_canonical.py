@@ -105,6 +105,36 @@ class CanonicalHamiltonianTests(unittest.TestCase):
         torch.testing.assert_close(q_actual, q_expected, rtol=0, atol=1e-14)
         torch.testing.assert_close(p_actual, p_expected, rtol=0, atol=1e-14)
 
+    def test_split_preserves_canonical_symplectic_form(self):
+        ball = PoincareBall(2, c=0.7)
+        potential = QuadraticPotential(1.5).double()
+        integrator = LeapfrogIntegrator(
+            VectorField(ball, potential), step_size=0.015, num_steps=1,
+        )
+        omega = torch.zeros((4, 4), dtype=torch.float64)
+        omega[:2, 2:] = torch.eye(2, dtype=torch.float64)
+        omega[2:, :2] = -torch.eye(2, dtype=torch.float64)
+
+        for coordinates in (
+            (0.2, -0.1, 0.3, 0.15),
+            (-0.3, 0.15, -0.2, 0.1),
+            (0.05, 0.25, 0.1, -0.4),
+        ):
+            with self.subTest(state=coordinates):
+                phase_state = torch.tensor(
+                    coordinates, dtype=torch.float64, requires_grad=True,
+                )
+
+                def flow(state):
+                    q, p = state[:2].reshape(1, 2), state[2:].reshape(1, 2)
+                    q_next, p_next = integrator.step(q, p)
+                    return torch.cat((q_next.reshape(-1), p_next.reshape(-1)))
+
+                jacobian = torch.autograd.functional.jacobian(flow, phase_state)
+                torch.testing.assert_close(
+                    jacobian.T @ omega @ jacobian, omega, rtol=1e-10, atol=1e-10,
+                )
+
     def test_split_is_reversible_and_has_bounded_energy_error(self):
         ball = PoincareBall(2)
         vf = VectorField(ball, QuadraticPotential(1.5).double())
