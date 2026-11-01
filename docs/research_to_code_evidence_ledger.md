@@ -70,8 +70,9 @@ prescribed edge `(.3,0) -> (0,.4)` at `c=1`, this substitution yields a
 kinetic-energy ratio of 0.7260249991; dual transport preserves it within
 float64 roundoff. This is a bounded operator counterexample for the archived
 implementation. The public source now contains a separate opt-in canonical
-Poincare split integrator, tested against independent hyperboloid flow and
-finite-step reversibility checks. It is not wired into an adapter/GGUF path,
+Poincare split integrator, tested against independent hyperboloid flow,
+sampled canonical symplectic-form Jacobians and finite-step reversibility.
+It is not wired into an adapter/GGUF path,
 does not validate historical checkpoints, and gives no model-benefit result.
 
 **Declared-LoRA coverage:** six public load/merge paths verify exact serialized

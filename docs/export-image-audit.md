@@ -566,10 +566,11 @@ multiplication or task result.
 
 The integrator's targeted CPU test compares its exponential map with an
 independent Lorentz-hyperboloid geodesic flow, checks analytic Hamiltonian
-gradients, dual momentum transport, reversibility, bounded finite-step energy
-error, training gradients and inference-mode execution. These checks cover
-float32/float64 state only and do not certify every numerical regime, the
-archived checkpoint history, a training run, or downstream model benefit.
+gradients, dual momentum transport, sampled canonical symplectic-form
+Jacobians, reversibility, bounded finite-step energy error, training gradients
+and inference-mode execution. These checks cover float32/float64 state only and
+do not certify every numerical regime, the archived checkpoint history, a
+training run, or downstream model benefit.
 
 ```powershell
 python -m unittest discover -b -s tests -p test_poincare_transport.py
