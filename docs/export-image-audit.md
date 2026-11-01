@@ -525,8 +525,10 @@ The archived integrator uses precisely that inverse-metric kinetic energy but
 passes its momentum directly to tangent transport. For the isolated test edge
 `(.3,0) -> (0,.4)`, that substitution gives a kinetic-energy ratio of
 `0.7260249991`, whereas the dual map preserves it within float64 roundoff.
-This is an operator counterexample, **not an energy measurement or repair of
-the complete integrator**. No symplecticity or time-reversal claim is made.
+This is an operator counterexample for the archived implementation, **not an
+energy measurement from a model**. The public source now includes a separate
+opt-in canonical split integrator; it does not replace the archived code or
+change the default adapter.
 
 For the positively oriented geodesic triangle
 `(0,0) -> (.3,0) -> (0,.4) -> (0,0)`, the full returned tangent is
@@ -552,18 +554,28 @@ batch broadcasting and half/bfloat16 promotion to float32; and explicit
 invalid-input rejection. This is not exhaustive floating-point verification,
 especially near the ball boundary, or a formal proof-assistant certificate.
 
-```powershell
-python -m unittest discover -b -s tests -p test_poincare_transport.py
-python scripts\transport_reference.py
-```
-
 Inputs must be finite, broadcast-compatible tensors with matching dtype/device,
 and points strictly inside the curvature-scaled ball. The implementation does
 not silently project or clamp points and raises on transport overflow.
-The class intentionally provides only conformal factor and tangent/cotangent
-transport, not the archive's full exp/log/dynamics API. It is not imported by
-either adapter or GGUF runtime. Archive files remain unchanged. The metric is
-prescribed, not learned; this adds no hypercomplex multiplication or task result.
+The transport class provides conformal factor and tangent/cotangent transport.
+The separate `igbundle.dynamics.LeapfrogIntegrator` supplies the exact
+exponential map and symmetric canonical splitting; the opt-in path is not
+imported by either adapter or GGUF runtime. The archived source files remain
+unchanged. The metric is prescribed, not learned; this adds no hypercomplex
+multiplication or task result.
+
+The integrator's targeted CPU test compares its exponential map with an
+independent Lorentz-hyperboloid geodesic flow, checks analytic Hamiltonian
+gradients, dual momentum transport, reversibility, bounded finite-step energy
+error, training gradients and inference-mode execution. These checks cover
+float32/float64 state only and do not certify every numerical regime, the
+archived checkpoint history, a training run, or downstream model benefit.
+
+```powershell
+python -m unittest discover -b -s tests -p test_poincare_transport.py
+python -m unittest discover -b -s tests -p test_hamiltonian_canonical.py
+python scripts\transport_reference.py
+```
 
 ### Legacy adapter execution checkpoint
 

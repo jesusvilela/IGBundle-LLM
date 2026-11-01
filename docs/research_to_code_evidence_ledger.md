@@ -68,9 +68,11 @@ Source inspection also confirms that the archived leapfrog computes
 `p^T g^-1 p / 2` but applies tangent-only transport to that covector. On the
 prescribed edge `(.3,0) -> (0,.4)` at `c=1`, this substitution yields a
 kinetic-energy ratio of 0.7260249991; dual transport preserves it within
-float64 roundoff. This is a bounded operator counterexample, not a complete
-integrator repair or certification. The metric is prescribed and no
-adapter/GGUF path uses this reference.
+float64 roundoff. This is a bounded operator counterexample for the archived
+implementation. The public source now contains a separate opt-in canonical
+Poincare split integrator, tested against independent hyperboloid flow and
+finite-step reversibility checks. It is not wired into an adapter/GGUF path,
+does not validate historical checkpoints, and gives no model-benefit result.
 
 **Declared-LoRA coverage:** six public load/merge paths verify exact serialized
 keys and restored values. Tiny real PEFT checks cover nonzero wrapped-save state

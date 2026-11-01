@@ -1,7 +1,7 @@
-"""Opt-in geodesic transport for the prescribed Poincare metric, K = -c.
+"""Reference operations for the prescribed Poincare metric, K = -c.
 
-This reference is not a drop-in replacement for archived dynamics and is not
-wired into either adapter. In particular, momenta are covectors, not tangents.
+These operators are not wired into either adapter. Hamiltonian dynamics is
+provided separately as an opt-in module; momenta are covectors, not tangents.
 """
 
 import math
@@ -11,7 +11,7 @@ from torch import nn
 
 
 class PoincareBall(nn.Module):
-    """Transport on g_x = [2 / (1 - c ||x||^2)]^2 I, for fixed c > 0."""
+    """Geodesic operations on g_x = [2 / (1 - c ||x||^2)]^2 I, for c > 0."""
 
     def __init__(self, dim: int, c: float = 1.0):
         super().__init__()
@@ -51,6 +51,39 @@ class PoincareBall(nn.Module):
         (x,) = self._prepare(x)
         _, gap = self._ball_coordinates(x)
         return 2 / gap
+
+    def exp_map(self, x: torch.Tensor, tangent: torch.Tensor) -> torch.Tensor:
+        """Map a tangent vector to the ball along its exact geodesic."""
+        x, tangent = self._prepare(x, tangent)
+        _, gap_x = self._ball_coordinates(x)
+        sqrt_c = math.sqrt(self.c)
+        lam = 2 / gap_x
+        z_squared = self.c * lam.square() * tangent.square().sum(dim=-1, keepdim=True) / 4
+        z = torch.sqrt(z_squared.clamp_min(torch.finfo(z_squared.dtype).tiny))
+        threshold = torch.finfo(z_squared.dtype).eps
+        ratio = torch.where(
+            z_squared < threshold,
+            1 - z_squared / 3 + 2 * z_squared.square() / 15
+            - 17 * z_squared.pow(3) / 315 + 62 * z_squared.pow(4) / 2835,
+            torch.tanh(z) / z.clamp_min(math.sqrt(threshold)),
+        )
+        factor = lam * ratio / 2
+        step = factor * tangent
+
+        x_sq = x.square().sum(dim=-1, keepdim=True)
+        step_sq = step.square().sum(dim=-1, keepdim=True)
+        x_step = (x * step).sum(dim=-1, keepdim=True)
+        denominator = 1 + 2 * self.c * x_step + self.c**2 * x_sq * step_sq
+        if not torch.isfinite(denominator).all() or (denominator <= 0).any():
+            raise ValueError("Exponential map denominator lost positivity")
+        result = (
+            (1 + 2 * self.c * x_step + self.c * step_sq) * x
+            + (1 - self.c * x_sq) * step
+        ) / denominator
+        if not torch.isfinite(result).all():
+            raise ValueError("Exponential map overflow at this precision")
+        self._ball_coordinates(result)
+        return result
 
     @staticmethod
     def _gyration(u, v, w):
