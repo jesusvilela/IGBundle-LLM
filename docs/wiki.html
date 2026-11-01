@@ -178,9 +178,8 @@
                 metric, so its momentum is a covector, but passes that momentum
                 through tangent-only transport. On the edge (.3,0) to (0,.4)
                 at c=1 this yields a kinetic-energy ratio of 0.7260249991;
-                the dual map preserves it to float64 roundoff. This is a
-                source-level operator counterexample, not a complete integrator
-                repair or certification.
+                the dual map preserves it to float64 roundoff. This remains a
+                source-level counterexample for that archived implementation.
             </p>
             <p>On the prescribed K=-1 geodesic triangle
                 (0,0) to (.3,0) to (0,.4) to (0,0), the tangent rotates by
@@ -188,10 +187,20 @@
                 calculation and the negative angle defect. Scale-only transport
                 returns zero rotation.
             </p>
-            <p><a href="benchmark-results/transport-reference.json">Numerical witness</a>
-                and <a href="https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/export-image-audit.md#hyperbolic-transport-checkpoint">source fingerprints, dual-map derivation and bounded test scope</a>.
-                This reference is not wired into either adapter or GGUF and does
-                not certify the archived integrator, learned geometry or task benefit.
+            <p>The current source also includes an opt-in canonical split
+                integrator: potential kick, exact Poincare geodesic flow with
+                cotangent transport, then potential kick. Bounded CPU tests
+                check analytic energy gradients, an independent hyperboloid
+                exponential-map reference, reversibility, energy error and
+                inference-mode execution. These are prescribed-operator checks,
+                not a formal proof or model evaluation.
+            </p>
+            <p><a href="benchmark-results/transport-reference.json">Transport numerical witness</a>
+                and <a href="https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/export-image-audit.md#hyperbolic-transport-checkpoint">source fingerprints, derivations and scope</a>.
+                The integrator requires float32/float64 state, is not wired into
+                either adapter or GGUF, and has not been used to retrain or
+                re-evaluate a checkpoint. No learned geometry or task benefit
+                is established.
             </p>
 
             <h2 id="legacy-execution">13. Legacy adapter execution</h2>

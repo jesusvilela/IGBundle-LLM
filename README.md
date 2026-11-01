@@ -49,6 +49,7 @@ This is a small language-modeling probe, not task accuracy. A had 4,160,713 trai
 ### Historical diagnostics and task evaluations
 
 - The historical audit file reports **6/6 checks passed**, but does not bind the run to immutable source and checkpoint hashes. The inspected audit loader allows random initialization when weights are missing and non-strict loading. Its displacement and squared-coordinate-norm proxies do not verify parallel transport or Hamiltonian energy conservation. Retained as a historical report, **not operator certification**. [Audit data](docs/benchmark-results/faithfulness-audit-A.json) · [method limitations](docs/benchmark-results/provenance.json).
+- The archived Hamiltonian transport defect now has a separate, opt-in canonical Poincare integrator. It uses a symmetric potential-kick / exact-geodesic / potential-kick split and dual covector transport. This is an operator implementation with bounded CPU tests, not a model-quality result; it is not wired into the default adapter and does not validate historical checkpoint scores. [Implementation and limits](docs/wiki.html#hyperbolic-transport).
 - Historical zero-shot ARC-Challenge `acc_norm` was **54.86% for both** an adapter checkpoint and the base (1,172 test items per run). This is a separate protocol and dataset size from the October subset run. [Adapter results](docs/benchmark-results/arc-challenge-adapter-2026-01.json) · [Base results](docs/benchmark-results/arc-challenge-base-2026-01.json).
 - A separate historical ARC-AGI evaluator reported **1/100 (1%)**, but scored only the first test pair per task and allowed substring matching. This is not an all-test-pair exact-task solve rate. Model-First Reasoning format compliance was **0/100**; it is a prompt-format metric, not geometric faithfulness. [Historical aggregate](docs/benchmark-results/arc-agi-summary.json) · [strict rescoring of the saved first-pair answers](docs/benchmark-results/arc-agi-rescore.json).
 
@@ -62,6 +63,7 @@ The historical value near -5.63 is not evidence of learned hyperbolicity. For `g
 |---|---|---|
 | Default-adapter restoration | Exact registered tensor coverage, shapes, finite values and safe dtype conversion before copying; missing-weight rejection in five HF entry points; tiny restored-operator execution | Historical checkpoint compatibility, base/LoRA identity, production HF loading, or GGUF adapter execution |
 | Default `IGBundleAdapter` / Poincare affinity | Radial projection, analytic origin distances, exact zero diagonal, symmetry, sampled triangle inequalities, finite/checked gradients, float32/bfloat16 small-tensor forward/backward, identity initialization | Trained-model quality, learned geometry, or all possible numerical inputs |
+| Opt-in canonical Poincare Hamiltonian | Exact geodesic exponential map, cotangent transport, analytic energy gradients, finite-step reversibility/energy checks, and inference-mode execution on bounded CPU inputs | Not connected to either adapter or GGUF; no training, checkpoint compatibility, low-precision integration, or model benefit |
 | `arc_eval.py`, HF and GGUF ARC runners | Shared deterministic selection, strict grid equality, all test pairs, errors retained and run invalidated, explicit empty-run rejection, output overwrite protection | Backend model loading or restoration of separate runtime adapter weights; no new model evaluation was run |
 | Historical evidence | Recomputed NLL means and paired statistics; October accuracies, indices and McNemar tests; source hashes and first-pair ARC rescoring | Independent grading, dataset non-contamination, or complete reproduction from a fresh clone |
 | Synthetic F32 Qwen2 GGUFs | Native full/incremental logits compared with PyTorch, tied/untied output weights, grouped-query attention and malformed-shape rejection | Not the archived exports, tokenizer semantics, quantized kernels, public converter or geometric/hypercomplex integration |
@@ -106,6 +108,7 @@ Nine research images were reviewed against their generators. The thesis loss, af
 ```
 src/igbundle/
 ├── geometry/          # Legacy experimental geometry; not certified
+├── dynamics/          # Opt-in canonical Poincare Hamiltonian; not wired into adapters
 ├── modules/           # Default mixture adapter, KL, affinity, and losses
 ├── integrations/      # Hugging Face block wrapping
 └── training/          # Legacy experimental training utilities
@@ -142,6 +145,7 @@ In an existing environment with PyTorch, the bounded operator checks are:
 ```bash
 python -m unittest discover -s tests -p test_geometry.py
 python -m unittest discover -s tests -p test_ig.py
+python -m unittest discover -b -s tests -p test_hamiltonian_canonical.py
 python -m unittest discover -b -s tests -p test_checkpoint.py
 python -m unittest discover -b -s tests -p test_torch_checkpoint_metadata.py
 python -m unittest discover -b -s tests -p test_legacy_geometric_adapter.py
@@ -296,8 +300,11 @@ The archived `LeapfrogIntegrator` computes kinetic energy with the inverse
 metric, so its momentum is a covector, but transports that momentum with the
 tangent-only map. On the edge `(.3,0) -> (0,.4)` at `c=1`, that substitution
 gives a kinetic-energy ratio of `0.7260249991`; the dual map preserves it within
-float64 roundoff. This is a source-level operator counterexample, not a repair
-or full certification of the archived integrator.
+float64 roundoff. This identifies a defect in the archived integrator, not an
+energy measurement from a model. The current source also contains an opt-in
+canonical split integrator; bounded tests check reversibility and finite-step
+energy error for a prescribed potential. No default adapter, GGUF, or
+historical checkpoint uses this path, and no model-quality result follows.
 
 For the geodesic triangle `(0,0) -> (.3,0) -> (0,.4) -> (0,0)` at `c=1`,
 the returned tangent rotates by `-0.238857852` radians, matching the negative
@@ -307,10 +314,13 @@ alongside metric products, inverse transport, gradients and explicit domain erro
 [Numerical witness](docs/benchmark-results/transport-reference.json) and
 [audit, derivation and limits](docs/export-image-audit.md#hyperbolic-transport-checkpoint).
 
-Run `python scripts\transport_reference.py` in a compatible PyTorch environment.
-This is a transport-only reference, not a drop-in dynamics replacement.
-It is **not wired into either adapter or GGUF**, does not repair the archived
-Hamiltonian integrator, and establishes no learned curvature or model benefit.
+Run `python scripts\transport_reference.py` in a compatible PyTorch environment
+for the transport-only witness. The separate opt-in integrator is
+`igbundle.dynamics.LeapfrogIntegrator`; its bounded CPU regression test is
+`tests/test_hamiltonian_canonical.py`. It requires float32 or float64 states
+and is **not wired into either adapter or GGUF**. It does not repair or
+revalidate archived checkpoints, establish learned curvature, or demonstrate
+model benefit.
 
 ### Legacy adapter execution
 

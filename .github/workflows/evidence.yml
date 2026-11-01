@@ -47,6 +47,7 @@ jobs:
           python -m unittest discover -b -s tests -p test_torch_checkpoint_metadata.py
           python -m unittest discover -b -s tests -p test_projection_display.py
           python -m unittest discover -b -s tests -p test_poincare_transport.py
+          python -m unittest discover -b -s tests -p test_hamiltonian_canonical.py
           python -m unittest discover -b -s tests -p test_legacy_geometric_adapter.py
           python scripts/transport_reference.py
       - name: Install small plotting test dependencies
