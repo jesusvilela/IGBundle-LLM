@@ -60,7 +60,9 @@ jobs:
       - name: Install pinned HF test dependencies
         run: python -m pip install -r requirements-test-hf.txt
       - name: Tiny real HF integration
-        run: python -m unittest discover -b -s tests -p test_tiny_hf_integration.py
+        run: |
+          python -m unittest discover -b -s tests -p test_tiny_hf_integration.py
+          python -m unittest discover -b -s tests -p test_pipeline.py
       - name: Build pinned CPU-only native GGUF check
         run: |
           git init "$RUNNER_TEMP/native-source"
