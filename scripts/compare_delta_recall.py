@@ -107,7 +107,7 @@ def evaluate_round_order(model, original, swapped, labels, first_labels, changed
     return int(both_correct[changed].sum())
 
 
-def run(rounds, encoder="one-hot"):
+def run(rounds, encoder="one-hot", *, decay=DECAY):
     torch.set_num_threads(1)
     backbone = make_qwen_encoder() if encoder == "qwen2" else None
     input_width = backbone.config.hidden_size if backbone is not None else KEYS + 2
@@ -125,7 +125,7 @@ def run(rounds, encoder="one-hot"):
         "batch_size": BATCH_SIZE,
         "eval_size_per_seed": EVAL_SIZE,
         "learning_rate": LEARNING_RATE,
-        "decaying_additive_retention_per_token": DECAY,
+        "decaying_additive_retention_per_token": decay,
         "runs": [],
     }
     for seed in SEEDS:
@@ -135,7 +135,7 @@ def run(rounds, encoder="one-hot"):
         additive = copy.deepcopy(recurrent)
         additive.erase = False
         decaying = DeltaFiberUpdate(input_width - 2, 2, mem_dim=16, num_heads=2,
-                                   erase=False, decay=DECAY)
+                                   erase=False, decay=decay)
         decaying.load_state_dict(recurrent.state_dict())
         fit(recurrent, seed + 1, reset=False, rounds=rounds, backbone=backbone)
         fit(reset, seed + 1, reset=True, rounds=rounds, backbone=backbone)
@@ -191,5 +191,11 @@ if __name__ == "__main__":
         "--encoder", choices=("one-hot", "qwen2"), default="one-hot",
         help="Use a frozen random tiny Qwen2 encoder with the pinned HF dependencies.",
     )
+    parser.add_argument(
+        "--decay", type=float, default=DECAY,
+        help="Fraction of prior memory retained per token in the decaying additive arm.",
+    )
     args = parser.parse_args()
-    print(json.dumps(run(args.write_rounds, args.encoder), indent=2, allow_nan=False))
+    if not 0.0 <= args.decay <= 1.0:
+        parser.error("--decay must be between zero and one")
+    print(json.dumps(run(args.write_rounds, args.encoder, decay=args.decay), indent=2, allow_nan=False))

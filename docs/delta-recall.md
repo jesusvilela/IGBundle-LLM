@@ -71,8 +71,21 @@ and mean query negative log likelihood.
 
 The delta model learned to track the most recent write on this four-key
 task. It scored 730/730 changed pairs. Fixed decay tracked recency on
-682/730 pairs. This comparison uses one retention factor and three
-seeds. Curvature and entropy modulation were inactive in training.
+682/730 pairs at the default retention of 0.8. An exploratory sweep
+on the same three evaluation seeds gave the following counts.
+
+| Retention per token | Original order / 1,536 | Both orders on changed pairs / 730 |
+| ---: | ---: | ---: |
+| 0.50 | 1,519 | 697 |
+| 0.65 | 1,517 | 688 |
+| 0.80 | 1,515 | 682 |
+| 0.90 | 1,490 | 632 |
+| 0.95 | 1,424 | 520 |
+
+Reproduce a row with `python scripts/compare_delta_recall.py --write-rounds 2 --decay 0.5`,
+using the same `PYTHONPATH` setup as above. The sweep reuses evaluation data and
+leaves performance after selecting a retention factor on independent data open.
+Curvature and entropy modulation were inactive in training.
 
 ## Frozen tiny Qwen2 features
 
@@ -101,7 +114,7 @@ because the contextual vectors change when the order changes.
 
 The delta head retained its overwrite result when the input came from
 causal transformer features. The decaying additive head solved 638/730
-changed pairs. The experiment trains a classifier on a synthetic token
+changed pairs at 0.8 retention and 634/730 at 0.5. The experiment trains a classifier on a synthetic token
 vocabulary. It leaves pretrained weights, language-model loss and
 autoregressive generation for a separate experiment.
 
