@@ -118,6 +118,59 @@ changed pairs at 0.8 retention and 634/730 at 0.5. The experiment trains a class
 vocabulary. It leaves pretrained weights, language-model loss and
 autoregressive generation for a separate experiment.
 
+## Pretrained Qwen2.5 residual logits
+
+This experiment maps each synthetic event to one token from a local
+pretrained Qwen2 tokenizer. It trains a memory head on the frozen final
+hidden states and adds its two corrections to the native logits for
+answer tokens `0` and `1`. Every arm starts with a zero correction,
+and the base model supplies the same hidden states and logits to all
+arms. The unadapted model, additive memory, two decay rates, and the
+memory-reset head serve as controls.
+
+```powershell
+$env:PYTHONPATH = 'src'
+python -m scripts.compare_pretrained_recall 'path-to-local-qwen2-checkpoint' --steps 64 --eval-size 256 --threads 4
+```
+
+Use the pinned CPU and Hugging Face dependencies above. The command
+requires a local Qwen2 checkpoint with a single `model.safetensors`
+file and records the weight and config digests. It trains on the
+original orders only and screens out both orders of every evaluation
+prefix within the corresponding seed. The target is the token for
+the last-written bit. Log-sum-exp over the unchanged vocabulary
+entries gives the exact full-vocabulary loss for the two edited
+logits. The script reports that loss and full-vocabulary top-1,
+alongside two-choice and swapped-order scores.
+
+### Recorded pretrained run
+
+The [JSON report](benchmark-results/pretrained-delta-recall.json) records
+three seeds with 256 evaluation queries each after 64 optimizer steps.
+The frozen model had 494,032,768 parameters, with 46,666 allocated to
+each trainable head. One sampled training prefix was rejected because
+it matched a held-out prefix.
+
+| Arm | Full-vocabulary top-1 / 768 | Answer choice / 768 | Both orders on changed pairs / 362 | Mean full-vocabulary NLL |
+| --- | ---: | ---: | ---: | ---: |
+| Frozen base | 0 | 398 | 11 | 8.1612 |
+| Delta | 476 | 476 | 73 | 0.8218 |
+| Memory reset | 476 | 476 | 73 | 0.6373 |
+| Additive | 400 | 400 | 34 | 0.7920 |
+| Decaying additive (0.5) | 538 | 538 | 107 | 0.5790 |
+| Decaying additive (0.8) | 446 | 446 | 18 | 0.8049 |
+
+At this budget the 0.5 decaying control led overall. The delta head
+led the controls on seed 11 and got zero changed pairs right in both
+orders on seed 29. The large NLL improvement over the frozen base
+includes learning to assign probability to the two designated
+answer tokens, shared by all trained arms.
+
+This task uses a synthetic symbol vocabulary. The adapter applies its
+correction at the query position. The experiment covers supervised
+next-token prediction on that task, with the ordinary language
+distribution and generation behavior still open.
+
 ## Consolidation scope
 
 The source development tip is `1b35fad` and the upstream base is `4e19e15`.

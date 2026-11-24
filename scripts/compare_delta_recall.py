@@ -37,13 +37,29 @@ def make_qwen_encoder():
 def encode(inputs, backbone):
     if backbone is None:
         return inputs
+    hidden = backbone(input_ids=event_ids(inputs), use_cache=False).last_hidden_state
+    return hidden.unsqueeze(2)
+
+
+def event_ids(inputs):
+    """Map generated key/value features to task-local event IDs."""
     tokens = inputs[:, :, 0]
     key = tokens[..., :KEYS].argmax(dim=-1)
     bit = tokens[..., KEYS:]
     # Each key gets three tokens: write zero, write one, and query.
     slot = torch.where(bit.sum(dim=-1) == 0, 2, bit.argmax(dim=-1))
-    hidden = backbone(input_ids=3 * key + slot, use_cache=False).last_hidden_state
-    return hidden.unsqueeze(2)
+    return 3 * key + slot
+
+
+def swap_write_rounds(inputs):
+    return torch.cat((inputs[:, KEYS:2 * KEYS], inputs[:, :KEYS], inputs[:, -1:]), dim=1)
+
+
+def first_write_labels(inputs):
+    first = inputs[:, :KEYS, 0]
+    query_key = inputs[:, -1:, 0, :KEYS]
+    matched = (first[:, :, :KEYS] * query_key).sum(dim=-1)
+    return (first[:, :, KEYS + 1] * matched).sum(dim=-1).long()
 
 
 def make_batch(generator, size, rounds=1):
@@ -147,10 +163,7 @@ def run(rounds, encoder="one-hot", *, decay=DECAY):
         features = encode(inputs, backbone)
         changed = None
         if rounds == 2:
-            first = inputs[:, :KEYS, 0]
-            query_key = inputs[:, -1:, 0, :KEYS]
-            matched = (first[:, :, :KEYS] * query_key).sum(dim=-1)
-            first_labels = (first[:, :, KEYS + 1] * matched).sum(dim=-1).long()
+            first_labels = first_write_labels(inputs)
             changed = first_labels != labels
 
         result = {
@@ -165,7 +178,7 @@ def run(rounds, encoder="one-hot", *, decay=DECAY):
         }
         if changed is not None:
             result["queries_with_changed_value"] = int(changed.sum())
-            swapped = torch.cat((inputs[:, KEYS:2 * KEYS], inputs[:, :KEYS], inputs[:, -1:]), dim=1)
+            swapped = swap_write_rounds(inputs)
             swapped_features = encode(swapped, backbone)
             comparisons = (
                 ("recurrent", recurrent, False), ("additive", additive, False),

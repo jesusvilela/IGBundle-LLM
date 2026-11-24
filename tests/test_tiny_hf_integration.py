@@ -69,6 +69,28 @@ class TinyHFTests(unittest.TestCase):
         # Resetting adapter memory retains the contextual backbone's prefix information.
         self.assertGreater((features[:, -1:] - encode(inputs[:, -1:], backbone)).abs().max(), 1e-6)
 
+    def test_pretrained_recall_grouped_loss_matches_full_vocabulary(self):
+        from scripts.compare_delta_recall import event_ids, make_batch
+        from scripts.compare_pretrained_recall import frozen_outputs, residual_logits
+        from igbundle.modules.delta_fiber import DeltaFiberUpdate
+
+        model = base_model().requires_grad_(False)
+        inputs, labels = make_batch(torch.Generator().manual_seed(44), size=4, rounds=2)
+        token_map = torch.arange(14)
+        features, grouped, other_max = frozen_outputs(model, token_map, inputs)
+        with torch.no_grad():
+            full = model(token_map[event_ids(inputs)], logits_to_keep=1, use_cache=False).logits[:, 0]
+        adapter = DeltaFiberUpdate(14, 2, mem_dim=8, num_heads=2)
+        updated = residual_logits(adapter, features, grouped, reset=False)
+        full = full.index_add(-1, token_map[-2:], updated[:, :2] - grouped[:, :2])
+        torch.testing.assert_close(
+            torch.nn.functional.cross_entropy(updated, labels),
+            torch.nn.functional.cross_entropy(full, token_map[-2:][labels]),
+        )
+        other_ids = ~torch.isin(torch.arange(32), token_map[-2:])
+        torch.testing.assert_close(other_max, full[:, other_ids].amax(dim=-1))
+        self.assertFalse(features.requires_grad)
+
     def test_identity_wrapper_preserves_real_qwen_logits(self):
         model = base_model()
         self.assertLess(sum(p.numel() for p in model.parameters()), 100_000)

@@ -1,0 +1,179 @@
+{
+  "weight_sha256": "2bcc4e364209f205ba338806fcc753a8820e60450931103eb2c470fc7628790b",
+  "config_sha256": "1accca3df6bc3ea791b549463b5df46f2b6608dbe4c928c61c2c29f27e35da31",
+  "python": "3.11.16",
+  "torch": "2.9.1+cpu",
+  "transformers": "5.10.1",
+  "device": "cpu",
+  "cpu_threads": 4,
+  "backbone_parameters": 494032768,
+  "token_ids": {
+    " A": 362,
+    " B": 425,
+    " C": 356,
+    " D": 422,
+    " E": 468,
+    " F": 434,
+    " G": 479,
+    " H": 472,
+    " I": 358,
+    " J": 619,
+    " K": 730,
+    " L": 444,
+    "0": 15,
+    "1": 16
+  },
+  "steps": 64,
+  "batch_size": 32,
+  "eval_size_per_seed": 256,
+  "learning_rate": 0.01,
+  "runs": [
+    {
+      "seed": 11,
+      "held_out_prefix_count": 512,
+      "rejected_training_prefixes": 0,
+      "allocated_parameters_per_arm": 46666,
+      "changed_pairs": 121,
+      "base": {
+        "answer_choice_correct": 138,
+        "full_vocab_strict_top1_correct": 0,
+        "full_vocab_mean_nll": 8.15565299987793,
+        "answer_choice_mean_nll": 0.7438315749168396,
+        "changed_pairs_both_correct": 3
+      },
+      "delta": {
+        "answer_choice_correct": 200,
+        "full_vocab_strict_top1_correct": 200,
+        "full_vocab_mean_nll": 0.5297675132751465,
+        "answer_choice_mean_nll": 0.5293020606040955,
+        "changed_pairs_both_correct": 49
+      },
+      "reset": {
+        "answer_choice_correct": 128,
+        "full_vocab_strict_top1_correct": 128,
+        "full_vocab_mean_nll": 0.7257533669471741,
+        "answer_choice_mean_nll": 0.7238496541976929,
+        "changed_pairs_both_correct": 11
+      },
+      "additive": {
+        "answer_choice_correct": 135,
+        "full_vocab_strict_top1_correct": 135,
+        "full_vocab_mean_nll": 0.7620721459388733,
+        "answer_choice_mean_nll": 0.7520584464073181,
+        "changed_pairs_both_correct": 19
+      },
+      "decaying_additive_0.5": {
+        "answer_choice_correct": 182,
+        "full_vocab_strict_top1_correct": 182,
+        "full_vocab_mean_nll": 0.5872963666915894,
+        "answer_choice_mean_nll": 0.5864478349685669,
+        "changed_pairs_both_correct": 40
+      },
+      "decaying_additive_0.8": {
+        "answer_choice_correct": 138,
+        "full_vocab_strict_top1_correct": 138,
+        "full_vocab_mean_nll": 0.7157410383224487,
+        "answer_choice_mean_nll": 0.7148202061653137,
+        "changed_pairs_both_correct": 9
+      }
+    },
+    {
+      "seed": 29,
+      "held_out_prefix_count": 512,
+      "rejected_training_prefixes": 1,
+      "allocated_parameters_per_arm": 46666,
+      "changed_pairs": 126,
+      "base": {
+        "answer_choice_correct": 112,
+        "full_vocab_strict_top1_correct": 0,
+        "full_vocab_mean_nll": 8.250544548034668,
+        "answer_choice_mean_nll": 0.8153764009475708,
+        "changed_pairs_both_correct": 4
+      },
+      "delta": {
+        "answer_choice_correct": 113,
+        "full_vocab_strict_top1_correct": 113,
+        "full_vocab_mean_nll": 1.3124374151229858,
+        "answer_choice_mean_nll": 1.3124374151229858,
+        "changed_pairs_both_correct": 0
+      },
+      "reset": {
+        "answer_choice_correct": 163,
+        "full_vocab_strict_top1_correct": 163,
+        "full_vocab_mean_nll": 0.6341109871864319,
+        "answer_choice_mean_nll": 0.6339091062545776,
+        "changed_pairs_both_correct": 30
+      },
+      "additive": {
+        "answer_choice_correct": 119,
+        "full_vocab_strict_top1_correct": 119,
+        "full_vocab_mean_nll": 0.7796964645385742,
+        "answer_choice_mean_nll": 0.7758024334907532,
+        "changed_pairs_both_correct": 13
+      },
+      "decaying_additive_0.5": {
+        "answer_choice_correct": 184,
+        "full_vocab_strict_top1_correct": 184,
+        "full_vocab_mean_nll": 0.5703072547912598,
+        "answer_choice_mean_nll": 0.5664871335029602,
+        "changed_pairs_both_correct": 40
+      },
+      "decaying_additive_0.8": {
+        "answer_choice_correct": 144,
+        "full_vocab_strict_top1_correct": 144,
+        "full_vocab_mean_nll": 0.8729276657104492,
+        "answer_choice_mean_nll": 0.8729276657104492,
+        "changed_pairs_both_correct": 0
+      }
+    },
+    {
+      "seed": 47,
+      "held_out_prefix_count": 510,
+      "rejected_training_prefixes": 0,
+      "allocated_parameters_per_arm": 46666,
+      "changed_pairs": 115,
+      "base": {
+        "answer_choice_correct": 148,
+        "full_vocab_strict_top1_correct": 0,
+        "full_vocab_mean_nll": 8.077325820922852,
+        "answer_choice_mean_nll": 0.684567391872406,
+        "changed_pairs_both_correct": 4
+      },
+      "delta": {
+        "answer_choice_correct": 163,
+        "full_vocab_strict_top1_correct": 163,
+        "full_vocab_mean_nll": 0.6232317090034485,
+        "answer_choice_mean_nll": 0.6231992840766907,
+        "changed_pairs_both_correct": 24
+      },
+      "reset": {
+        "answer_choice_correct": 185,
+        "full_vocab_strict_top1_correct": 185,
+        "full_vocab_mean_nll": 0.5518868565559387,
+        "answer_choice_mean_nll": 0.5515088438987732,
+        "changed_pairs_both_correct": 32
+      },
+      "additive": {
+        "answer_choice_correct": 146,
+        "full_vocab_strict_top1_correct": 146,
+        "full_vocab_mean_nll": 0.834182858467102,
+        "answer_choice_mean_nll": 0.8341236114501953,
+        "changed_pairs_both_correct": 2
+      },
+      "decaying_additive_0.5": {
+        "answer_choice_correct": 172,
+        "full_vocab_strict_top1_correct": 172,
+        "full_vocab_mean_nll": 0.5793402194976807,
+        "answer_choice_mean_nll": 0.5792497992515564,
+        "changed_pairs_both_correct": 27
+      },
+      "decaying_additive_0.8": {
+        "answer_choice_correct": 164,
+        "full_vocab_strict_top1_correct": 164,
+        "full_vocab_mean_nll": 0.8260317444801331,
+        "answer_choice_mean_nll": 0.8260284662246704,
+        "changed_pairs_both_correct": 9
+      }
+    }
+  ]
+}
