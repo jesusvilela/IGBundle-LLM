@@ -7,6 +7,11 @@
 
 > **Evidence status (31 October 2026):** The geometric inductive-bias idea remains an open research hypothesis, but the available experiments do **not** establish a general task-performance advantage, learned hyperbolicity, or training/inference efficiency gains. Previously advertised accuracy, “MFR,” ablation, and efficiency claims are retracted. Recorded-result arithmetic is reproducible offline; historical model runs and graders have not been independently reproduced. See the [correction notice](docs/correction-notice.md), [evidence ledger](docs/research_to_code_evidence_ledger.md), and [verification output](docs/benchmark-results/verification.json).
 
+The [delta-rule associative recall experiment](docs/delta-recall.md) runs on
+CPU from a fresh checkout. It compares the development branch's recurrence
+with additive, decaying additive and memory-reset controls. The overwrite task
+can use one-hot inputs or features from a frozen tiny Qwen2 backbone.
+
 ## Research design
 
 IGBundle explores Poincare-ball coordinates, categorical fiber components, and geometric or dynamical operators as a possible structure for adapting language models. These describe the intended parameterization; they are not evidence that a trained model has learned semantic hierarchy, a fiber bundle, sheaf structure, or hyperbolic geometry.
@@ -69,7 +74,7 @@ The historical value near -5.63 is not evidence of learned hyperbolicity. For `g
 | Synthetic F32 Qwen2 GGUFs | Native full/incremental logits compared with PyTorch, tied/untied output weights, grouped-query attention and malformed-shape rejection | Not the archived exports, tokenizer semantics, quantized kernels, public converter or geometric/hypercomplex integration |
 | Four archived companion files | Bounded, non-executing metadata inspection records 226 tensor descriptors; ARC adapter hidden width 3584 conflicts with its surviving width-896 GGUF | No tensor values, payload integrity, complete restoration, trained-state provenance or geometric laws are certified |
 | Legacy `GeometricIGBundleAdapter` forward | Tiny identity/nonzero execution, gradients, causal prefixes and strict module-state roundtrip; repaired multi-token coordinate smoothing | No connection is used by this forward path. Not parallel transport, cached generation, historical checkpoint restoration or a supported training pipeline. |
-| Legacy `geometry/riemannian.py`, training and experimental geometry modules | **Outside the validated geometric core** | The metric is position-independent while connection coefficients come from an unrelated network; these do not establish Levi-Civita geometry, categorical laws, or sheaf laws. The legacy `train.py` entry point also contains an incomplete trainer block and is not a supported training command. |
+| Legacy `geometry/riemannian.py`, full-model training and experimental geometry modules | **Outside the validated geometric core** | The metric is position-independent while connection coefficients come from an unrelated network. The full-model route in `train.py` contains an incomplete trainer block. |
 
 The Poincare affinity correction changes historical numerics; old checkpoint scores must not be attributed to the corrected implementation without reevaluation. The default adapter is now exactly residual-identity at initialization (both output weights and bias are zero). No new checkpoint or performance result is implied.
 
@@ -221,6 +226,11 @@ Only trusted local tensor checkpoints are supported; `weights_only=True` is not
 a general resource-isolation guarantee. This does not restore an adapter or
 certify learned geometry. See the [display contract](docs/export-image-audit.md#projection-display-checkpoint).
 
+For constructed 3D topology examples, see the standalone
+[Braintop example](https://github.com/jesusvilela/braintop/blob/306fcb45a28b1add94e2e98011ff9e9c9ec8464f/examples/basic_example.py).
+The example generates its own graph and sphere nodes. It takes no IGBundle
+checkpoint or recall output as input.
+
 ### GGUF export preflight
 
 `export_gguf.py` requires an explicit converter and `--lora-only` acknowledgement:
@@ -259,8 +269,8 @@ It supplies no hypercomplex hyperbolic metric or GGUF implementation.
 ### Tiny real-backend integration
 
 Hosted CPU checks now exercise a randomly initialized Qwen2 with two layers,
-hidden width 16 and fewer than 100,000 base parameters, using PyTorch 2.6.0,
-Transformers 4.48.3, PEFT 0.14.0 and Accelerate 1.2.1.
+hidden width 16 and fewer than 100,000 base parameters, using
+PyTorch 2.9.1 CPU, Transformers 5.10.1, PEFT 0.14.0 and Accelerate 1.2.1 in CI.
 They check identity wrapping, real PEFT save/reload before wrapper insertion,
 strict adapter restoration, gradients and cached generation.
 
@@ -273,6 +283,43 @@ The full app/server and quantized backends remain outside this check.
 Pinned optional dependencies are in `requirements-test-hf.txt`.
 Run `python -m unittest discover -b -s tests -p test_tiny_hf_integration.py`
 in a compatible CPU environment.
+
+To exercise the training entry point on a tiny, randomly initialized Qwen2,
+install the pinned CPU and Hugging Face test dependencies, then run:
+
+```powershell
+python train.py --smoke_test --max_steps 1
+```
+
+The CPU smoke uses fixed synthetic tokens and reports next-token loss and
+the number of adapter, LoRA, and frozen base tensors updated. It performs
+no downloads and needs no training config or checkpoint. The legacy
+full-model training path is still experimental and incomplete.
+
+### Train and reload local Qwen2 adapters
+
+Use the pinned test dependencies above, a local Qwen2 causal model with
+safetensors weights and a tokenizer, and a UTF-8 JSONL dataset. Each
+record has a `text` field, for example `{"text":"The latest value is blue."}`.
+Run from the repository root:
+
+```powershell
+python train.py --local-checkpoint path/to/qwen2 --train-jsonl data.jsonl --output-dir output/local-adapter --max_steps 2
+```
+
+The CPU path trains the public IGBundle adapter and LoRA on shifted
+causal language-model loss. It cycles through records in file order
+and truncates each to `--max-length` tokens (128 by default). It uses
+the local checkpoint and tokenizer without downloads. The output
+directory must be new.
+
+The saved directory contains `adapter_weights.pt`, PEFT files,
+`igbundle_config.json`, and `training_report.json`. Before publishing
+those files, the command reloads both adapters against a fresh copy of
+the base through the public checkpoint loaders and verifies the
+training-probe logits exactly. The generated config points to the
+input base directory. The checkpoint contains inference weights and
+does not include optimizer state.
 
 ### Declared LoRA restoration
 
