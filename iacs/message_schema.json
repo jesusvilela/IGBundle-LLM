@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "IACS Message",
+  "description": "Inter-Agent Communication System message format v1.0.0",
+  "type": "object",
+  "required": ["sender", "recipient", "type", "payload"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Server-assigned UUID v4"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp"
+    },
+    "sender": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Agent ID of sender"
+    },
+    "recipient": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Agent ID or '__broadcast__'"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "task_assignment", "finding", "question", "answer",
+        "status_update", "file_lock", "capability_query",
+        "heartbeat", "system"
+      ]
+    },
+    "priority": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3,
+      "default": 2,
+      "description": "0=critical, 1=high, 2=normal, 3=low"
+    },
+    "ttl_seconds": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 300,
+      "description": "Time-to-live in seconds. 0 = no expiry"
+    },
+    "correlation_id": {
+      "type": ["string", "null"],
+      "format": "uuid",
+      "description": "For request/reply threading"
+    },
+    "payload": {
+      "type": "object",
+      "description": "Arbitrary JSON payload"
+    },
+    "version": {
+      "type": "string",
+      "default": "1.0.0",
+      "description": "Protocol version"
+    }
+  }
+}

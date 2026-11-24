@@ -1,0 +1,9 @@
+{
+  "checkpoint_name": "checkpoint-alignment-eos-1400",
+  "checkpoint_dir": "igbundle_odyssey_v3\\checkpoint-alignment-eos-1400",
+  "step": 1400,
+  "eos_ratio": 0.64,
+  "promotion_status": true,
+  "source": "baseline_reference",
+  "baseline_benchmark_floor": 0.8
+}

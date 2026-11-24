@@ -1,32 +1,21 @@
-# ManifoldGL Project Context
+# IGBundle / ManifoldGL
 
-## Project Overview
-ManifoldGL (formerly IGBundle-LLM) is a research project adapting Large Language Models with Information-Geometric constraints.
-It uses Hyperbolic Fiber Bundles to model semantic spaces, achieving +131.5% accuracy on ARC-AGI tasks.
+IGBundle is an experimental research codebase exploring information-geometric and fiber-structured adapters for language models. The proposed geometric inductive bias remains a hypothesis. Current evidence does not establish improved task performance, learned hyperbolicity, or training/inference efficiency gains.
 
-## Key Documentation
-- **Thesis**: /docs/wiki.html (Full mathematical and experimental details)
-- **Codebase**: https://github.com/jesusvilela/IGBundle-LLM
-- **Demo Guide**: /docs/demo.html (Instructions for local 4-bit inference)
+## Evidence at a glance
 
-## Architecture
-- **Base Model**: Qwen2.5-7B
-- **Adapter**: IGBundle (Fiber Bundle projection, Sheaf Consistency Loss)
-- **Optimization**: Natural Gradient Descent (Fisher Information Metric)
-- **Curvature**: Learned Hyperbolic (κ → -1)
+- Fixed-operator faithfulness audit: 6/6 checks passed for the tested configuration. This is not a measure of learned geometry or task quality.
+- Default curvature telemetry is weight-invariant because its conformal factor is fixed; do not describe the reported curvature as learned.
+- October 27, 2026 local multi-benchmark run: custom weighted index 61.1 for base Qwen2.5-7B, 60.0 for the merged cp300 checkpoint, and 64.7 for a reconstructed adapter composite. No individual paired benchmark comparison was statistically significant. The index is custom, subsets were small (8–98), and the reconstructed arm is not the original trained checkpoint.
+- The exported cp300 weights in that run did not contain the runtime geometric adapter. The reconstructed arm grafted a surviving adapter trained on the base model onto cp300 and used a different loading/quantization path; this does not isolate a geometric effect.
+- [October per-benchmark summary](benchmark-results/aa-index-2026-10-27.csv)
+- Paired held-out token-NLL probe (20 September 2026; 24 examples × 64 tokens): frozen base 2.3188, geometric adapter A 1.9352, vanilla-LoRA control B 0.8187. B had lower NLL on 24/24 examples.
+- The probe is not parameter matched (A: 4,160,713 trainable parameters; B: 585,728) and compares one geometric layer with 13 LoRA layers. It does not isolate a geometric effect and is not task accuracy.
+- Historical ARC-Challenge zero-shot `acc_norm`: 54.86% for both the adapter and base on 1,172 items each. A separate historical ARC-AGI run solved 1/100 tasks.
+- ARC-AGI Model-First Reasoning format compliance was 0/100; this prompt-format metric is unrelated to the 6/6 fixed-operator audit.
 
-## Setup
-```bash
-git clone https://github.com/jesusvilela/IGBundle-LLM
-pip install -r requirements.txt
-python trainv2.py --config configs/qwen25_7b_igbundle_lora.yaml
-```
+## Links
 
-## Results
-<!-- RETRACTED (2026-07 audit): the previous figures here (28.7% vs 12.4% accuracy;
-     94.2% "MFR") are refuted by the project's own evaluation artifacts and have no
-     surviving provenance. Measured values below. See draft_paper_falsification.md
-     §2.5–§2.7 for the full reconciliation. -->
-- ARC evaluation (n=100): accuracy 0.01, MFR-compliance (Model-First Reasoning protocol) 0.0% (arc_evaluation_results.json)
-- ARC-Challenge: 54.86% — identical to base Qwen2.5-7B (no measurable geometric transfer)
-- Kernel faithfulness (fixed Poincaré operations): 100% — verifies fixed kernels, not learned geometry
+- [Evidence and limitations](wiki.html)
+- [Paired probe data](benchmark-results/matched-token-nll-2026-09-20.csv)
+- [Source repository](https://github.com/jesusvilela/IGBundle-LLM)

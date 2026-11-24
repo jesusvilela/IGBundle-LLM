@@ -1,0 +1,28 @@
+{
+  "C": {
+    "config": "C",
+    "trainable_params": 2342912,
+    "total_params": 4355315200,
+    "max_steps": 500,
+    "final_checkpoint": "experiments\\falsification\\checkpoints\\config_C\\checkpoint-500",
+    "wall_time_seconds": 1287,
+    "lora_rank": 8,
+    "lora_layers": [
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20
+    ],
+    "learning_rate": 0.0002,
+    "seed": 42
+  }
+}

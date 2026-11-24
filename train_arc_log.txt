@@ -1,0 +1,15 @@
+Skipping import of cpp extensions due to incompatible torch version 2.6.0+cu124 for torchao version 0.15.0             Please see https://github.com/pytorch/ao/issues/2919 for more info
+INFO:__main__:Loading Models...
+`torch_dtype` is deprecated! Use `dtype` instead!
+`torch_dtype` is deprecated! Use `dtype` instead!
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+GeometricIGBundle: D=32, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+Traceback (most recent call last):
+  File "H:\LLM-MANIFOLD\igbundle-llm\train_arc_v1.py", line 252, in <module>
+    train()
+    ~~~~~^^
+  File "H:\LLM-MANIFOLD\igbundle-llm\train_arc_v1.py", line 149, in train
+    projector = VisionProjector(config).to(DEVICE).to(torch.bfloat16) # Projector can be bfloat16
+                ~~~~~~~~~~~~~~~^^^^^^^^
+TypeError: VisionProjector.__init__() missing 1 required positional argument: 'bottleneck_dim'

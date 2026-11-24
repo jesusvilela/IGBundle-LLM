@@ -1,0 +1,6 @@
+{
+  "stage": "alignment-eos",
+  "step": 49,
+  "rolling_train_S_50": 0.05339008048176765,
+  "collapse_threshold": 0.3
+}

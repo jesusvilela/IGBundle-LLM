@@ -1,0 +1,187 @@
+/* IACS Dashboard — Dark theme matching Neural Glass aesthetic */
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --border: #30363d;
+  --text: #c9d1d9;
+  --text-dim: #8b949e;
+  --accent: #58a6ff;
+  --green: #3fb950;
+  --yellow: #d29922;
+  --red: #f85149;
+  --blue: #58a6ff;
+  --purple: #bc8cff;
+  --orange: #d18616;
+  --mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--mono);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ── Header ──────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.header h1 { font-size: 16px; font-weight: 600; letter-spacing: 1px; }
+.header h1 span { color: var(--accent); }
+.status-dot {
+  display: inline-block;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+.status-dot.ok { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.status-dot.err { background: var(--red); box-shadow: 0 0 6px var(--red); }
+
+/* ── Grid ────────────────────────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 12px 20px;
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+}
+.panel h2 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+}
+
+/* ── Agent Cards ─────────────────────────────────────── */
+.agent-grid { display: flex; gap: 10px; flex-wrap: wrap; }
+.agent-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 14px;
+  min-width: 180px;
+  flex: 1;
+}
+.agent-card .name { font-weight: 600; font-size: 14px; }
+.agent-card .type { color: var(--text-dim); font-size: 11px; }
+.agent-card .badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  margin-top: 6px;
+}
+.badge.online { background: rgba(63,185,80,0.15); color: var(--green); }
+.badge.idle { background: rgba(210,153,34,0.15); color: var(--yellow); }
+.badge.working { background: rgba(88,166,255,0.15); color: var(--blue); }
+.badge.offline { background: rgba(248,81,73,0.15); color: var(--red); }
+
+/* ── Stats ───────────────────────────────────────────── */
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.stat-box {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px;
+  text-align: center;
+}
+.stat-box .val {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--accent);
+}
+.stat-box .label {
+  font-size: 10px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* ── Bar Chart ───────────────────────────────────────── */
+.bar-chart { display: flex; gap: 6px; align-items: flex-end; height: 100px; }
+.bar-col { display: flex; flex-direction: column; align-items: center; flex: 1; }
+.bar {
+  width: 100%;
+  max-width: 40px;
+  background: var(--accent);
+  border-radius: 3px 3px 0 0;
+  min-height: 2px;
+  transition: height 0.4s ease;
+}
+.bar-label {
+  font-size: 9px;
+  color: var(--text-dim);
+  margin-top: 4px;
+  text-align: center;
+  word-break: break-all;
+}
+
+/* ── Message Log ─────────────────────────────────────── */
+.log-panel { grid-column: 1 / -1; }
+.log-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.log-controls select, .log-controls label {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.log-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.log-table th {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.log-table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid rgba(48,54,61,0.5);
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.log-table tr:hover { background: rgba(88,166,255,0.05); }
+.log-scroll {
+  max-height: 320px;
+  overflow-y: auto;
+}
+.priority-0 { color: var(--red); font-weight: 700; }
+.priority-1 { color: var(--orange); }
+.priority-2 { color: var(--text); }
+.priority-3 { color: var(--text-dim); }
+
+/* ── Scrollbar ───────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }

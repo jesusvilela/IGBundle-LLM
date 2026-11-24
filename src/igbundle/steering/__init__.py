@@ -3,6 +3,7 @@ from .gsp import (
     GSPGenome,
     GSPEvolver,
     NeuralGlassBridge,
+    create_gsp,
     create_gsp_for_qwen7b,
     poincare_log_map,
     poincare_project,
@@ -11,8 +12,9 @@ from .gsp import (
 __all__ = [
     "GeometricSteeringProbe",
     "GSPGenome",
-    "GSPEvolver", 
+    "GSPEvolver",
     "NeuralGlassBridge",
+    "create_gsp",
     "create_gsp_for_qwen7b",
     "poincare_log_map",
     "poincare_project",

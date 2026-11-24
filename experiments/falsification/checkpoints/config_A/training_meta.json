@@ -1,0 +1,11 @@
+{
+  "config": "A",
+  "trainable_params": 4160713,
+  "max_steps": 500,
+  "final_checkpoint": "experiments\\falsification\\checkpoints\\config_A\\checkpoint-500",
+  "wall_time_seconds": 2246,
+  "geo_lambda_max": 0.05,
+  "geo_ramp_steps": 300,
+  "learning_rate": 0.0002,
+  "seed": 42
+}

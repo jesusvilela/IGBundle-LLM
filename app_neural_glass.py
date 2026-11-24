@@ -60,11 +60,11 @@ sys.path.append(os.path.abspath("src"))
 from igbundle.core.config import IGBundleConfig
 from igbundle.modules.geometric_adapter import create_geometric_adapter
 from igbundle.modules.regularization import LipschitzPenalty
-from igbundle.geometry.hyperbolic import PoincareBall
 from igbundle.fibers.constraint import ConstraintExtractor, ConstraintScorer
+from igbundle.telemetry import format_epic_panel, format_stack_panel, summarize_epic_stack, summarize_manifold_stack
 from imd_memory import IMDMemory
 from model_state import ModelState
-from igbundle.steering.gsp import create_gsp_for_qwen7b
+from igbundle.steering.gsp import create_gsp
 
 # --- GENERATION STOP EVENT ---
 # Thread-safe mechanism to halt model.generate() when corruption is detected.
@@ -136,15 +136,18 @@ class _EOSBoostProcessor(LogitsProcessor):
         return scores
 
 # --- CONSTANTS ---
-BASE_MODEL_ID = "h:/LLM-MANIFOLD/igbundle_qwen7b_cp600"
+BASE_MODEL_ID = "h:/LLM-MANIFOLD/gemma4_e4b_it"
 ADAPTER_PATH = "" # Autodetect
 CHECKPOINT_DIR = "h:/LLM-MANIFOLD/igbundle-llm/igbundle_odyssey_v3" # Epic 15: OdysseyV3 checkpoints
+OFFLOAD_DIR = os.path.join(os.path.dirname(__file__), "offload_neural_glass")
+# Legacy: "h:/LLM-MANIFOLD/igbundle_qwen7b_cp600"
 
 
 # --- GLOBAL STATE ---
 # We use a global state to allow the UI to poll telemetry while generating
 TELEMETRY_STATE = {
     "curvature": -1.0,
+    "curvature_status": "standby",
     "entropy": 0.0,
     "active_fiber": "None",
     "thought_trace": [],
@@ -155,7 +158,15 @@ TELEMETRY_STATE = {
     "lipschitz_ratio": 1.0,
     "last_geo_pos": None, # For computing d_M(t, t-1)
     "last_euc_pos": None,
-    "manifold_trace": [], # List of (x,y) coordinates for plotting
+    "manifold_trace": [], # 2D render projection; n-stack keeps full-D summaries
+    "n_stack": {},
+    "n_stack_panel": "H=? D=? P=? K=? Bot=?\nM=standby dyn=0 delta=0 depth=0",
+    "epic_stack": {},
+    "epic_panel": "active=0/0 present=0/0 OOD=0.00",
+    "ood_state": {},
+    "adapter_provenance": {},
+    "gsp_status": {},
+    "runtime_events": [],
     "gibbs_beta": 4.6,  # Effective inverse temperature
     "damping": 0.01     # Damping parameter for Gibbs calculation
 }
@@ -177,6 +188,151 @@ MODELS = {
 
 # --- STATEFUL CONFIG ---
 MODEL_STATE = ModelState()
+
+def _record_runtime_event(kind: str, message: str, trace: bool = True, limit: int = 20):
+    event = f"{time.strftime('%H:%M:%S')} {kind}: {message}"
+    events = TELEMETRY_STATE.setdefault("runtime_events", [])
+    if not events or events[-1].split(" ", 1)[-1] != event.split(" ", 1)[-1]:
+        events.append(event)
+        TELEMETRY_STATE["runtime_events"] = events[-limit:]
+    if trace:
+        trace_msg = f"{kind.upper()}: {message}"
+        thought_trace = TELEMETRY_STATE.setdefault("thought_trace", [])
+        if not thought_trace or thought_trace[-1] != trace_msg:
+            thought_trace.append(trace_msg)
+            TELEMETRY_STATE["thought_trace"] = thought_trace[-50:]
+
+
+def _bytes_to_gib(value: int) -> float:
+    return float(value) / float(1024 ** 3)
+
+
+def _model_safetensor_bytes(model_id: str) -> int:
+    if not os.path.isdir(model_id):
+        return 0
+    total = 0
+    for root, _, files in os.walk(model_id):
+        for name in files:
+            if name.endswith(".safetensors"):
+                total += os.path.getsize(os.path.join(root, name))
+    return total
+
+
+def _windows_memory_status():
+    if os.name != "nt":
+        return None
+    try:
+        import ctypes
+
+        class MEMORYSTATUSEX(ctypes.Structure):
+            _fields_ = [
+                ("dwLength", ctypes.c_ulong),
+                ("dwMemoryLoad", ctypes.c_ulong),
+                ("ullTotalPhys", ctypes.c_ulonglong),
+                ("ullAvailPhys", ctypes.c_ulonglong),
+                ("ullTotalPageFile", ctypes.c_ulonglong),
+                ("ullAvailPageFile", ctypes.c_ulonglong),
+                ("ullTotalVirtual", ctypes.c_ulonglong),
+                ("ullAvailVirtual", ctypes.c_ulonglong),
+                ("ullAvailExtendedVirtual", ctypes.c_ulonglong),
+            ]
+
+        status = MEMORYSTATUSEX()
+        status.dwLength = ctypes.sizeof(MEMORYSTATUSEX)
+        if not ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(status)):
+            return None
+        return {
+            "available_pagefile": int(status.ullAvailPageFile),
+            "total_pagefile": int(status.ullTotalPageFile),
+            "available_physical": int(status.ullAvailPhys),
+            "total_physical": int(status.ullTotalPhys),
+            "memory_load": int(status.dwMemoryLoad),
+        }
+    except Exception:
+        return None
+
+
+def _preflight_model_load_capacity(model_id: str) -> dict:
+    model_bytes = _model_safetensor_bytes(model_id)
+    status = _windows_memory_status()
+    report = {"model_safetensors_bytes": model_bytes, "windows_memory": status or {}}
+    if os.environ.get("NEURAL_GLASS_SKIP_PREFLIGHT") == "1":
+        report["skipped"] = True
+        return report
+    if status and model_bytes:
+        headroom_gib = float(os.environ.get("NEURAL_GLASS_PAGEFILE_HEADROOM_GIB", "2"))
+        required = model_bytes + int(headroom_gib * (1024 ** 3))
+        available = int(status.get("available_pagefile", 0))
+        report["required_commit_bytes"] = required
+        if available < required:
+            msg = (
+                "Windows commit/pagefile is too small for Gemma4 safetensor mmap: "
+                f"available={_bytes_to_gib(available):.1f}GiB, "
+                f"required~={_bytes_to_gib(required):.1f}GiB "
+                f"(model={_bytes_to_gib(model_bytes):.1f}GiB + {headroom_gib:.1f}GiB headroom). "
+                "Increase the Windows paging file or close memory-heavy apps, then relaunch. "
+                "Set NEURAL_GLASS_SKIP_PREFLIGHT=1 to bypass this guard."
+            )
+            _record_runtime_event("preflight", msg)
+            raise RuntimeError(msg)
+    return report
+
+
+def _transformers_memory_plan() -> dict:
+    gpu_gib = os.environ.get("NEURAL_GLASS_GPU_MAX_GIB", "5")
+    cpu_gib = os.environ.get("NEURAL_GLASS_CPU_MAX_GIB", "24")
+    return {0: f"{gpu_gib}GiB", "cpu": f"{cpu_gib}GiB"}
+
+
+def _find_transformer_layers(model):
+    for path_fn in [
+        lambda m: m.model.language_model.layers,
+        lambda m: m.model.layers,
+        lambda m: m.model.model.layers,
+        lambda m: m.base_model.model.model.layers,
+    ]:
+        try:
+            layers = path_fn(model)
+            if layers is not None and len(layers) > 0:
+                return layers
+        except (AttributeError, IndexError):
+            continue
+    return None
+
+
+def _select_gsp_target_layers(model, span: int = 13) -> list[int]:
+    layers = _find_transformer_layers(model)
+    if layers is None:
+        return []
+    layer_count = len(layers)
+    if layer_count <= 0:
+        return []
+    span = max(1, min(int(span), layer_count))
+    center = layer_count // 2
+    start = max(0, min(layer_count - span, center - span // 2))
+    return list(range(start, start + span))
+
+
+def _estimate_curvature(adapter, geo_state) -> tuple[float, str]:
+    positions = getattr(geo_state, "base_coordinates", None)
+    manifold_type = str(getattr(adapter, "manifold_type", getattr(getattr(adapter, "cfg", None), "manifold_type", "unknown")))
+    if hasattr(adapter, "riemannian_geometry") and isinstance(positions, torch.Tensor):
+        try:
+            real_curvature = adapter.riemannian_geometry.estimate_sectional_curvature_stochastic(
+                positions, num_samples=3
+            )
+            value = float(real_curvature.detach().float().mean().item())
+            if np.isfinite(value):
+                return value, "estimated-riemannian"
+            raise ValueError("non-finite curvature estimate")
+        except Exception as exc:
+            _record_runtime_event("curvature", f"estimator failed ({type(exc).__name__})", trace=False)
+            if manifold_type == "poincare":
+                return -1.0, f"failed-analytic-poincare:{type(exc).__name__}"
+            return 0.0, f"failed:{type(exc).__name__}"
+    if manifold_type == "poincare":
+        return -1.0, "analytic-poincare"
+    return 0.0, "unavailable"
 
 # --- CONTINUOUS RUN MODE ---
 # Prompts organized by Poincaré zone — the manifold position determines
@@ -219,12 +375,15 @@ def _select_continuation_prompt() -> str:
     This creates a natural oscillation on the manifold rather than
     random walk or boundary-hugging.
     """
+    stack = TELEMETRY_STATE.get("n_stack", {}) or {}
     trace = TELEMETRY_STATE.get("manifold_trace", [])
-    if not trace:
+    if stack.get("radius_max") is not None:
+        r = float(stack.get("radius_max", 0.0))
+    elif trace:
+        current = trace[-1]
+        r = float(np.sqrt(current[0]**2 + current[1]**2))
+    else:
         return random.choice(_CONT_PROMPTS_BALANCED)
-
-    current = trace[-1]
-    r = float(np.sqrt(current[0]**2 + current[1]**2))
 
     # Track momentum direction for thought trace
     if len(trace) >= 2:
@@ -267,38 +426,260 @@ def find_latest_adapter():
         return path, "geometric"
     return "DEBUG_MODE_NO_WEIGHTS", "none"
 
+
+def _unwrap_checkpoint_state(state):
+    if isinstance(state, dict) and "state_dict" in state and isinstance(state["state_dict"], dict):
+        return state["state_dict"]
+    return state
+
+
+def _infer_model_hidden_size(llm, default=2560):
+    """Infer the text residual width from multimodal or text-only HF configs."""
+    config = getattr(llm, "config", None)
+    for source in [
+        config,
+        getattr(config, "text_config", None),
+        getattr(config, "language_config", None),
+        getattr(config, "language_model_config", None),
+    ]:
+        value = getattr(source, "hidden_size", None)
+        if isinstance(value, int) and value > 0:
+            return value
+    return default
+
+
+def _derive_checkpoint_geometry(state_dict):
+    """Derive H/D/P/K/Bot from geometric adapter tensor algebra."""
+    if not isinstance(state_dict, dict):
+        return None
+    required = [
+        "input_proj.weight",
+        "output_proj.weight",
+        "base_coord_proj.weight",
+        "fiber_section_proj.weight",
+    ]
+    if any(key not in state_dict for key in required):
+        return None
+
+    try:
+        d_bot, hidden_size = tuple(state_dict["input_proj.weight"].shape)
+        out_hidden, d_plus_k = tuple(state_dict["output_proj.weight"].shape)
+        p_times_d = int(state_dict["base_coord_proj.weight"].shape[0])
+        p_times_k = int(state_dict["fiber_section_proj.weight"].shape[0])
+    except Exception:
+        return None
+
+    if int(out_hidden) != int(hidden_size):
+        return None
+
+
+    candidates = []
+    for components in range(1, 257):
+        if p_times_d % components != 0 or p_times_k % components != 0:
+            continue
+        latent_dim = p_times_d // components
+        categories = p_times_k // components
+        if latent_dim + categories == int(d_plus_k):
+            candidates.append({
+                "hidden_size": int(hidden_size),
+                "latent_dim": int(latent_dim),
+                "num_components": int(components),
+                "num_categories": int(categories),
+                "bottleneck_dim": int(d_bot),
+            })
+
+    if not candidates:
+        return None
+    return sorted(candidates, key=lambda item: abs(item["num_components"] - 8))[0]
+
+
+def _infer_checkpoint_geometry(weight_path):
+    if not weight_path or weight_path == "DEBUG_MODE_NO_WEIGHTS" or not os.path.exists(weight_path):
+        return None
+    try:
+        state = _unwrap_checkpoint_state(torch.load(weight_path, map_location="cpu"))
+        return _derive_checkpoint_geometry(state)
+    except Exception as e:
+        print(f"[Adapter] Could not infer checkpoint geometry from {weight_path}: {e}")
+        return None
+
+
+def _validate_geometric_checkpoint(adapter, weight_path):
+    """Return compatibility info for a geometric checkpoint against current adapter."""
+    state = _unwrap_checkpoint_state(torch.load(weight_path, map_location="cpu"))
+    if not isinstance(state, dict):
+        return {
+            "ok": False,
+            "reason": "checkpoint is not a state_dict",
+            "compatible": {},
+            "coverage": 0.0,
+            "mismatched": [],
+            "checkpoint_geometry": None,
+            "mode": "invalid",
+        }
+
+    target = adapter.state_dict()
+    checkpoint_geometry = _derive_checkpoint_geometry(state)
+    compatible = {}
+    mismatched = []
+    for key, value in state.items():
+        if key not in target:
+            continue
+        if tuple(value.shape) == tuple(target[key].shape):
+            compatible[key] = value
+        else:
+            mismatched.append((key, tuple(value.shape), tuple(target[key].shape)))
+
+    coverage = len(compatible) / max(1, len(target))
+    source_hidden = checkpoint_geometry.get("hidden_size") if checkpoint_geometry else None
+    same_geometry = False
+    if checkpoint_geometry:
+        same_geometry = (
+            checkpoint_geometry.get("latent_dim") == getattr(adapter, "D", None)
+            and checkpoint_geometry.get("num_components") == getattr(adapter, "P", None)
+            and checkpoint_geometry.get("num_categories") == getattr(adapter, "K", None)
+        )
+
+    full_adapter = len(compatible) > 0 and coverage >= 0.5
+    core_transplant = bool(len(compatible) > 0 and same_geometry)
+    ok = full_adapter or core_transplant
+    mode = "full" if full_adapter and source_hidden == getattr(adapter, "H", None) else "geometry-core" if core_transplant else "invalid"
+    reason = "" if ok else f"low compatibility ({coverage:.1%})"
+    return {
+        "ok": ok,
+        "reason": reason,
+        "compatible": compatible,
+        "coverage": coverage,
+        "mismatched": mismatched,
+        "checkpoint_geometry": checkpoint_geometry,
+        "mode": mode,
+    }
+
+
+def _load_geometric_checkpoint_safe(adapter, weight_path):
+    """Load only shape-compatible tensors; fail gracefully on incompatible checkpoints."""
+    report = _validate_geometric_checkpoint(adapter, weight_path)
+    if not report["ok"]:
+        sample = report["mismatched"][:3]
+        if sample:
+            sample_text = "; ".join([f"{k}: {src} -> {dst}" for k, src, dst in sample])
+            print(f"[WARN] Incompatible geometric checkpoint skipped: {weight_path}")
+            print(f"[WARN] {report['reason']} | sample mismatches: {sample_text}")
+        else:
+            print(f"[WARN] Incompatible geometric checkpoint skipped: {weight_path} ({report['reason']})")
+        return False
+
+    load_result = adapter.load_state_dict(report["compatible"], strict=False)
+    print(
+        f"[Adapter] Loaded geometric checkpoint ({report['mode']}) with compatibility {report['coverage']:.1%} "
+        f"({len(report['compatible'])} tensors)."
+    )
+    if load_result.missing_keys:
+        print(f"[Adapter] Missing keys after partial load: {len(load_result.missing_keys)}")
+    return True
+
 def load_models():
     if MODELS["llm"] is not None: return "Models Already Loaded"
 
     print(f"Loading Base Model: {BASE_MODEL_ID}...")
+    capacity = _preflight_model_load_capacity(BASE_MODEL_ID)
+    if capacity.get("model_safetensors_bytes"):
+        print(
+            "[Preflight] Gemma4 safetensors="
+            f"{_bytes_to_gib(capacity['model_safetensors_bytes']):.1f}GiB | "
+            f"memory_plan={_transformers_memory_plan()}"
+        )
+    os.makedirs(OFFLOAD_DIR, exist_ok=True)
     tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL_ID, trust_remote_code=True)
     if tokenizer.pad_token is None: tokenizer.pad_token = tokenizer.eos_token
 
     bnb_config = BitsAndBytesConfig(
-        load_in_4bit=True, bnb_4bit_quant_type="nf4", bnb_4bit_compute_dtype=torch.float16
+        load_in_4bit=True, bnb_4bit_quant_type="nf4", bnb_4bit_compute_dtype=torch.bfloat16,
+        llm_int8_enable_fp32_cpu_offload=True,
     )
-    # Epic: CPU Swapping - Restrict GPU memory to force layer offloading
-    max_memory = {0: "5GiB", "cpu": "30GiB"}
+    # Gemma 4 E4B: PLE embedding (5.64GB) must stay on CPU, text layers (4-bit ~3.6GB) on GPU
+    device_map = {}
+    for i in range(42):
+        device_map[f'model.language_model.layers.{i}'] = 0
+    device_map['model.language_model.embed_tokens'] = 0
+    device_map['model.language_model.norm'] = 0
+    device_map['lm_head'] = 0
+    # CPU: PLE (5.64GB), vision/audio towers
+    for cpu_mod in ['model.language_model.embed_tokens_per_layer',
+                    'model.language_model.per_layer_model_projection',
+                    'model.language_model.per_layer_projection_norm',
+                    'model.vision_tower', 'model.embed_vision',
+                    'model.audio_tower', 'model.embed_audio']:
+        device_map[cpu_mod] = 'cpu'
     llm = AutoModelForCausalLM.from_pretrained(
-        BASE_MODEL_ID, quantization_config=bnb_config, device_map="auto", max_memory=max_memory, trust_remote_code=True
+        BASE_MODEL_ID, quantization_config=bnb_config, device_map=device_map,
+        dtype=torch.bfloat16, low_cpu_mem_usage=True, trust_remote_code=True,
+        max_memory=_transformers_memory_plan(), offload_folder=OFFLOAD_DIR,
+        offload_state_dict=True
     )
 
-    print("Loading SigLIP (CPU — moved to GPU on demand)...")
-    processor = SiglipImageProcessor.from_pretrained("google/siglip2-so400m-patch14-384")
-    vision_model = SiglipVisionModel.from_pretrained(
-        "google/siglip2-so400m-patch14-384", torch_dtype=torch.float16
-    )  # Stays on CPU — saves ~500MB VRAM for text-only queries
+    # Gemma 4 has built-in vision+audio encoders — no separate SigLIP needed.
+    # For multimodal inference, use AutoProcessor instead.
+    print("Loading Gemma 4 Processor (vision+audio built-in)...")
+    try:
+        from transformers import AutoProcessor
+        processor = AutoProcessor.from_pretrained(BASE_MODEL_ID, trust_remote_code=True)
+    except Exception as e:
+        print(f"[WARN] Processor load failed ({e}), falling back to tokenizer-only")
+        processor = None
+
+    weight_path, weight_type = find_latest_adapter()
+    model_hidden_size = _infer_model_hidden_size(llm)
+    checkpoint_geometry = _infer_checkpoint_geometry(weight_path) if weight_type == "geometric" else None
+
+    adapter_dims = {
+        "hidden_size": model_hidden_size,
+        "latent_dim": 64,
+        "num_components": 8,
+        "num_categories": 16,
+        "bottleneck_dim": model_hidden_size // 4,
+    }
+    provenance = {
+        "base_model": BASE_MODEL_ID,
+        "base_hidden_size": model_hidden_size,
+        "checkpoint_path": weight_path if weight_path != "DEBUG_MODE_NO_WEIGHTS" else "",
+        "checkpoint_geometry": checkpoint_geometry or {},
+        "mode": "initialized",
+    }
+    if checkpoint_geometry:
+        adapter_dims.update({
+            "latent_dim": checkpoint_geometry["latent_dim"],
+            "num_components": checkpoint_geometry["num_components"],
+            "num_categories": checkpoint_geometry["num_categories"],
+        })
+        if checkpoint_geometry["hidden_size"] == model_hidden_size:
+            adapter_dims["bottleneck_dim"] = checkpoint_geometry["bottleneck_dim"]
+            provenance["mode"] = "checkpoint-full"
+        else:
+            provenance["mode"] = "gemma4-teacher-geometry-core"
+            print(
+                "[Adapter] Checkpoint residual width "
+                f"H={checkpoint_geometry['hidden_size']} differs from Gemma4 H={model_hidden_size}. "
+                "Using checkpoint D/P/K as n-geometry teacher and reinitializing H-bound projections."
+            )
 
     print("Loading Geometric Adapter...")
     config = IGBundleConfig(
-        hidden_size=3584, num_components=8, latent_dim=64, num_categories=16,
-        use_dynamics=True, use_geodesic_attn=True, supported_modalities=["vision", "text"],
+        hidden_size=adapter_dims["hidden_size"],
+        num_components=adapter_dims["num_components"],
+        latent_dim=adapter_dims["latent_dim"],
+        num_categories=adapter_dims["num_categories"],
+        bottleneck_dim=adapter_dims["bottleneck_dim"],
+        manifold_type="poincare",
+        num_hidden_layers=getattr(llm.config, 'num_hidden_layers', 1),
+        use_dynamics=True, use_geodesic_attn=True, supported_modalities=["vision", "text", "audio"],
         enable_meta_cognition=True,
-        use_delta_fiber=True, delta_mem_dim=64, delta_num_heads=4,  # Epic 17b
+        use_delta_fiber=True, delta_mem_dim=64, delta_num_heads=4,
+        use_geometric_cache=True, geometric_cache_max_length=128,
+        use_nmtrixed=True, geometric_eviction=True,
     )
     adapter = create_geometric_adapter(config).to("cuda")
-
-    weight_path, weight_type = find_latest_adapter()
+    TELEMETRY_STATE["adapter_provenance"] = provenance
     if weight_path != "DEBUG_MODE_NO_WEIGHTS":
         print(f"Found Weights: {weight_path} ({weight_type})")
 
@@ -308,32 +689,44 @@ def load_models():
 
         elif weight_type == "geometric":
             print(f"Loading Geometric Weights from {weight_path}...")
-            adapter.load_state_dict(torch.load(weight_path), strict=False)
+            loaded = _load_geometric_checkpoint_safe(adapter, weight_path)
+            if not loaded:
+                # Clear stale checkpoint pointer so next startup resolves from current CHECKPOINT_DIR.
+                MODEL_STATE.update_checkpoint("", 0)
+                print("[ModelState] Cleared incompatible checkpoint path. Running with initialized adapter.")
 
     MODELS.update({
         "llm": llm, "tokenizer": tokenizer,
-        "vision_model": vision_model, "processor": processor, "adapter": adapter,
+        "vision_model": None, "processor": processor, "adapter": adapter,
         "constraint_extractor": ConstraintExtractor(),
         "constraint_scorer": ConstraintScorer(),
-        "memory": IMDMemory(telemetry_state=TELEMETRY_STATE)  # IMD: 3-tier geometric memory
+        "memory": IMDMemory(telemetry_state=TELEMETRY_STATE)
     })
 
-    # Inject Hook
+    # Inject Hook — Gemma 4 E4B has 42 layers, hook at layer 21 (middle)
     inject_adapter_hook(llm, adapter)
 
-    # GSP: Geometric Steering Probe — inference-time homeostatic controller
-    # Attaches as forward hooks to layers 8-20, reads TELEMETRY_STATE live,
-    # applies GENERIC-compliant deicing perturbations when Bundle lock detected.
+    # GSP: Geometric Steering Probe — model-agnostic factory
     try:
-        gsp, gsp_bridge = create_gsp_for_qwen7b(telemetry_dict=TELEMETRY_STATE)
-        gsp.attach(llm, range(8, 21))
+        from igbundle.steering.gsp import create_gsp
+        gsp, gsp_bridge = create_gsp(hidden_dim=config.hidden_size, telemetry_dict=TELEMETRY_STATE)
+        gsp_layers = _select_gsp_target_layers(llm, span=len(gsp.genome.layer_weights))
+        gsp_target_layers = range(gsp_layers[0], gsp_layers[-1] + 1) if gsp_layers else range(0, 0)
+        attached_layers = gsp.attach(llm, gsp_target_layers)
         MODELS["gsp"] = gsp
         MODELS["gsp_bridge"] = gsp_bridge
-        print("[GSP] Geometric Steering Probe initialized and attached.")
+        TELEMETRY_STATE["gsp_status"] = {
+            "target_layers": gsp_layers,
+            "attached_layers": attached_layers,
+            "hidden_dim": config.hidden_size,
+        }
+        print(f"[GSP] Geometric Steering Probe initialized on layers {attached_layers}.")
     except Exception as e:
         print(f"[GSP] WARNING: Failed to initialize GSP: {e}")
+        _record_runtime_event("gsp", f"initialization failed ({type(e).__name__})")
         MODELS["gsp"] = None
         MODELS["gsp_bridge"] = None
+        TELEMETRY_STATE["gsp_status"] = {"error": str(e), "attached_layers": []}
 
     # Restore telemetry from previous session
     saved_telem = MODEL_STATE.restore_telemetry()
@@ -359,24 +752,21 @@ def load_models():
 VISION_CONTEXT = {"feats": None}
 
 def inject_adapter_hook(llm, adapter):
-    model_root = llm
-    if hasattr(model_root, "model") and hasattr(model_root.model, "layers"):
-         layers = model_root.model.layers
-    elif hasattr(model_root, "model") and hasattr(model_root.model, "model") and hasattr(model_root.model.model, "layers"):
-         layers = model_root.model.model.layers
-    elif hasattr(model_root, "base_model") and hasattr(model_root.base_model, "model") and hasattr(model_root.base_model.model, "layers"):
-         layers = model_root.base_model.model.layers
-    else:
+    layers = _find_transformer_layers(llm)
+    if layers is None:
          print("ERROR: Could not locate transformer layers in model structure. Hook injection failed.")
+         _record_runtime_event("hook", "adapter injection failed: layers not found")
          return
 
-    target_layer = layers[12]
+    # Hook at model midpoint: layer 12 for Qwen (28 layers), layer 21 for Gemma4-E4B (42 layers)
+    hook_idx = len(layers) // 2
+    target_layer = layers[hook_idx]
+    print(f"[Hook] Attaching adapter at layer {hook_idx}/{len(layers)}")
     llm._geo_target_layer = target_layer
-    original_forward = target_layer.forward
 
-    def adapter_hook(hidden_states, *args, **kwargs):
-        # 1. Base Forward
-        out = original_forward(hidden_states, *args, **kwargs)
+    # Use register_forward_hook to avoid monkey-patching forward signature
+    # (Gemma4 decoder layers have complex signatures with PLE inputs, position_embeddings, etc.)
+    def adapter_hook(module, input, out):
         h = out[0] if isinstance(out, tuple) else out
         orig_dtype = h.dtype
 
@@ -391,10 +781,6 @@ def inject_adapter_hook(llm, adapter):
 
         # 3. Telemetry Extraction
         try:
-            curv = 0.0
-            if hasattr(adapter, 'riemannian_geometry'):
-                 pass
-
             probs = geo_state.fiber_sections.clamp(min=1e-8)
             entropy_tensor = -torch.sum(probs * torch.log(probs), dim=-1).mean()
             entropy = float(entropy_tensor.item()) if entropy_tensor.numel() == 1 else float(entropy_tensor.mean().item())
@@ -406,55 +792,57 @@ def inject_adapter_hook(llm, adapter):
             else:
                  active_fiber = "Standby"
 
-            if hasattr(adapter, 'riemannian_geometry') and hasattr(geo_state, 'base_coordinates'):
-                 try:
-                     positions = geo_state.base_coordinates
-                     real_curvature = adapter.riemannian_geometry.estimate_sectional_curvature_stochastic(
-                         positions, num_samples=3
-                     )
-                     curv_val = real_curvature.mean().item()
-                     TELEMETRY_STATE["curvature"] = round(float(curv_val), 2)
-                 except Exception as e:
-                     print(f"Curvature Calc Failed: {e}")
-                     TELEMETRY_STATE["curvature"] = round(-1.0 + random.uniform(-0.1, 0.1), 2)
-            else:
-                 TELEMETRY_STATE["curvature"] = round(-1.0 + random.uniform(-0.05, 0.05), 2)
+            curv_val, curvature_status = _estimate_curvature(adapter, geo_state)
+            TELEMETRY_STATE["curvature"] = round(float(curv_val), 2)
+            TELEMETRY_STATE["curvature_status"] = curvature_status
             TELEMETRY_STATE["entropy"] = round(float(entropy), 4)
 
-            # OOD Teleportation Detection
+            # Full-D manifold telemetry. The 2D trace below is only a render projection.
             current_euc = h_in[:, -1, :]
+            previous_geo = TELEMETRY_STATE.get("last_geo_pos")
+            previous_euc = TELEMETRY_STATE.get("last_euc_pos")
+            n_stack = summarize_manifold_stack(
+                adapter,
+                geo_state,
+                hidden_state=h_in,
+                previous_geo=previous_geo,
+                previous_hidden=previous_euc,
+                curvature=1.0,
+                constraint_score=TELEMETRY_STATE.get("constraint_score", 1.0),
+            )
+            TELEMETRY_STATE["n_stack"] = n_stack
+            TELEMETRY_STATE["n_stack_panel"] = format_stack_panel(n_stack)
+            epic_stack = summarize_epic_stack(
+                adapter,
+                geo_state,
+                TELEMETRY_STATE,
+                gsp=MODELS.get("gsp"),
+                memory=MODELS.get("memory"),
+            )
+            TELEMETRY_STATE["epic_stack"] = epic_stack
+            TELEMETRY_STATE["epic_panel"] = format_epic_panel(epic_stack)
+            TELEMETRY_STATE["ood_state"] = epic_stack.get("ood", {})
+            if TELEMETRY_STATE["ood_state"].get("active"):
+                reasons = ",".join(TELEMETRY_STATE["ood_state"].get("reasons", []) or ["unknown"])
+                _record_runtime_event("ood", f"detected {reasons}")
+            ratio = float(n_stack.get("holoportation_ratio", 1.0))
+            TELEMETRY_STATE["lipschitz_ratio"] = ratio
+            if ratio > 5.0:
+                TELEMETRY_STATE["thought_trace"].append(f"HOLOPORTATION DETECTED (L={ratio:.1f})")
 
             if hasattr(geo_state, 'base_coordinates'):
                  current_geo = geo_state.base_coordinates[:, -1, 0, :]
 
-                 if TELEMETRY_STATE["last_geo_pos"] is not None:
-                     prev_geo = TELEMETRY_STATE["last_geo_pos"]
-                     prev_euc = TELEMETRY_STATE["last_euc_pos"]
-                     # Move prev tensors to same device for comparison
-                     if hasattr(prev_geo, 'to'):
-                         prev_geo = prev_geo.to(current_geo.device)
-                     if hasattr(prev_euc, 'to'):
-                         prev_euc = prev_euc.to(current_euc.device)
-
-                     d_M = PoincareBall.dist(current_geo, prev_geo, c=1.0).item()
-                     d_E = torch.norm(current_euc - prev_euc).item() + 1e-9
-
-                     ratio = d_M / d_E
-                     TELEMETRY_STATE["lipschitz_ratio"] = ratio
-
-                     if ratio > 5.0:
-                         TELEMETRY_STATE["thought_trace"].append(f"TELEPORT DETECTED (L={ratio:.1f})")
-
-                 # Store on CPU to free VRAM
+                 # Store on CPU to free VRAM while preserving the full latent dimension.
                  TELEMETRY_STATE["last_geo_pos"] = current_geo.detach().cpu()
                  TELEMETRY_STATE["last_euc_pos"] = current_euc.detach().cpu()
 
                  try:
-                     pt = current_geo[0, 0:2].float().cpu().numpy()
-                     TELEMETRY_STATE["manifold_trace"].append(pt)
+                     TELEMETRY_STATE["manifold_trace"].append(n_stack.get("projection", [0.0, 0.0]))
                      if len(TELEMETRY_STATE["manifold_trace"]) > 100:
                          TELEMETRY_STATE["manifold_trace"].pop(0)
-                 except: pass
+                 except Exception as exc:
+                     _record_runtime_event("projection", f"trace update failed ({type(exc).__name__})", trace=False)
 
             TELEMETRY_STATE["active_fiber"] = str(active_fiber)
 
@@ -522,7 +910,7 @@ def inject_adapter_hook(llm, adapter):
         if isinstance(out, tuple): return (adapted,) + out[1:]
         return adapted
 
-    target_layer.forward = adapter_hook
+    llm._geo_hook_handle = target_layer.register_forward_hook(adapter_hook)
     print("Hook Injected.")
 
 
@@ -695,8 +1083,8 @@ def generate_stream(text, image_path, max_new_tokens):
             try:
                 MODELS["vision_model"].to("cpu")
                 _safe_empty_cache()
-            except Exception:
-                pass
+            except Exception as cleanup_exc:
+                _record_runtime_event("vision", f"cleanup failed ({type(cleanup_exc).__name__})", trace=False)
             yield f"Error loading image: {e}"
             return
 
@@ -948,13 +1336,16 @@ def generate_stream(text, image_path, max_new_tokens):
     # Stop event: main thread signals generation to halt on corruption
     _stop_generation = threading.Event()
 
-    # Qwen chat uses <|im_end|> as turn terminator AND <|endoftext|> as EOS.
-    # Both must be stop tokens — otherwise model either stops too early or never stops.
+    # EOS handling: Gemma 4 uses <end_of_turn> and <eos> tokens.
+    # Qwen used <|im_end|>/<|endoftext|>. We detect model type and set accordingly.
     _eos_ids = [tokenizer.eos_token_id]
+    # Gemma 4 turn terminator
+    _eot_id = tokenizer.convert_tokens_to_ids("<end_of_turn>")
+    if _eot_id is not None and _eot_id != tokenizer.unk_token_id and _eot_id != tokenizer.eos_token_id:
+        _eos_ids.append(_eot_id)
+    # Legacy Qwen support
     _im_end_id = tokenizer.convert_tokens_to_ids("<|im_end|>")
-    if _im_end_id is None or _im_end_id == tokenizer.unk_token_id:
-        _im_end_id = 151645
-    if _im_end_id is not None and _im_end_id != tokenizer.eos_token_id:
+    if _im_end_id is not None and _im_end_id != tokenizer.unk_token_id and _im_end_id not in _eos_ids:
         _eos_ids.append(_im_end_id)
 
     # New-turn hallucination guard: stop if model emits <|im_start|> or continues after <|im_end|>
@@ -1086,9 +1477,10 @@ def generate_stream(text, image_path, max_new_tokens):
         # --- Cat A: Foreign persona injection ---
         "You are Elizabeth",               # 77 occurrences in cp3001 salvos
         "izabeth, a highly intelligent",   # boundary-corrupted Elizabeth variant
-        "I am Nezha",                      # Qwen identity drift
+        "I am Nezha",                      # Legacy Qwen identity drift
         "I'm Nezha",
         "Nezha, a virtual",
+        "I am Gemma",                      # Gemma identity drift
         # --- Cat B: Tokenization / role separator artifacts ---
         "inquiringuser",                   # 85 occurrences — role tag bleed
         "inquiringassistant",              # 84 occurrences
@@ -1525,7 +1917,7 @@ def poll_telemetry():
         # preventing 600+ Plotly rebuilds during a 60s stall.
         now = time.time()
         if _GENERATION_ACTIVE.is_set() and (now - _last_telem_time) < 1.0:
-            return (gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update())
+            return (gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update())
         _last_telem_time = now
 
         damping = TELEMETRY_STATE.get("damping", 0.01)
@@ -1643,7 +2035,7 @@ def poll_telemetry():
         rw_color = 'lime' if beta > 1.87 else 'orange'
 
         fig.update_layout(
-            title=dict(text="Poincare Manifold Projection", font=dict(size=12, color='cyan'), x=0.5),
+            title=dict(text="Poincare n-Manifold Projection", font=dict(size=12, color='cyan'), x=0.5),
             template="plotly_dark",
             xaxis=dict(range=[-1.25, 1.25], showgrid=False, zeroline=False, showticklabels=False, title=None, fixedrange=True),
             yaxis=dict(range=[-1.25, 1.25], showgrid=False, zeroline=False, showticklabels=False, title=None, scaleanchor='x', fixedrange=True),
@@ -1670,13 +2062,19 @@ def poll_telemetry():
             f"{TELEMETRY_STATE['entropy']}",
             f"{TELEMETRY_STATE['active_fiber']}",
             f"{TELEMETRY_STATE['constraint_score']:.2f}",
+            TELEMETRY_STATE.get("n_stack_panel", ""),
+            TELEMETRY_STATE.get("epic_panel", ""),
             "\n".join(TELEMETRY_STATE["thought_trace"][-8:]),
             fig,
             history_fig
         )
     except Exception as e:
         print(f"Telemetry Poll Error: {e}")
-        return ("0.0", "0.0", "Error", "0.0", f"Error: {e}", go.Figure(), go.Figure())
+        return (
+            "0.0", "0.0", "Error", "0.0",
+            f"Error: {e}", f"Error: {e}", f"Error: {e}",
+            go.Figure(), go.Figure()
+        )
 
 # --- UI BUILD ---
 css_path = os.path.join(os.path.dirname(__file__), "theme_neural_glass.css")
@@ -1699,13 +2097,27 @@ with gr.Blocks(theme=gr.themes.Base(), css=css, title="NEURAL GLASS") as app:
             gr.Markdown("### SYSTEM STATUS")
 
             with gr.Group(elem_classes="info-card"):
-                gr.Markdown("**MODEL IDENTITY**\nUnified Manifold v2.1\nQwen 7B (NF4) + SigLIP")
+                gr.Markdown("**MODEL IDENTITY**\nUnified Manifold v3.0\nGemma 4 E4B (NF4) + Geometric Adapter")
 
             with gr.Group(elem_classes="info-card"):
                 k_label = gr.Label(label="SECTIONAL CURVATURE (K)", value="0.0")
                 s_label = gr.Label(label="MANIFOLD ENTROPY (S)", value="0.0")
                 constraint_label = gr.Label(label="CONSTRAINT SCORE", value="1.0")
                 fiber_label = gr.Label(label="ACTIVE BUNDLE", value="Standby")
+                n_stack_box = gr.TextArea(
+                    label="N-MANIFOLD STACK",
+                    value=TELEMETRY_STATE.get("n_stack_panel", ""),
+                    lines=8, max_lines=8,
+                    interactive=False,
+                    elem_classes="thought-stream"
+                )
+                epic_stack_box = gr.TextArea(
+                    label="EPIC STACK",
+                    value=TELEMETRY_STATE.get("epic_panel", ""),
+                    lines=4, max_lines=4,
+                    interactive=False,
+                    elem_classes="thought-stream"
+                )
 
                 manifold_plot = gr.Plot(label="Poincare Manifold")
                 metrics_plot = gr.Plot(label="Metrics History (K, S)")
@@ -2069,8 +2481,8 @@ with gr.Blocks(theme=gr.themes.Base(), css=css, title="NEURAL GLASS") as app:
             if _mem:
                 try:
                     _mem.store(bot_message[:1000], tier="auto")
-                except Exception:
-                    pass
+                except Exception as mem_exc:
+                    _record_runtime_event("memory", f"auto-store failed ({type(mem_exc).__name__})", trace=False)
 
         # VRAM cleanup after every turn
         _cleanup_vram()
@@ -2091,9 +2503,10 @@ with gr.Blocks(theme=gr.themes.Base(), css=css, title="NEURAL GLASS") as app:
                         k = TELEMETRY_STATE.get("curvature", 0.0)
                         s = TELEMETRY_STATE.get("entropy", 0.0)
                         fiber = TELEMETRY_STATE.get("active_fiber", "?")
+                        stack = TELEMETRY_STATE.get("n_stack", {}) or {}
                         trace = TELEMETRY_STATE.get("manifold_trace", [])
-                        r = 0.0
-                        if trace:
+                        r = float(stack.get("radius_max", 0.0) or 0.0)
+                        if r == 0.0 and trace:
                             pt = trace[-1]
                             r = float(np.sqrt(pt[0]**2 + pt[1]**2))
 
@@ -2110,8 +2523,8 @@ with gr.Blocks(theme=gr.themes.Base(), css=css, title="NEURAL GLASS") as app:
 
                 try:
                     MODEL_STATE.snapshot_telemetry(TELEMETRY_STATE)
-                except Exception:
-                    pass
+                except Exception as snap_exc:
+                    _record_runtime_event("telemetry", f"snapshot failed ({type(snap_exc).__name__})", trace=False)
 
             # Trim history for long-horizon: rolling window
             history = _make_rolling_context(history, MAX_ROLLING_MESSAGES)
@@ -2159,7 +2572,7 @@ with gr.Blocks(theme=gr.themes.Base(), css=css, title="NEURAL GLASS") as app:
 
     # Telemetry Timer
     timer = gr.Timer(0.1)
-    timer.tick(poll_telemetry, None, [k_label, s_label, fiber_label, constraint_label, thought_log, manifold_plot, metrics_plot])
+    timer.tick(poll_telemetry, None, [k_label, s_label, fiber_label, constraint_label, n_stack_box, epic_stack_box, thought_log, manifold_plot, metrics_plot])
 
 if __name__ == "__main__":
     print("Initializing Models...")

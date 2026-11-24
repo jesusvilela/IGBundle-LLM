@@ -1,0 +1,124 @@
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.0.2, pluggy-1.6.0 -- H:\LLM-MANIFOLD\igbundle-llm\unsloth_env\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: H:\LLM-MANIFOLD\igbundle-llm
+plugins: anyio-4.12.0, dash-3.3.0, asyncio-1.3.0, timeout-2.4.0, typeguard-4.4.4
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 20 items
+
+tests/test_hyperbolic.py::TestPoincareBall::test_dist_positivity FAILED  [  5%]
+tests/test_v2_components.py::test_hamiltonian PASSED                     [ 10%]
+tests/test_delta_fiber.py::TestDeltaFiberUpdate::test_curvature_modulates_write_gate PASSED [ 15%]
+tests/test_fiber_regression.py::TestFiberRefinement::test_gate_modulation PASSED [ 20%]
+tests/test_fiber_regression.py::TestFiberRefinement::test_locus_switch PASSED [ 25%]
+tests/test_fiber_regression.py::TestFiberRefinement::test_refinement_cycle PASSED [ 30%]
+tests/test_riemannian_attention.py::TestRiemannianAttention::test_attention_focus PASSED [ 35%]
+tests/test_riemannian_attention.py::TestRiemannianAttention::test_forward_shape FAILED [ 40%]
+tests/test_audit_fixes.py::TestPoincareCurvatureClamp::test_distance_matches_closed_form_for_c_quarter PASSED [ 45%]
+tests/test_audit_fixes.py::TestPoincareCurvatureClamp::test_log_map_norm_matches_distance_at_origin PASSED [ 50%]
+tests/test_audit_fixes.py::TestOpsBallProjection::test_riemannian_affinity_stays_finite_and_normalized PASSED [ 55%]
+tests/test_audit_fixes.py::TestCurvatureEstimator::test_bundle_curvature_loss_no_attribute_error PASSED [ 60%]
+tests/test_audit_fixes.py::TestCurvatureEstimator::test_curvature_is_zero_when_conformal_scale_zero PASSED [ 65%]
+tests/test_audit_fixes.py::TestCurvatureEstimator::test_curvature_responds_to_conformal_scale PASSED [ 70%]
+tests/test_audit_fixes.py::TestCurvatureEstimator::test_learnable_conformal_flag_controls_parameterization PASSED [ 75%]
+tests/test_audit_fixes.py::TestCurvatureEstimator::test_log_map_flat_fast_path PASSED [ 80%]
+tests/test_audit_fixes.py::TestCurvatureEstimator::test_sectional_curvature_compat_shim_exists PASSED [ 85%]
+tests/test_audit_fixes.py::TestConfigFlags::test_audit_flags_default_off PASSED [ 90%]
+tests/test_audit_fixes.py::TestConfigFlags::test_supported_modalities_explicit_not_aliased PASSED [ 95%]
+tests/test_audit_fixes.py::TestConfigFlags::test_supported_modalities_not_shared_default PASSED [100%]
+
+================================== FAILURES ===================================
+____________________ TestPoincareBall.test_dist_positivity ____________________
+
+self = <test_hyperbolic.TestPoincareBall testMethod=test_dist_positivity>
+
+    def test_dist_positivity(self):
+        """Test d(x,y) >= 0 and d(x,x) = 0"""
+        x = torch.randn(10, 5) * 0.5
+        y = torch.randn(10, 5) * 0.5
+    
+        # d(x, x)
+        d_xx = PoincareBall.dist(x, x, self.c)
+        # AUDIT FIX (2026-07): atol=1e-4 is too tight for D=5 hyperbolic distance
+        # at x norms up to ~1.1 (randn*0.5 in D=5); the M÷bius subtraction and
+        # acosh accumulate ~1e-3 float error. Use 1e-3.
+>       self.assertTrue(torch.allclose(d_xx, torch.zeros_like(d_xx), atol=1e-3))
+E       AssertionError: False is not true
+
+tests\test_hyperbolic.py:41: AssertionError
+_________________ TestRiemannianAttention.test_forward_shape __________________
+
+self = <test_riemannian_attention.TestRiemannianAttention testMethod=test_forward_shape>
+
+    def test_forward_shape(self):
+        B, H, T, S, D = 1, 4, 2, 5, 16
+        # Queries and Keys on Manifold (Projected)
+        q = torch.randn(B, H, T, D) * 0.1 # Small norm
+        k = torch.randn(B, H, S, D) * 0.1
+        v = torch.randn(B, H, S, D) # Values (Euclidean)
+    
+>       out = self.attn(q, k, v)
+              ^^^^^^^^^^^^^^^^^^
+
+tests\test_riemannian_attention.py:32: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+unsloth_env\Lib\site-packages\torch\nn\modules\module.py:1739: in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+unsloth_env\Lib\site-packages\torch\nn\modules\module.py:1750: in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src\igbundle\modules\riemannian_attention.py:59: in forward
+    dist_sq = PoincareBall.pairwise_dist2_fast(q_states, k_states, self.c)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+q = tensor([[[[ 5.0150e-01,  3.8708e-01,  2.3442e-01, -5.4798e-01,  1.7657e-01,
+           -3.2130e-01, -1.1209e-02, -4.17...3,  5.1432e-02,
+            2.8304e-02,  1.6321e-01,  2.3385e-01,  7.2586e-02,  1.5375e-01,
+            8.7858e-02]]]])
+k = tensor([[[[ 0.4771,  0.2500, -0.3549, -0.2792, -0.0336,  0.4041,  0.1618,
+            0.1423,  0.2820,  0.0046, -0.446...09,  0.1522,
+            0.2375,  0.1571, -0.2989,  0.0086, -0.2664, -0.0235,  0.2708,
+            0.1732, -0.1699]]]])
+c = 1.0, eps = 1e-08
+
+    @staticmethod
+    def pairwise_dist2_fast(q: torch.Tensor, k: torch.Tensor, c: float, eps: float = 1e-8) -> torch.Tensor:
+        """
+        Squared hyperbolic distance using a memory-reduced pairwise kernel.
+        q: (B, H, T, D)
+        k: (B, H, S, D)
+        Returns: (B, H, T, S)
+        """
+        B, H, T, D = q.shape
+        S = k.shape[2]
+    
+        q_flat = q.reshape(B * H, T, D)
+        k_flat = k.reshape(B * H, S, D)
+    
+        # Use cdist to avoid explicit (T,S,D) broadcast when possible.
+        dist2 = torch.cdist(q_flat, k_flat, p=2).pow(2)
+        dist2 = dist2.view(B, H, T, S)
+    
+        q2 = torch.sum(q.pow(2), dim=-1, keepdim=True)  # (B,H,T,1)
+        k2 = torch.sum(k.pow(2), dim=-1, keepdim=True)  # (B,H,S,1)
+    
+        alpha = (1.0 - c * q2).clamp_min(MIN_NORM)      # (B,H,T,1)
+        beta = (1.0 - c * k2).clamp_min(MIN_NORM)       # (B,H,S,1)
+        # AUDIT FIX (2026-07): beta.expand(-1,-1,T,-1) was a shape bug ù beta's
+        # dim 2 is S (not 1), so expand raised RuntimeError whenever T != S.
+        # alpha broadcasts (B,H,T,1) vs (B,H,T,S); beta must broadcast as
+        # (B,H,1,S). Move the S axis to dim 3 via transpose, expand T, transpose back.
+        alpha = alpha.expand(-1, -1, -1, S)             # (B,H,T,S)
+        beta = beta.transpose(2, 3).expand(-1, -1, T, -1).transpose(2, 3)  # (B,H,T,S)
+    
+>       arg = 1.0 + 2.0 * c * dist2 / (alpha * beta + eps)
+                                       ^^^^^^^^^^^^
+E       RuntimeError: The size of tensor a (5) must match the size of tensor b (2) at non-singleton dimension 3
+
+src\igbundle\geometry\hyperbolic.py:141: RuntimeError
+=========================== short test summary info ===========================
+FAILED tests/test_hyperbolic.py::TestPoincareBall::test_dist_positivity - Ass...
+FAILED tests/test_riemannian_attention.py::TestRiemannianAttention::test_forward_shape
+================== 2 failed, 18 passed in 265.23s (0:04:25) ===================

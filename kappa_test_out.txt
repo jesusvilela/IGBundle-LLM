@@ -1,0 +1,32 @@
+========================================================================
+TEST A ù legacy estimator invariance w.r.t. metric_chol
+========================================================================
+Loading checkpoint: H:\LLM-MANIFOLD\igbundle_phase8_training\checkpoint-3000\adapter_weights.pt
+  metric_chol key: riemannian_geometry.metric_chol  shape: (8, 64, 64)
+  ||trained_chol - I|| / ||I|| = 0.0793
+  trained (cp3000)     : mean kappa = -32.660
+  identity             : mean kappa = -32.660
+  analytic (chol-free) : mean kappa = -32.660
+  random (control)     : mean kappa = -13.276
+
+  trained vs identity relative deviation: 1.22e-12
+  VERDICT: WEIGHT-INVARIANT (architecture constant)
+
+========================================================================
+TEST C ù radius sweep (explains published magnitudes)
+========================================================================
+  r = 0.1 : kappa = -130.761
+  r = 0.3 : kappa = -35.708
+  r = 0.5 : kappa = -16.298
+  r = 0.7 : kappa = -8.333
+  r = 0.9 : kappa = -4.421
+  (the published -5.63/-5.72 are this curve read near the r=0.95
+   projection boundary; the spread across published values is the
+   coordinate-norm distribution shifting between evals)
+
+========================================================================
+TEST B ù remediation: corrected estimator responds to conformal scale
+========================================================================
+  conformal_scale=0.50 : kappa = -0.903351
+  conformal_scale=0.05 : kappa = -0.112476
+  VERDICT: RESPONSIVE ù regularizer can bind

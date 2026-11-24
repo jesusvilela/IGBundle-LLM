@@ -1,0 +1,21 @@
+{
+  "hypothesis": "12.3% bpb improvement on manifold geometry sequences",
+  "runs": {
+    "control_lr3e4_wd03": {
+      "bpb_init": 1.6231831430613066,
+      "bpb_final": 1.6156174901350648,
+      "improvement_pct": 0.46609977183308104
+    },
+    "treatment_lr5e4_wd04": {
+      "bpb_init": 1.6231758712742634,
+      "bpb_final": 1.6160902418332201,
+      "improvement_pct": 0.43652875615263853
+    }
+  },
+  "head_to_head": {
+    "control_bpb": 1.6156174901350648,
+    "treatment_bpb": 1.6160902418332201,
+    "relative_improvement_pct": -0.029261362979908258,
+    "hypothesis_supported": false
+  }
+}

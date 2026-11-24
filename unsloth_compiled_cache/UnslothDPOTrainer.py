@@ -198,171 +198,171 @@ def align_logprobs_with_mask(
 class UnslothDPOConfig(DPOConfig):
     """
     
-Configuration class for the [`DPOTrainer`].
+    Configuration class for the [`DPOTrainer`].
 
-This class includes only the parameters that are specific to DPO training. For a full list of training arguments,
-please refer to the [`~transformers.TrainingArguments`] documentation. Note that default values in this class may
-differ from those in [`~transformers.TrainingArguments`].
+    This class includes only the parameters that are specific to DPO training. For a full list of training arguments,
+    please refer to the [`~transformers.TrainingArguments`] documentation. Note that default values in this class may
+    differ from those in [`~transformers.TrainingArguments`].
 
-Using [`~transformers.HfArgumentParser`] we can turn this class into
-[argparse](https://docs.python.org/3/library/argparse#module-argparse) arguments that can be specified on the
-command line.
+    Using [`~transformers.HfArgumentParser`] we can turn this class into
+    [argparse](https://docs.python.org/3/library/argparse#module-argparse) arguments that can be specified on the
+    command line.
 
-Parameters:
-    > Parameters that control the model and reference model
+    Parameters:
+        > Parameters that control the model and reference model
 
-    model_init_kwargs (`dict[str, Any]`, *optional*):
-        Keyword arguments for `AutoModelForCausalLM.from_pretrained`, used when the `model` argument of the
-        [`DPOTrainer`] is provided as a string.
-    ref_model_init_kwargs (`dict[str, Any]`, *optional*):
-        Keyword arguments for `AutoModelForCausalLM.from_pretrained`, used when the `ref_model` argument of the
-        [`DPOTrainer`] is provided as a string.
-    model_adapter_name (`str`, *optional*):
-        Name of the train target PEFT adapter, when using LoRA with multiple adapters.
-    ref_adapter_name (`str`, *optional*):
-        Name of the reference PEFT adapter, when using LoRA with multiple adapters.
-    force_use_ref_model (`bool`, *optional*, defaults to `False`):
-        If you provide a PEFT model as the active model and wish to use a different model for the `ref_model`, set
-        this flag to `True`.
-    disable_dropout (`bool`, *optional*, defaults to `True`):
-        Whether to disable dropout in the model and reference model.
-    use_logits_to_keep (`bool`, *optional*, defaults to `False`):
-        If `True`, only a specified number of logits are computed in the forward pass. This can be useful for
-        saving memory and speeding up training by not computing the logits for all tokens, especially in scenarios
-        when working with very long prompts where labels are ignored (-100).
+        model_init_kwargs (`dict[str, Any]`, *optional*):
+            Keyword arguments for `AutoModelForCausalLM.from_pretrained`, used when the `model` argument of the
+            [`DPOTrainer`] is provided as a string.
+        ref_model_init_kwargs (`dict[str, Any]`, *optional*):
+            Keyword arguments for `AutoModelForCausalLM.from_pretrained`, used when the `ref_model` argument of the
+            [`DPOTrainer`] is provided as a string.
+        model_adapter_name (`str`, *optional*):
+            Name of the train target PEFT adapter, when using LoRA with multiple adapters.
+        ref_adapter_name (`str`, *optional*):
+            Name of the reference PEFT adapter, when using LoRA with multiple adapters.
+        force_use_ref_model (`bool`, *optional*, defaults to `False`):
+            If you provide a PEFT model as the active model and wish to use a different model for the `ref_model`, set
+            this flag to `True`.
+        disable_dropout (`bool`, *optional*, defaults to `True`):
+            Whether to disable dropout in the model and reference model.
+        use_logits_to_keep (`bool`, *optional*, defaults to `False`):
+            If `True`, only a specified number of logits are computed in the forward pass. This can be useful for
+            saving memory and speeding up training by not computing the logits for all tokens, especially in scenarios
+            when working with very long prompts where labels are ignored (-100).
 
-    > Parameters that control the data preprocessing
+        > Parameters that control the data preprocessing
 
-    dataset_num_proc (`int`, *optional*):
-        Number of processes to use for processing the dataset.
-    pad_token (`str`, *optional*):
-        Token used for padding. If `None`, it defaults to `processing_class.pad_token`, or if that is also `None`,
-        it falls back to `processing_class.eos_token`.
-    label_pad_token_id (`int`, *optional*, defaults to `-100`):
-        Padding value to use for labels.
-    max_prompt_length (`int` or `None`, *optional*, defaults to `512`):
-        Maximum length of the prompt.
-    max_completion_length (`int`, *optional*):
-        Maximum length of the completion.
-    max_length (`int` or `None`, *optional*, defaults to `1024`):
-        Maximum length of the full sequence (prompt + completion).
-    truncation_mode (`str`, *optional*, defaults to `"keep_end"`):
-        Truncation mode to use when the sequence exceeds `max_length`. Possible values are `"keep_end"` and
-        `"keep_start"`.
-    padding_free (`bool`, *optional*, defaults to `False`):
-        Whether to perform forward passes without padding by flattening all sequences in the batch into a single
-        continuous sequence. This reduces memory usage by eliminating padding overhead. Currently, this is only
-        supported with the `flash_attention_2` attention implementation, which can efficiently handle the flattened
-        batch structure.
-    precompute_ref_log_probs (`bool`, *optional*, defaults to `False`):
-        Whether to precompute the log probabilities from the reference model. Setting this to `True` allows
-        training without needing the reference model during training, which can help reduce GPU memory usage. If
-        set to `False` (default), the reference model will be used during training to compute log probabilities
-        on-the-fly.
-    precompute_ref_batch_size (`int`, *optional*):
-        Batch size to use when precomputing reference model log probabilities. This can be set higher than the
-        training batch size to speed up preprocessing. If `None`, defaults to `per_device_train_batch_size` for
-        training and `per_device_eval_batch_size` for evaluation.
-    tools (`Optional[list[Union[dict, Callable]]]`, *optional*):
-        List of tools (callable functions) that will be accessible to the model. If the template does not support
-        function calling, this argument will have no effect.
+        dataset_num_proc (`int`, *optional*):
+            Number of processes to use for processing the dataset.
+        pad_token (`str`, *optional*):
+            Token used for padding. If `None`, it defaults to `processing_class.pad_token`, or if that is also `None`,
+            it falls back to `processing_class.eos_token`.
+        label_pad_token_id (`int`, *optional*, defaults to `-100`):
+            Padding value to use for labels.
+        max_prompt_length (`int` or `None`, *optional*, defaults to `512`):
+            Maximum length of the prompt.
+        max_completion_length (`int`, *optional*):
+            Maximum length of the completion.
+        max_length (`int` or `None`, *optional*, defaults to `1024`):
+            Maximum length of the full sequence (prompt + completion).
+        truncation_mode (`str`, *optional*, defaults to `"keep_end"`):
+            Truncation mode to use when the sequence exceeds `max_length`. Possible values are `"keep_end"` and
+            `"keep_start"`.
+        padding_free (`bool`, *optional*, defaults to `False`):
+            Whether to perform forward passes without padding by flattening all sequences in the batch into a single
+            continuous sequence. This reduces memory usage by eliminating padding overhead. Currently, this is only
+            supported with the `flash_attention_2` attention implementation, which can efficiently handle the flattened
+            batch structure.
+        precompute_ref_log_probs (`bool`, *optional*, defaults to `False`):
+            Whether to precompute the log probabilities from the reference model. Setting this to `True` allows
+            training without needing the reference model during training, which can help reduce GPU memory usage. If
+            set to `False` (default), the reference model will be used during training to compute log probabilities
+            on-the-fly.
+        precompute_ref_batch_size (`int`, *optional*):
+            Batch size to use when precomputing reference model log probabilities. This can be set higher than the
+            training batch size to speed up preprocessing. If `None`, defaults to `per_device_train_batch_size` for
+            training and `per_device_eval_batch_size` for evaluation.
+        tools (`Optional[list[Union[dict, Callable]]]`, *optional*):
+            List of tools (callable functions) that will be accessible to the model. If the template does not support
+            function calling, this argument will have no effect.
 
-    > Parameters that control the training
+        > Parameters that control the training
 
-    loss_type (`str` or `list[str]`, *optional*, defaults to `"sigmoid"`):
-        Type of loss to use. Possible values are:
+        loss_type (`str` or `list[str]`, *optional*, defaults to `"sigmoid"`):
+            Type of loss to use. Possible values are:
 
-            - `"sigmoid"`: sigmoid loss from the original [DPO](https://huggingface.co/papers/2305.18290) paper.
-            - `"hinge"`: hinge loss on the normalized likelihood from the
-              [SLiC](https://huggingface.co/papers/2305.10425) paper.
-            - `"ipo"`: IPO loss from the [IPO](https://huggingface.co/papers/2310.12036) paper.
-            - `"exo_pair"`: pairwise EXO loss from the [EXO](https://huggingface.co/papers/2402.00856) paper.
-            - `"nca_pair"`: pairwise NCA loss from the [NCA](https://huggingface.co/papers/2402.05369) paper.
-            - `"robust"`: unbiased estimate of the DPO loss that is robust to preference noise from the [Robust
-              DPO](https://huggingface.co/papers/2403.00409) paper.
-            - `"bco_pair"`: pairwise BCO loss from the [BCO](https://huggingface.co/papers/2404.04656) paper.
-            - `"sppo_hard"`: SPPO loss with hard label from the [SPPO](https://huggingface.co/papers/2405.00675)
-              paper.
-            - `"aot"`: AOT loss for paired datasets from the [AOT](https://huggingface.co/papers/2406.05882) paper.
-            - `"aot_pair"`: AOT loss for unpaired datasets from the [AOT](https://huggingface.co/papers/2406.05882)
-              paper.
-            - `"discopop"`: DiscoPOP (a.k.a Log-Ratio Modulated Loss, LRML) loss from the
-              [DiscoPOP](https://huggingface.co/papers/2406.08414) paper.
-            - `"apo_zero"`: APO-zero loss from the [APO](https://huggingface.co/papers/2408.06266) paper.
-            - `"apo_down"`: APO-down loss from the [APO](https://huggingface.co/papers/2408.06266) paper.
-            - `"sft"`: Negative log-likelihood loss (standard supervised fine-tuning loss).
+                - `"sigmoid"`: sigmoid loss from the original [DPO](https://huggingface.co/papers/2305.18290) paper.
+                - `"hinge"`: hinge loss on the normalized likelihood from the
+                  [SLiC](https://huggingface.co/papers/2305.10425) paper.
+                - `"ipo"`: IPO loss from the [IPO](https://huggingface.co/papers/2310.12036) paper.
+                - `"exo_pair"`: pairwise EXO loss from the [EXO](https://huggingface.co/papers/2402.00856) paper.
+                - `"nca_pair"`: pairwise NCA loss from the [NCA](https://huggingface.co/papers/2402.05369) paper.
+                - `"robust"`: unbiased estimate of the DPO loss that is robust to preference noise from the [Robust
+                  DPO](https://huggingface.co/papers/2403.00409) paper.
+                - `"bco_pair"`: pairwise BCO loss from the [BCO](https://huggingface.co/papers/2404.04656) paper.
+                - `"sppo_hard"`: SPPO loss with hard label from the [SPPO](https://huggingface.co/papers/2405.00675)
+                  paper.
+                - `"aot"`: AOT loss for paired datasets from the [AOT](https://huggingface.co/papers/2406.05882) paper.
+                - `"aot_pair"`: AOT loss for unpaired datasets from the [AOT](https://huggingface.co/papers/2406.05882)
+                  paper.
+                - `"discopop"`: DiscoPOP (a.k.a Log-Ratio Modulated Loss, LRML) loss from the
+                  [DiscoPOP](https://huggingface.co/papers/2406.08414) paper.
+                - `"apo_zero"`: APO-zero loss from the [APO](https://huggingface.co/papers/2408.06266) paper.
+                - `"apo_down"`: APO-down loss from the [APO](https://huggingface.co/papers/2408.06266) paper.
+                - `"sft"`: Negative log-likelihood loss (standard supervised fine-tuning loss).
 
-        Multiple loss types can be combined using comma separation (e.g., `["sigmoid", "bco_pair", "sft"]` for
-        [MPO](https://huggingface.co/papers/2411.10442)). The `loss_weights` parameter can be used to specify
-        corresponding weights for each loss type.
+            Multiple loss types can be combined using comma separation (e.g., `["sigmoid", "bco_pair", "sft"]` for
+            [MPO](https://huggingface.co/papers/2411.10442)). The `loss_weights` parameter can be used to specify
+            corresponding weights for each loss type.
 
-    use_liger_loss (`bool`, *optional*, defaults to `False`):
-        Whether to use Liger loss.
-    base_model_attribute_name (`str`, *optional*, defaults to `"model"`):
-        Name of the attribute in the model that contains the base model. This is used to get the base model from
-        the model when the model does not have a `get_decoder` method in the case when `use_liger_loss` is `True`.
-    beta (`float`, *optional*, defaults to `0.1`):
-        Parameter controlling the deviation from the reference model. Higher β means less deviation from the
-        reference model. For the IPO loss (`loss_type="ipo"`), β is the regularization parameter denoted by τ in
-        the [paper](https://huggingface.co/papers/2310.12036).
-    f_divergence_type ([`FDivergenceType`] or `str`, *optional*, defaults to `FDivergenceType.REVERSE_KL`):
-        Type of f-divergence regularization function to compute divergence between policy and reference model.
-    f_alpha_divergence_coef (`float`, *optional*, defaults to `1.0`):
-        α coefficient in the α-divergence u^-α regularization function for DPO loss.
-    reference_free (`bool`, *optional*, defaults to `False`):
-        Whether to ignore the provided reference model and implicitly use a reference model that assigns equal
-        probability to all responses.
-    label_smoothing (`float`, *optional*, defaults to `0.0`):
-        Robust DPO label smoothing parameter from the [cDPO report](https://ericmitchell.ai/cdpo.pdf) and [Robust
-        DPO](https://huggingface.co/papers/2403.00409) paper that should be between `0.0` and `0.5`.
-    use_weighting (`bool`, *optional*, defaults to `False`):
-        Whether to weight the loss as done in the [WPO paper](https://huggingface.co/papers/2406.11827).
-    rpo_alpha (`float`, *optional*):
-        α parameter from the [RPO paper](https://huggingface.co/papers/2404.19733) (v3), which controls the
-        weighting of the NLL term in the loss. If `None`, no weighting is applied and the loss is the same as the
-        DPO loss. The paper recommends `rpo_alpha=1.0`.
-    ld_alpha (`float`, *optional*):
-        α parameter from the [LD-DPO paper](https://huggingface.co/papers/2409.06411), which controls the weighting
-        of the verbose token log-probabilities in responses. If `None`, no weighting is applied to the verbose
-        part, and the loss is equivalent to the standard DPO loss. The paper recommends setting `ld_alpha` between
-        `0.0` and `1.0`.
-    discopop_tau (`float`, *optional*, defaults to `0.05`):
-        τ/temperature parameter from the [DiscoPOP](https://huggingface.co/papers/2406.08414) paper, which controls
-        the shape of log ratio modulated loss. The paper recommends the default value `discopop_tau=0.05`.
-    loss_weights (`list[float]`, *optional*):
-        List of loss weights for multi-loss combinations. Used when combining multiple loss types. Example: `[0.8,
-        0.2, 1.0]` for [MPO](https://huggingface.co/papers/2411.10442). If not provided, defaults to equal weights
-        (`1.0`) for all loss types.
-    sync_ref_model (`bool`, *optional*, defaults to `False`):
-        Whether to synchronize the reference model with the active model every `ref_model_sync_steps` steps, using
-        the `ref_model_mixup_alpha` parameter. This synchronization originates from the
-        [TR-DPO](https://huggingface.co/papers/2404.09656) paper.
-    ref_model_mixup_alpha (`float`, *optional*, defaults to `0.6`):
-        α parameter from the [TR-DPO](https://huggingface.co/papers/2404.09656) paper, which controls the mix
-        between the current policy and the previous reference policy during updates. The reference policy is
-        updated according to the equation: `π_ref = α * π_θ + (1 - α) * π_ref_prev`. To use this parameter, you
-        must set `sync_ref_model=True`.
-    ref_model_sync_steps (`int`, *optional*, defaults to `512`):
-        τ parameter from the [TR-DPO](https://huggingface.co/papers/2404.09656) paper, which determines how
-        frequently the current policy is synchronized with the reference policy. To use this parameter, you must
-        set `sync_ref_model=True`.
+        use_liger_loss (`bool`, *optional*, defaults to `False`):
+            Whether to use Liger loss.
+        base_model_attribute_name (`str`, *optional*, defaults to `"model"`):
+            Name of the attribute in the model that contains the base model. This is used to get the base model from
+            the model when the model does not have a `get_decoder` method in the case when `use_liger_loss` is `True`.
+        beta (`float`, *optional*, defaults to `0.1`):
+            Parameter controlling the deviation from the reference model. Higher β means less deviation from the
+            reference model. For the IPO loss (`loss_type="ipo"`), β is the regularization parameter denoted by τ in
+            the [paper](https://huggingface.co/papers/2310.12036).
+        f_divergence_type ([`FDivergenceType`] or `str`, *optional*, defaults to `FDivergenceType.REVERSE_KL`):
+            Type of f-divergence regularization function to compute divergence between policy and reference model.
+        f_alpha_divergence_coef (`float`, *optional*, defaults to `1.0`):
+            α coefficient in the α-divergence u^-α regularization function for DPO loss.
+        reference_free (`bool`, *optional*, defaults to `False`):
+            Whether to ignore the provided reference model and implicitly use a reference model that assigns equal
+            probability to all responses.
+        label_smoothing (`float`, *optional*, defaults to `0.0`):
+            Robust DPO label smoothing parameter from the [cDPO report](https://ericmitchell.ai/cdpo.pdf) and [Robust
+            DPO](https://huggingface.co/papers/2403.00409) paper that should be between `0.0` and `0.5`.
+        use_weighting (`bool`, *optional*, defaults to `False`):
+            Whether to weight the loss as done in the [WPO paper](https://huggingface.co/papers/2406.11827).
+        rpo_alpha (`float`, *optional*):
+            α parameter from the [RPO paper](https://huggingface.co/papers/2404.19733) (v3), which controls the
+            weighting of the NLL term in the loss. If `None`, no weighting is applied and the loss is the same as the
+            DPO loss. The paper recommends `rpo_alpha=1.0`.
+        ld_alpha (`float`, *optional*):
+            α parameter from the [LD-DPO paper](https://huggingface.co/papers/2409.06411), which controls the weighting
+            of the verbose token log-probabilities in responses. If `None`, no weighting is applied to the verbose
+            part, and the loss is equivalent to the standard DPO loss. The paper recommends setting `ld_alpha` between
+            `0.0` and `1.0`.
+        discopop_tau (`float`, *optional*, defaults to `0.05`):
+            τ/temperature parameter from the [DiscoPOP](https://huggingface.co/papers/2406.08414) paper, which controls
+            the shape of log ratio modulated loss. The paper recommends the default value `discopop_tau=0.05`.
+        loss_weights (`list[float]`, *optional*):
+            List of loss weights for multi-loss combinations. Used when combining multiple loss types. Example: `[0.8,
+            0.2, 1.0]` for [MPO](https://huggingface.co/papers/2411.10442). If not provided, defaults to equal weights
+            (`1.0`) for all loss types.
+        sync_ref_model (`bool`, *optional*, defaults to `False`):
+            Whether to synchronize the reference model with the active model every `ref_model_sync_steps` steps, using
+            the `ref_model_mixup_alpha` parameter. This synchronization originates from the
+            [TR-DPO](https://huggingface.co/papers/2404.09656) paper.
+        ref_model_mixup_alpha (`float`, *optional*, defaults to `0.6`):
+            α parameter from the [TR-DPO](https://huggingface.co/papers/2404.09656) paper, which controls the mix
+            between the current policy and the previous reference policy during updates. The reference policy is
+            updated according to the equation: `π_ref = α * π_θ + (1 - α) * π_ref_prev`. To use this parameter, you
+            must set `sync_ref_model=True`.
+        ref_model_sync_steps (`int`, *optional*, defaults to `512`):
+            τ parameter from the [TR-DPO](https://huggingface.co/papers/2404.09656) paper, which determines how
+            frequently the current policy is synchronized with the reference policy. To use this parameter, you must
+            set `sync_ref_model=True`.
 
-    > Parameters that control the logging
+        > Parameters that control the logging
 
-    generate_during_eval (`bool`, *optional*, defaults to `False`):
-        Whether to generate and log completions from both the model and the reference model to W&B or Comet during
-        evaluation.
+        generate_during_eval (`bool`, *optional*, defaults to `False`):
+            Whether to generate and log completions from both the model and the reference model to W&B or Comet during
+            evaluation.
 
-    > Deprecated parameters
+        > Deprecated parameters
 
-    padding_value:
+        padding_value:
 
-        <Deprecated version="0.24.0">
+            <Deprecated version="0.24.0">
 
-        This parameter is deprecated and will be removed in version 0.25.0. Use `pad_token` (`str`) instead.
+            This parameter is deprecated and will be removed in version 0.25.0. Use `pad_token` (`str`) instead.
 
-        </Deprecated>
-
+            </Deprecated>
+    
     """
     vllm_sampling_params: Optional[Any] = field(
         default = None,
@@ -727,69 +727,7 @@ Parameters:
 pass
 
 class _UnslothDPOTrainer(BaseTrainer):
-    """
-    Trainer for Direct Preference Optimization (DPO) method.
-
-    This class is a wrapper around the [`transformers.Trainer`] class and inherits all of its attributes and methods.
-
-    Args:
-        model (`Union[str, PreTrainedModel]`):
-            Model to be trained. Can be either:
-
-            - A string, being the *model id* of a pretrained model hosted inside a model repo on huggingface.co, or a
-              path to a *directory* containing model weights saved using
-              [`~transformers.PreTrainedModel.save_pretrained`], e.g., `'./my_model_directory/'`. The model is loaded
-              using [`~transformers.AutoModelForCausalLM.from_pretrained`] with the keyword arguments in
-              `args.model_init_kwargs`.
-            - A [`~transformers.PreTrainedModel`] object. Only causal language models are supported.
-        ref_model ([`PreTrainedModelWrapper`]):
-            Hugging Face transformer model with a casual language modelling head. Used for implicit reward computation
-            and loss. If no reference model is provided, the trainer will create a reference model with the same
-            architecture as the model to be optimized.
-        args ([`DPOConfig`], *optional*):
-            Configuration for this trainer. If `None`, a default configuration is used.
-        data_collator ([`~transformers.DataCollator`], *optional*):
-            Function to use to form a batch from a list of elements of the processed `train_dataset` or `eval_dataset`.
-            Will default to [`DataCollatorForPreference`].
-        train_dataset ([`~datasets.Dataset`] or [`~datasets.IterableDataset`]):
-            Dataset to use for training. DPO supports [preference](#preference) type and. The format of the samples can
-            be either:
-
-            - [Standard](dataset_formats#standard): Each sample contains plain text.
-            - [Conversational](dataset_formats#conversational): Each sample contains structured messages (e.g., role
-              and content).
-        eval_dataset ([`~datasets.Dataset`], [`~datasets.IterableDataset`] or `dict[str, Union[Dataset, IterableDataset]]`):
-            Dataset to use for evaluation. It must meet the same requirements as `train_dataset`.
-        processing_class ([`~transformers.PreTrainedTokenizerBase`], [`~transformers.BaseImageProcessor`], [`~transformers.FeatureExtractionMixin`] or [`~transformers.ProcessorMixin`], *optional*):
-            Processing class used to process the data. If `None`, the processing class is loaded from the model's name
-            with [`~transformers.AutoTokenizer.from_pretrained`].
-        compute_metrics (`Callable[[EvalPrediction], dict]`, *optional*):
-            The function that will be used to compute metrics at evaluation. Must take a [`EvalPrediction`] and return
-            a dictionary string to metric values. *Note* When passing TrainingArgs with `batch_eval_metrics` set to
-            `True`, your compute_metrics function must take a boolean `compute_result` argument. This will be triggered
-            after the last eval batch to signal that the function needs to calculate and return the global summary
-            statistics rather than accumulating the batch-level statistics.
-        callbacks (list of [`~transformers.TrainerCallback`], *optional*):
-            List of callbacks to customize the training loop. Will add those to the list of default callbacks detailed
-            in [here](https://huggingface.co/docs/transformers/main_classes/callback).
-
-            If you want to remove one of the default callbacks used, use the [`~transformers.Trainer.remove_callback`]
-            method.
-        optimizers (`tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR]`, *optional*, defaults to `(None, None)`):
-            A tuple containing the optimizer and the scheduler to use. Will default to an instance of [`AdamW`] on your
-            model and a scheduler given by [`get_linear_schedule_with_warmup`] controlled by `args`.
-        optimizer_cls_and_kwargs (`Tuple[Type[torch.optim.Optimizer], Dict[str, Any]]`, *optional*):
-            A tuple containing the optimizer class and keyword arguments to use. Overrides `optim` and `optim_args` in
-            `args`. Incompatible with the `optimizers` argument.
-        preprocess_logits_for_metrics (`Callable[[torch.Tensor, torch.Tensor], torch.Tensor]`, *optional*):
-            A function that preprocess the logits right before caching them at each evaluation step. Must take two
-            tensors, the logits and the labels, and return the logits once processed as desired. The modifications made
-            by this function will be reflected in the predictions received by `compute_metrics`.
-
-            Note that the labels (second parameter) will be `None` if the dataset does not have them.
-        peft_config ([`~peft.PeftConfig`], *optional*):
-            PEFT configuration used to wrap the model. If `None`, the model is not wrapped.
-    """
+    """"""
 
     _tag_names = ["trl", "dpo"]
     _name = "DPO"
@@ -2547,68 +2485,68 @@ class _UnslothDPOTrainer(BaseTrainer):
 class UnslothDPOTrainer(_UnslothDPOTrainer):
     """
     
-Trainer for Direct Preference Optimization (DPO) method.
+    Trainer for Direct Preference Optimization (DPO) method.
 
-This class is a wrapper around the [`transformers.Trainer`] class and inherits all of its attributes and methods.
+    This class is a wrapper around the [`transformers.Trainer`] class and inherits all of its attributes and methods.
 
-Args:
-    model (`Union[str, PreTrainedModel]`):
-        Model to be trained. Can be either:
+    Args:
+        model (`Union[str, PreTrainedModel]`):
+            Model to be trained. Can be either:
 
-        - A string, being the *model id* of a pretrained model hosted inside a model repo on huggingface.co, or a
-          path to a *directory* containing model weights saved using
-          [`~transformers.PreTrainedModel.save_pretrained`], e.g., `'./my_model_directory/'`. The model is loaded
-          using [`~transformers.AutoModelForCausalLM.from_pretrained`] with the keyword arguments in
-          `args.model_init_kwargs`.
-        - A [`~transformers.PreTrainedModel`] object. Only causal language models are supported.
-    ref_model ([`PreTrainedModelWrapper`]):
-        Hugging Face transformer model with a casual language modelling head. Used for implicit reward computation
-        and loss. If no reference model is provided, the trainer will create a reference model with the same
-        architecture as the model to be optimized.
-    args ([`DPOConfig`], *optional*):
-        Configuration for this trainer. If `None`, a default configuration is used.
-    data_collator ([`~transformers.DataCollator`], *optional*):
-        Function to use to form a batch from a list of elements of the processed `train_dataset` or `eval_dataset`.
-        Will default to [`DataCollatorForPreference`].
-    train_dataset ([`~datasets.Dataset`] or [`~datasets.IterableDataset`]):
-        Dataset to use for training. DPO supports [preference](#preference) type and. The format of the samples can
-        be either:
+            - A string, being the *model id* of a pretrained model hosted inside a model repo on huggingface.co, or a
+              path to a *directory* containing model weights saved using
+              [`~transformers.PreTrainedModel.save_pretrained`], e.g., `'./my_model_directory/'`. The model is loaded
+              using [`~transformers.AutoModelForCausalLM.from_pretrained`] with the keyword arguments in
+              `args.model_init_kwargs`.
+            - A [`~transformers.PreTrainedModel`] object. Only causal language models are supported.
+        ref_model ([`PreTrainedModelWrapper`]):
+            Hugging Face transformer model with a casual language modelling head. Used for implicit reward computation
+            and loss. If no reference model is provided, the trainer will create a reference model with the same
+            architecture as the model to be optimized.
+        args ([`DPOConfig`], *optional*):
+            Configuration for this trainer. If `None`, a default configuration is used.
+        data_collator ([`~transformers.DataCollator`], *optional*):
+            Function to use to form a batch from a list of elements of the processed `train_dataset` or `eval_dataset`.
+            Will default to [`DataCollatorForPreference`].
+        train_dataset ([`~datasets.Dataset`] or [`~datasets.IterableDataset`]):
+            Dataset to use for training. DPO supports [preference](#preference) type and. The format of the samples can
+            be either:
 
-        - [Standard](dataset_formats#standard): Each sample contains plain text.
-        - [Conversational](dataset_formats#conversational): Each sample contains structured messages (e.g., role
-          and content).
-    eval_dataset ([`~datasets.Dataset`], [`~datasets.IterableDataset`] or `dict[str, Union[Dataset, IterableDataset]]`):
-        Dataset to use for evaluation. It must meet the same requirements as `train_dataset`.
-    processing_class ([`~transformers.PreTrainedTokenizerBase`], [`~transformers.BaseImageProcessor`], [`~transformers.FeatureExtractionMixin`] or [`~transformers.ProcessorMixin`], *optional*):
-        Processing class used to process the data. If `None`, the processing class is loaded from the model's name
-        with [`~transformers.AutoTokenizer.from_pretrained`].
-    compute_metrics (`Callable[[EvalPrediction], dict]`, *optional*):
-        The function that will be used to compute metrics at evaluation. Must take a [`EvalPrediction`] and return
-        a dictionary string to metric values. *Note* When passing TrainingArgs with `batch_eval_metrics` set to
-        `True`, your compute_metrics function must take a boolean `compute_result` argument. This will be triggered
-        after the last eval batch to signal that the function needs to calculate and return the global summary
-        statistics rather than accumulating the batch-level statistics.
-    callbacks (list of [`~transformers.TrainerCallback`], *optional*):
-        List of callbacks to customize the training loop. Will add those to the list of default callbacks detailed
-        in [here](https://huggingface.co/docs/transformers/main_classes/callback).
+            - [Standard](dataset_formats#standard): Each sample contains plain text.
+            - [Conversational](dataset_formats#conversational): Each sample contains structured messages (e.g., role
+              and content).
+        eval_dataset ([`~datasets.Dataset`], [`~datasets.IterableDataset`] or `dict[str, Union[Dataset, IterableDataset]]`):
+            Dataset to use for evaluation. It must meet the same requirements as `train_dataset`.
+        processing_class ([`~transformers.PreTrainedTokenizerBase`], [`~transformers.BaseImageProcessor`], [`~transformers.FeatureExtractionMixin`] or [`~transformers.ProcessorMixin`], *optional*):
+            Processing class used to process the data. If `None`, the processing class is loaded from the model's name
+            with [`~transformers.AutoTokenizer.from_pretrained`].
+        compute_metrics (`Callable[[EvalPrediction], dict]`, *optional*):
+            The function that will be used to compute metrics at evaluation. Must take a [`EvalPrediction`] and return
+            a dictionary string to metric values. *Note* When passing TrainingArgs with `batch_eval_metrics` set to
+            `True`, your compute_metrics function must take a boolean `compute_result` argument. This will be triggered
+            after the last eval batch to signal that the function needs to calculate and return the global summary
+            statistics rather than accumulating the batch-level statistics.
+        callbacks (list of [`~transformers.TrainerCallback`], *optional*):
+            List of callbacks to customize the training loop. Will add those to the list of default callbacks detailed
+            in [here](https://huggingface.co/docs/transformers/main_classes/callback).
 
-        If you want to remove one of the default callbacks used, use the [`~transformers.Trainer.remove_callback`]
-        method.
-    optimizers (`tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR]`, *optional*, defaults to `(None, None)`):
-        A tuple containing the optimizer and the scheduler to use. Will default to an instance of [`AdamW`] on your
-        model and a scheduler given by [`get_linear_schedule_with_warmup`] controlled by `args`.
-    optimizer_cls_and_kwargs (`Tuple[Type[torch.optim.Optimizer], Dict[str, Any]]`, *optional*):
-        A tuple containing the optimizer class and keyword arguments to use. Overrides `optim` and `optim_args` in
-        `args`. Incompatible with the `optimizers` argument.
-    preprocess_logits_for_metrics (`Callable[[torch.Tensor, torch.Tensor], torch.Tensor]`, *optional*):
-        A function that preprocess the logits right before caching them at each evaluation step. Must take two
-        tensors, the logits and the labels, and return the logits once processed as desired. The modifications made
-        by this function will be reflected in the predictions received by `compute_metrics`.
+            If you want to remove one of the default callbacks used, use the [`~transformers.Trainer.remove_callback`]
+            method.
+        optimizers (`tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR]`, *optional*, defaults to `(None, None)`):
+            A tuple containing the optimizer and the scheduler to use. Will default to an instance of [`AdamW`] on your
+            model and a scheduler given by [`get_linear_schedule_with_warmup`] controlled by `args`.
+        optimizer_cls_and_kwargs (`Tuple[Type[torch.optim.Optimizer], Dict[str, Any]]`, *optional*):
+            A tuple containing the optimizer class and keyword arguments to use. Overrides `optim` and `optim_args` in
+            `args`. Incompatible with the `optimizers` argument.
+        preprocess_logits_for_metrics (`Callable[[torch.Tensor, torch.Tensor], torch.Tensor]`, *optional*):
+            A function that preprocess the logits right before caching them at each evaluation step. Must take two
+            tensors, the logits and the labels, and return the logits once processed as desired. The modifications made
+            by this function will be reflected in the predictions received by `compute_metrics`.
 
-        Note that the labels (second parameter) will be `None` if the dataset does not have them.
-    peft_config ([`~peft.PeftConfig`], *optional*):
-        PEFT configuration used to wrap the model. If `None`, the model is not wrapped.
-
+            Note that the labels (second parameter) will be `None` if the dataset does not have them.
+        peft_config ([`~peft.PeftConfig`], *optional*):
+            PEFT configuration used to wrap the model. If `None`, the model is not wrapped.
+    
     """
     def __init__(
         self,

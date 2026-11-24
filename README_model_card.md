@@ -1,45 +1,36 @@
-
 ---
-license: apache-2.0
 tags:
 - geometry
 - riemannian
 - qwen2.5
-- fine-tuned
-- manifold-learning
+- research
 base_model: unsloth/Qwen2.5-7B-Instruct
 library_name: peft
 ---
 
 # IGBundle-Qwen2.5-7B-Riemannian
 
-This model is a fine-tuned version of **Qwen2.5-7B-Instruct** incorporating **Riemannian Geometric Regularization** (IGBundle framework).
-It was trained to learn manifold structures within the latent space, preserving fiber bundle topology and minimizing curvature deviation.
+> **Historical research artifact.** This checkpoint has not been validated as a supported model release. The repository's current evidence does not establish improved task performance or learned hyperbolicity. Do not rely on the historical experimental claims below.
 
-## Model Details
-- **Base Model**: `unsloth/Qwen2.5-7B-Instruct`
-- **Method**: Riemannian Manifold Fine-Tuning (IGBundle) with LoRA + GeometricAdapter.
-- **Precision**: BFloat16
-- **Context Length**: 32k (trained/eval at 4k-8k)
+## Intended approach
 
-## Training & Performance
-- **Training Steps**: 700 (Resumed + 100 Geometric Steps)
-- **Objective**: Causal LM Loss + Curvature Loss + Bundle Consistency Loss
-- **Optimization**: RiemannianOptimizer (Natural Gradients)
+IGBundle explores information-geometric operations and fiber-structured adapters as a possible inductive bias for adapting language models. The adapter design uses geometric operators and categorical components; this design intent does not demonstrate that a trained checkpoint learned a fiber bundle, semantic hierarchy, or hyperbolic representation.
 
-## Evaluation (ARC-AGI)
-Evaluated on the ARC-AGI Challenge validation set (subset).
+## Checkpoint metadata
 
-## Usage
-```python
-from transformers import AutoModelForCausalLM, AutoTokenizer
+The original accompanying notes identify Qwen2.5-7B-Instruct as the base model and describe a LoRA plus geometric-adapter training configuration. Exact checkpoint provenance, architecture compatibility, precision, and loading procedure depend on the artifact and source snapshot. Verify those details before attempting inference.
 
-model_id = "jesusvilela/igbundle-qwen2.5-7b-riemannian"
-model = AutoModelForCausalLM.from_pretrained(model_id, device_map="auto")
-tokenizer = AutoTokenizer.from_pretrained(model_id)
+## Evaluation status
 
-prompt = "Analyze the geometric structure of this problem..."
-inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
-outputs = model.generate(**inputs, max_new_tokens=128)
-print(tokenizer.decode(outputs[0]))
-```
+No task-performance claim is made for this model card. The repository documents:
+
+- A fixed-operator audit (6/6 checks) that does not verify learned geometry.
+- Historical ARC-Challenge `acc_norm` of 54.86% for both an adapter checkpoint and its base model under a zero-shot run; this is not evidence of improvement.
+- A September 2026 small paired token-NLL probe in which a vanilla-LoRA control outscored the geometric arm, with parameter-count and layer-coverage confounds.
+- An October 2026 local subset evaluation in which the exported cp300 checkpoint did not contain the runtime geometric adapter. A reconstructed composite was not the original trained checkpoint, and its individual paired task comparisons were not statistically significant.
+
+See the [repository evidence summary](https://github.com/jesusvilela/IGBundle-LLM/blob/main/README.md) and [October benchmark table](https://github.com/jesusvilela/IGBundle-LLM/blob/main/docs/benchmark-results/aa-index-2026-10-27.csv).
+
+## License and use
+
+The source repository's `LICENSE` reserves all rights. This model card does not grant permission to redistribute or use the weights; obtain authorization from the copyright holder and follow the base model's terms.

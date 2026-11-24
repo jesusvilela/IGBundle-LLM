@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AUTORESEARCH Dashboard — IGBundle</title>
+<style>
+:root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --surface2: #1a1a24;
+    --border: #2a2a3a;
+    --text: #e0e0e8;
+    --text-muted: #8888a0;
+    --accent: #7c3aed;
+    --accent2: #3b82f6;
+    --green: #22c55e;
+    --red: #ef4444;
+    --yellow: #f59e0b;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    line-height: 1.6;
+    padding: 24px;
+}
+.container { max-width: 1200px; margin: 0 auto; }
+h1 {
+    font-size: 1.8rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 4px;
+}
+.subtitle { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 24px; }
+.header-stats {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+}
+.header-stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 24px;
+    min-width: 140px;
+}
+.header-stat .value {
+    font-size: 2rem;
+    font-weight: 700;
+}
+.header-stat .label {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.section { margin-bottom: 32px; }
+.section h2 {
+    font-size: 1.2rem;
+    color: var(--accent2);
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+}
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    transition: border-color 0.2s;
+}
+.card:hover { border-color: var(--accent); }
+.card h3 { font-size: 1rem; margin-bottom: 12px; }
+.stats-row { display: flex; gap: 16px; margin-bottom: 12px; }
+.stat { text-align: center; }
+.stat-value { display: block; font-size: 1.4rem; font-weight: 700; }
+.stat-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; }
+.progress-bar {
+    height: 4px;
+    background: var(--surface2);
+    border-radius: 2px;
+    margin-bottom: 12px;
+    overflow: hidden;
+}
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--green));
+    border-radius: 2px;
+    transition: width 0.3s;
+}
+details { margin-top: 8px; }
+summary {
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+.questions {
+    margin-top: 8px;
+    padding-left: 20px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+.questions li { margin-bottom: 4px; }
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+th {
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 2px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+}
+tr:hover td { background: var(--surface2); }
+.status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+.mono { font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.8rem; }
+.muted { color: var(--text-muted); }
+.watch-list { list-style: none; }
+.watch-list li {
+    padding: 8px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 0.85rem;
+}
+.footer {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    margin-top: 48px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+@media (max-width: 768px) {
+    body { padding: 12px; }
+    .header-stats { gap: 12px; }
+    .cards { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>AUTORESEARCH</h1>
+<p class="subtitle">IGBundle Manifold LLM — Feynman Research Orchestrator</p>
+
+<div class="header-stats">
+    <div class="header-stat">
+        <div class="value">0</div>
+        <div class="label">Total Runs</div>
+    </div>
+    <div class="header-stat">
+        <div class="value" style="color:var(--green)">0</div>
+        <div class="label">Completed</div>
+    </div>
+    <div class="header-stat">
+        <div class="value" style="color:var(--red)">0</div>
+        <div class="label">Failed</div>
+    </div>
+    <div class="header-stat">
+        <div class="value">0</div>
+        <div class="label">Watches</div>
+    </div>
+    <div class="header-stat">
+        <div class="value">5</div>
+        <div class="label">Research Axes</div>
+    </div>
+</div>
+
+<div class="section">
+    <h2>Research Axes</h2>
+    <div class="cards">
+        
+        <div class="card">
+            <h3>Axis 1: Fiber Bundle Geometry in Neural Networks</h3>
+            <div class="stats-row">
+                <div class="stat">
+                    <span class="stat-value">0</span>
+                    <span class="stat-label">Runs</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" style="color:#22c55e">0</span>
+                    <span class="stat-label">Completed</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" style="color:#ef4444">0</span>
+                    <span class="stat-label">Failed</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" style="color:#3b82f6">0</span>
+                    <span class="stat-label">Outputs</span>
+                </div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width:0%"></div>
+            </div>
+            <details>
+                <summary>Research Questions (5)</summary>
+                <ol class="questions"><li>What prior work exists on applying fiber bundle theory to deep learning architectures?</li><li>How do connections and parallel transport relate to skip connections and residual streams?</li><li>What is the relationship between holonomy of a learned connection and model generalization?</li><li>Has anyone implemented genuine (not decorative) gauge equivariance in transformers?</li><li>What are the computational costs of maintaining geometric structure during training?</li></ol>
+            </details>
+        </div>
+        <div class="card">
+            <h3>Axis 2: Information Geometry of Language Models</h3>
+            <div class="stats-row">
+                <div class="stat">
+                    <span class="stat-value">0</span>
+                    <span class="stat-label">Runs</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" style="color:#22c55e">0</span>
+                    <span class="stat-label">Completed</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" style="color:#ef4444">0</span>
+                    <span class="stat-label">Failed</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" style="color:#3b82f6">0</span>
+                    <span class="stat-label">Outputs</span>
+                </div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width:0%"></div>
+            </div>
+            <details>
+                <summary>Research Questions (5)</summary>
+                <ol class="questions"><li>How does the Fisher information matrix of a transformer's output distribution relate to model uncertainty?</li><li>Can sectional curvature of the statistical manifold predict reasoning difficulty?</li><li>What is the natural gradient's effect on adapter fine-tuning convergence?</li><li>How does KL divergence geometry change across transformer layers?</li><li>What is the relationship between information-geometric curvature and loss landscape topology?</li></ol>
+            </details>
+        </div>
+        <div class="card">
+            <h3>Axis 3: Neuromorphic Memory Systems for AI</h3>
+            <div class="stats-row">
+                <div class="stat">
+                    <span class="stat-value">0</span>
+                    <span class="stat-label">Runs</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" style="color:#22c55e">0</span>
+                    <span class="stat-label">Completed</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" style="color:#ef4444">0</span>
+                    <span class="stat-label">Failed</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" style="color:#3b82f6">0</span>
+                    <span class="stat-label">Outputs</span>
+                </div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width:0%"></div>
+            </div>
+            <details>
+                <summary>Research Questions (7)</summary>
+                <ol class="questions"><li>What computational models of biological forgetting exist beyond exponential decay?</li><li>How do FitzHugh-Nagumo dynamics compare to Hodgkin-Huxley for modeling memory consolidation?</li><li>What is the state of the art in interference-based forgetting for AI memory systems?</li><li>How do Method of Loci / memory palace techniques map to computational retrieval architectures?</li><li>What work exists on frequency-selective memory decay (FFT-based or wavelet-based)?</li><li>How do Kolmogorov-Arnold Networks (KAN) compare to MLPs for learning adaptive decay curves?</li><li>What role does Gabor analysis play in memory interference modeling?</li></ol>
+            </details>
+        </div>
+        <div class="card">
+            <h3>Axis 4: Geometric Steering and Controllable Generation</h3>
+            <div class="stats-row">
+                <div class="stat">
+                    <span class="stat-value">0</span>
+                    <span class="stat-label">Runs</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" style="color:#22c55e">0</span>
+                    <span class="stat-label">Completed</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" style="color:#ef4444">0</span>
+                    <span class="stat-label">Failed</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" style="color:#3b82f6">0</span>
+                    <span class="stat-label">Outputs</span>
+                </div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width:0%"></div>
+            </div>
+            <details>
+                <summary>Research Questions (5)</summary>
+                <ol class="questions"><li>What inference-time control mechanisms exist for LLM generation beyond temperature/top-p?</li><li>How does GENERIC (General Equation for Non-Equilibrium Reversible-Irreversible Coupling) apply to neural generation?</li><li>Can curvature and entropy be used as real-time feedback signals for generation quality?</li><li>What is the relationship between activation steering and geometric steering?</li><li>How do homeostatic controllers compare to classifier-free guidance for controllability?</li></ol>
+            </details>
+        </div>
+        <div class="card">
+            <h3>Axis 5: Poincaré Embeddings and Hyperbolic ML</h3>
+            <div class="stats-row">
+                <div class="stat">
+                    <span class="stat-value">0</span>
+                    <span class="stat-label">Runs</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" style="color:#22c55e">0</span>
+                    <span class="stat-label">Completed</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" style="color:#ef4444">0</span>
+                    <span class="stat-label">Failed</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" style="color:#3b82f6">0</span>
+                    <span class="stat-label">Outputs</span>
+                </div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width:0%"></div>
+            </div>
+            <details>
+                <summary>Research Questions (5)</summary>
+                <ol class="questions"><li>What are the advantages of Poincare ball embeddings over Euclidean for hierarchical data?</li><li>How does hyperbolic geometry interact with attention mechanisms in transformers?</li><li>What optimization challenges arise from Riemannian gradient descent on the Poincare ball?</li><li>Can hyperbolic representations improve reasoning in language models?</li><li>What is the current state of hyperbolic transformers and their benchmarks?</li></ol>
+            </details>
+        </div>
+    </div>
+</div>
+
+<div class="section">
+    <h2>Run History</h2>
+    <p class='muted'>No runs recorded yet. Launch with: <code>python AUTORESEARCH/run_research.py --topic 1 --mode deep</code></p>
+</div>
+
+<div class="section">
+    <h2>Active Watches</h2>
+    <ul class="watch-list">
+        <li class='muted'>No active watches</li>
+    </ul>
+</div>
+
+<div class="footer">
+    Dashboard generated: 2026-03-27 14:59:48 &middot; Status last updated: never<br>
+    AUTORESEARCH &middot; Powered by Feynman + Claude
+</div>
+
+</div>
+</body>
+</html>

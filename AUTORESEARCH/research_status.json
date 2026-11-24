@@ -1,0 +1,61 @@
+{
+  "runs": [
+    {
+      "topic": "fiber_bundles_neural_nets",
+      "mode": "deep",
+      "query": "Fiber Bundle Geometry in Neural Networks \u2014 focus on recent advances (2023-2026), empirical results, and connections to fiber bundle geometry in transformers",
+      "output_dir": "H:\\LLM-MANIFOLD\\igbundle-llm\\AUTORESEARCH\\outputs\\fiber_bundles_neural_nets_20260327_170719",
+      "log_file": "H:\\LLM-MANIFOLD\\igbundle-llm\\AUTORESEARCH\\logs\\fiber_bundles_neural_nets_deep_20260327_170719.log",
+      "started_at": "2026-03-27T17:07:19.031810",
+      "status": "error",
+      "exit_code": -2,
+      "finished_at": "2026-03-27T17:07:19.055798"
+    },
+    {
+      "topic": "fiber_bundles_neural_nets",
+      "mode": "deep",
+      "query": "Fiber Bundle Geometry in Neural Networks \u2014 focus on recent advances (2023-2026), empirical results, and connections to fiber bundle geometry in transformers",
+      "output_dir": "H:\\LLM-MANIFOLD\\igbundle-llm\\AUTORESEARCH\\outputs\\fiber_bundles_neural_nets_20260327_171408",
+      "log_file": "H:\\LLM-MANIFOLD\\igbundle-llm\\AUTORESEARCH\\logs\\fiber_bundles_neural_nets_deep_20260327_171408.log",
+      "started_at": "2026-03-27T17:14:08.816713",
+      "status": "error",
+      "exit_code": -2,
+      "finished_at": "2026-03-27T17:14:08.841710"
+    },
+    {
+      "topic": "fiber_bundles_neural_nets",
+      "mode": "deep",
+      "query": "Fiber Bundle Geometry in Neural Networks \u2014 focus on recent advances (2023-2026), empirical results, and connections to fiber bundle geometry in transformers",
+      "output_dir": "H:\\LLM-MANIFOLD\\igbundle-llm\\AUTORESEARCH\\outputs\\fiber_bundles_neural_nets_20260327_171921",
+      "log_file": "H:\\LLM-MANIFOLD\\igbundle-llm\\AUTORESEARCH\\logs\\fiber_bundles_neural_nets_deep_20260327_171921.log",
+      "started_at": "2026-03-27T17:19:21.728488",
+      "status": "error",
+      "exit_code": -2,
+      "finished_at": "2026-03-27T17:19:21.751494"
+    },
+    {
+      "topic": "fiber_bundles_neural_nets",
+      "mode": "deep",
+      "query": "Fiber Bundle Geometry in Neural Networks \u2014 focus on recent advances (2023-2026), empirical results, and connections to fiber bundle geometry in transformers",
+      "output_dir": "H:\\LLM-MANIFOLD\\igbundle-llm\\AUTORESEARCH\\outputs\\fiber_bundles_neural_nets_20260327_200836",
+      "log_file": "H:\\LLM-MANIFOLD\\igbundle-llm\\AUTORESEARCH\\logs\\fiber_bundles_neural_nets_deep_20260327_200836.log",
+      "started_at": "2026-03-27T20:08:36.013908",
+      "status": "error",
+      "exit_code": -2,
+      "finished_at": "2026-03-27T20:08:36.053186"
+    },
+    {
+      "topic": "fiber_bundles_neural_nets",
+      "mode": "deep",
+      "query": "Fiber Bundle Geometry in Neural Networks \u2014 focus on recent advances (2023-2026), empirical results, and connections to fiber bundle geometry in transformers",
+      "output_dir": "H:\\LLM-MANIFOLD\\igbundle-llm\\AUTORESEARCH\\outputs\\fiber_bundles_neural_nets_20260328_001617",
+      "log_file": "H:\\LLM-MANIFOLD\\igbundle-llm\\AUTORESEARCH\\logs\\fiber_bundles_neural_nets_deep_20260328_001617.log",
+      "started_at": "2026-03-28T00:16:17.984650",
+      "status": "completed",
+      "exit_code": 0,
+      "finished_at": "2026-03-28T00:17:47.457427"
+    }
+  ],
+  "watches": [],
+  "last_updated": "2026-03-28T00:17:47.457427"
+}

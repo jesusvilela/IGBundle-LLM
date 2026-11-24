@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ManifoldGL | Information-Geometric LLM Adapters</title>
+    <title>IGBundle | Research status</title>
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono&display=swap"
         rel="stylesheet">
@@ -16,8 +16,8 @@
         <div class="brand">ManifoldGL</div>
         <div class="nav-links">
             <a href="index.html" class="nav-link active">Home</a>
-            <a href="wiki.html" class="nav-link">Wiki</a>
-            <a href="demo.html" class="nav-link">Demo</a>
+            <a href="wiki.html" class="nav-link">Evidence</a>
+            <a href="demo.html" class="nav-link">Research access</a>
             <a href="llms.txt" class="nav-link" title="AI Context">🤖</a>
             <a href="https://github.com/jesusvilela/IGBundle-LLM" target="_blank" class="nav-link">GitHub</a>
         </div>
@@ -25,59 +25,68 @@
 
     <div class="container">
         <section class="hero">
-            <h1 class="hero-title">The Geometry of Reasoning</h1>
+            <h1 class="hero-title">Geometric structure as a research hypothesis</h1>
             <p class="hero-subtitle">
-                Enhancing Large Language Models with Hyperbolic Fiber Bundles and Information-Geometric Optimization.
+                IGBundle explores information-geometric and fiber-structured adapters for language models. Current evidence does not establish a downstream performance advantage or learned hyperbolicity.
             </p>
             <div class="hero-btns">
-                <a href="demo.html" class="btn btn-primary">Launch Guide</a>
-                <a href="wiki.html" class="btn btn-secondary">Read Thesis</a>
+                <a href="wiki.html" class="btn btn-primary">Read the evidence</a>
+                <a href="https://github.com/jesusvilela/IGBundle-LLM" class="btn btn-secondary">Source repository</a>
             </div>
         </section>
 
         <section class="features">
             <div class="card">
-                <div class="card-icon">📐</div>
-                <h3 class="card-title">Hyperbolic Geometry</h3>
+                <div class="card-icon">Geometry</div>
+                <h3 class="card-title">Tested operators</h3>
                 <p class="card-text">
-                    Embeds semantic hierarchies in a Poincaré ball manifold (κ = -1), enabling natural representation of
-                    complex abstract concepts.
+                    Six fixed-operator checks passed in the recorded faithfulness audit. This verifies only the tested operations, not geometry learned by a model.
                 </p>
             </div>
             <div class="card">
-                <div class="card-icon">🧠</div>
-                <h3 class="card-title">Natural Gradients</h3>
+                <div class="card-icon">Fibers</div>
+                <h3 class="card-title">Structured adapter hypothesis</h3>
                 <p class="card-text">
-                    Optimizes using the Fisher Information Metric, accelerating convergence by 30% and respecting the
-                    statistical manifold structure.
+                    Poincaré-ball coordinates and categorical fiber components are explored as an inductive bias. Their value for reasoning remains unproven.
                 </p>
             </div>
             <div class="card">
-                <div class="card-icon">🔗</div>
-                <h3 class="card-title">Fiber Bundles</h3>
+                <div class="card-icon">Evaluation</div>
+                <h3 class="card-title">Falsifiable results</h3>
                 <p class="card-text">
-                    Models tokens as sections of a fiber bundle, allowing for compositional semantics via lambda
-                    calculus operations in fiber space.
+                    The latest paired token-NLL probe favored its vanilla-LoRA control. The comparison has major architecture and parameter-count confounds.
                 </p>
             </div>
         </section>
 
         <section style="margin-top: 6rem; text-align: center;">
-            <h2>Performance Breakthrough</h2>
-            <div style="margin-top: 2rem; display: flex; justify-content: center; gap: 4rem; flex-wrap: wrap;">
-                <div>
-                    <div style="font-size: 3rem; font-weight: 800; color: #3fb950;">+131.5%</div>
-                    <div style="color: var(--text-secondary);">Accuracy vs Base Model</div>
-                </div>
-                <div>
-                    <div style="font-size: 3rem; font-weight: 800; color: #a78bfa;">94.2%</div>
-                    <div style="color: var(--text-secondary);">Geometric Faithfulness</div>
-                </div>
-                <div>
-                    <div style="font-size: 3rem; font-weight: 800; color: #f43f5e;">-30%</div>
-                    <div style="color: var(--text-secondary);">Training Steps</div>
-                </div>
+            <h2>Latest local evaluation · 27 October 2026</h2>
+            <p style="color: var(--text-secondary); margin: 1rem auto; max-width: 760px;">
+                Small-subset benchmark run. The custom weighted index is exploratory, not a standardized metric or significance test.
+            </p>
+            <div style="overflow-x: auto; margin: 2rem auto; max-width: 760px;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: rgba(255,255,255,0.05);">
+                            <th style="padding: 1rem; text-align: left;">Variant</th>
+                            <th style="padding: 1rem; text-align: center;">Weighted index</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td style="padding: 1rem;">Base Qwen2.5-7B</td><td style="padding: 1rem; text-align: center;">61.1</td></tr>
+                        <tr><td style="padding: 1rem;">Merged cp300 checkpoint</td><td style="padding: 1rem; text-align: center;">60.0</td></tr>
+                        <tr><td style="padding: 1rem;">Reconstructed adapter composite</td><td style="padding: 1rem; text-align: center;">64.7</td></tr>
+                    </tbody>
+                </table>
             </div>
+            <p style="color: var(--text-secondary); max-width: 760px; margin: 0 auto;">
+                No individual paired benchmark difference was significant. The reconstructed arm is not the original trained checkpoint, and its loading/quantization path differed. The exported cp300 weights did not contain the runtime geometric adapter.
+            </p>
+            <p style="margin-top: 1.5rem;">
+                <a href="wiki.html">Methods, caveats, and historical evaluations</a> ·
+                <a href="benchmark-results/aa-index-2026-10-27.csv">Download October summary</a> ·
+                <a href="benchmark-results/matched-token-nll-2026-09-20.csv">September paired-probe data</a>
+            </p>
         </section>
     </div>
 

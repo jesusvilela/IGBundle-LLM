@@ -1,0 +1,28 @@
+{
+  "model": "google/gemma-4-26b-a4b",
+  "avg_tokens": 0.0,
+  "timestamp": "20260405_215656",
+  "total_tests": 3,
+  "passed": 0,
+  "accuracy_rate": 0.0,
+  "suite": "quick",
+  "results": [
+    {
+      "error": "The request was canceled due to the configured HttpClient.Timeout of 120 seconds elapsing.",
+      "passed": false,
+      "test_id": "q1"
+    },
+    {
+      "error": "The request was canceled due to the configured HttpClient.Timeout of 120 seconds elapsing.",
+      "passed": false,
+      "test_id": "q2"
+    },
+    {
+      "error": "The request was canceled due to the configured HttpClient.Timeout of 120 seconds elapsing.",
+      "passed": false,
+      "test_id": "q3"
+    }
+  ],
+  "pass_rate": 0.0,
+  "purity_rate": 0.0
+}

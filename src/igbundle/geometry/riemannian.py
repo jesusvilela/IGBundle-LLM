@@ -14,7 +14,7 @@ License: MIT
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Tuple, Optional
+from typing import Any, Dict, Tuple, Optional
 from dataclasses import dataclass
 import math
 
@@ -49,6 +49,8 @@ class RiemannianGeometry(nn.Module):
 
     def __init__(self, config):
         super().__init__()
+        self.connection_model = "conformal_levi_civita"
+        self.supports_nontrivial_holonomy = True
         self.dim = config.latent_dim  # Dimension of base manifold
         self.num_components = config.num_components
         self.num_categories = config.num_categories
@@ -141,19 +143,85 @@ class RiemannianGeometry(nn.Module):
 
     def christoffel_symbols(self, positions: torch.Tensor, metric: RiemannianMetric) -> torch.Tensor:
         """
-        Compute Christoffel symbols.
-        WARNING: This returns a (D, D, D) tensor which is O(D^3). 
-        Use estimate_sectional_curvature_stochastic for large D.
+        Compute the Levi-Civita coefficients of g(x) = lambda(x) g0.
+
+        Because g0 is position-constant, this is analytic, metric-compatible,
+        and torsion-free. Materializing the tensor is O(D^3); callers needing
+        only Gamma(a, b) should use ``connection_action``.
         """
-        # Return zeros (Euclidean approximation) to prevent OOM on legacy calls
-        # Real curvature is handled by stochastic estimation which bypasses this.
         B, T, P, D = positions.shape
-        # Only allocate if D is small
         if D > 64:
-             # Implicitly zero (flat)
-             return torch.zeros(B, T, P, 1, 1, 1, device=positions.device) # Dummy
-        
-        return torch.zeros(B, T, P, D, D, D, device=positions.device)
+            raise ValueError(
+                "Explicit Christoffel tensors are O(D^3); use connection_action "
+                "for latent dimensions above 64."
+            )
+        grad_f = self._grad_log_conformal(positions)
+        g0, g0_inv = self._base_metric_pair(positions)
+        raised_grad = torch.einsum('...kl,...l->...k', g0_inv, grad_f)
+        eye = torch.eye(D, device=positions.device, dtype=positions.dtype)
+        term_1 = torch.einsum('kj,...i->...kij', eye, grad_f)
+        term_2 = torch.einsum('ki,...j->...kij', eye, grad_f)
+        term_3 = torch.einsum('...ij,...k->...kij', g0, raised_grad)
+        return 0.5 * (term_1 + term_2 - term_3)
+
+    def _base_metric_pair(self, positions: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Return broadcast g0 and its inverse for the conformal metric."""
+        B, T, P, D = positions.shape
+        if self.manifold_type == 'euclidean':
+            g0 = torch.eye(D, device=positions.device, dtype=positions.dtype)
+            g0 = g0.view(1, 1, 1, D, D).expand(B, T, P, D, D)
+        else:
+            L = torch.tril(self.metric_chol).clamp(min=-5.0, max=5.0)
+            g0 = L @ L.transpose(-1, -2)
+            eye = torch.eye(D, device=positions.device, dtype=positions.dtype)
+            g0 = g0 + 1e-5 * eye.expand_as(g0)
+            g0 = g0.unsqueeze(0).unsqueeze(0).expand(B, T, P, D, D)
+        return g0, torch.linalg.inv(g0)
+
+    def _grad_log_conformal(self, positions: torch.Tensor) -> torch.Tensor:
+        """Analytic coordinate gradient of log(lambda(x))."""
+        if self.manifold_type == 'euclidean':
+            return torch.zeros_like(positions)
+        radius = torch.linalg.vector_norm(positions, dim=-1, keepdim=True)
+        safe_radius = radius.clamp_min(torch.finfo(positions.dtype).eps)
+        tanh_radius = torch.tanh(radius)
+        lam = 1.0 + self.conformal_scale * tanh_radius
+        radial_derivative = (
+            self.conformal_scale * (1.0 - tanh_radius.square()) / lam.clamp_min(1e-6)
+        )
+        direction = positions / safe_radius
+        direction = torch.where(radius > 0, direction, torch.zeros_like(direction))
+        return radial_derivative * direction
+
+    def connection_action(
+        self,
+        positions: torch.Tensor,
+        first: torch.Tensor,
+        second: torch.Tensor,
+    ) -> torch.Tensor:
+        """Compute Gamma(first, second) without allocating an O(D^3) tensor."""
+        grad_f = self._grad_log_conformal(positions)
+        g0, g0_inv = self._base_metric_pair(positions)
+        raised_grad = torch.einsum('...ij,...j->...i', g0_inv, grad_f)
+        df_first = (grad_f * first).sum(dim=-1, keepdim=True)
+        df_second = (grad_f * second).sum(dim=-1, keepdim=True)
+        g_first_second = torch.einsum(
+            '...i,...ij,...j->...', first, g0, second
+        ).unsqueeze(-1)
+        return 0.5 * (
+            df_first * second + df_second * first - g_first_second * raised_grad
+        )
+
+    def connection_contract(self) -> Dict[str, Any]:
+        """Describe the executable connection and its evidential boundary."""
+        return {
+            "model": self.connection_model,
+            "flat": self.manifold_type == 'euclidean',
+            "supports_nontrivial_holonomy": self.supports_nontrivial_holonomy,
+            "metric_family": "g(x)=lambda(x)*(L L^T + epsilon I)",
+            "connection_source": "analytic_metric_derivative",
+            "curvature_estimator": "stochastic_conformal_scalar_scale",
+        }
 
     @staticmethod
     def _safe_log_det(metric: torch.Tensor) -> torch.Tensor:
@@ -302,21 +370,36 @@ class RiemannianGeometry(nn.Module):
             pos_curr = path[..., i, :]
             pos_next = path[..., i + 1, :]
 
-            # Compute Christoffel symbols at current position
-            christoffel = self.christoffel_symbols(pos_curr, metric)
-
-            # Path velocity
-            velocity = pos_next - pos_curr
+            # The segment displacement already contains dgamma = gamma'(t) dt.
+            displacement = pos_next - pos_curr
 
             # Parallel transport equation: DV/dt = -Γ^k_{ij} v^i γ^j V^k = 0
             # Discrete approximation: V_new ≈ V - Γ(γ, V) * dt
-            connection_term = torch.einsum('...kij,...i,...j->...k',
-                                         christoffel, velocity, current_vector)
-
-            dt = 1.0 / (N - 1)  # Assuming unit parameter interval
-            current_vector = current_vector - dt * connection_term
+            connection_term = self.connection_action(
+                pos_curr, displacement, current_vector
+            )
+            current_vector = current_vector - connection_term
 
         return current_vector
+
+    def holonomy(self, vector: torch.Tensor, loop: torch.Tensor) -> Dict[str, torch.Tensor]:
+        """Transport around a closed loop and return the witnessed defect.
+
+        This witnesses path dependence for this connection and loop; it does not
+        claim a global topological classification of the learned bundle.
+        """
+        if loop.shape[-2] < 2:
+            raise ValueError("A holonomy loop needs at least two path points.")
+        if not torch.allclose(loop[..., 0, :], loop[..., -1, :], atol=1e-6, rtol=1e-5):
+            raise ValueError("Holonomy requires a closed loop.")
+        metric = self.get_metric(loop[..., 0, :])
+        returned = self.parallel_transport(vector, loop, metric)
+        defect = returned - vector
+        return {
+            "returned": returned,
+            "defect": defect,
+            "defect_norm": torch.linalg.vector_norm(defect, dim=-1),
+        }
 
     def exp_map(self, base_point: torch.Tensor, tangent_vec: torch.Tensor,
                 metric: RiemannianMetric) -> torch.Tensor:
@@ -341,11 +424,8 @@ class RiemannianGeometry(nn.Module):
         velocity = tangent_vec.clone()
 
         for step in range(num_steps):
-            # Compute Christoffel symbols at current position
-            christoffel = self.christoffel_symbols(position, metric)
-
             # Geodesic acceleration: -Γ^k_{ij} v^i v^j
-            acceleration = -torch.einsum('...kij,...i,...j->...k', christoffel, velocity, velocity)
+            acceleration = -self.connection_action(position, velocity, velocity)
 
             # Update position and velocity
             position = position + dt * velocity
@@ -366,13 +446,7 @@ class RiemannianGeometry(nn.Module):
         Returns:
             tangent_vec: (B, T, P, D) - logarithmic map
         """
-        # AUDIT FIX (2026-07): christoffel_symbols returns zeros by design, so
-        # exp_map integrates a straight line and log_map is exactly the Euclidean
-        # difference. The LBFGS inner loop was an expensive no-op (and returned
-        # detached, breaking gradients). Fast path taken whenever the connection
-        # is flat; the LBFGS branch is retained for a future non-flat connection.
-        christoffel_probe = self.christoffel_symbols(base_point, metric)
-        if torch.count_nonzero(christoffel_probe) == 0:
+        if self.manifold_type == 'euclidean':
             return target_point - base_point
 
         # Simplified implementation: use gradient descent to find initial velocity
@@ -397,7 +471,7 @@ class RiemannianGeometry(nn.Module):
 
 class FiberBundleLambdaCalculus(nn.Module):
     """
-    Implements true fiber-to-fiber bundle lambda calculus operations.
+    Learned bundle-section compositional surrogate.
 
     This provides:
     - Lambda abstraction over fiber bundle sections
@@ -413,7 +487,7 @@ class FiberBundleLambdaCalculus(nn.Module):
 
         # Lambda abstraction network: encodes function types
         self.lambda_encoder = nn.Sequential(
-            nn.Linear(self.base_dim + self.fiber_dim, 128),
+            nn.Linear(2 * (self.base_dim + self.fiber_dim), 128),
             nn.ReLU(),
             nn.Linear(128, self.base_dim + self.fiber_dim)
         )
@@ -443,7 +517,12 @@ class FiberBundleLambdaCalculus(nn.Module):
         Returns:
             lambda_term: (B, T, P, D_base + D_fiber) - abstracted function
         """
-        # Encode the lambda abstraction
+        expected = self.base_dim + self.fiber_dim
+        if variable_type.shape != body.shape or variable_type.shape[-1] != expected:
+            raise ValueError(
+                "lambda_abstraction expects equal shapes with final dimension "
+                f"{expected}; got {tuple(variable_type.shape)} and {tuple(body.shape)}"
+            )
         combined = torch.cat([variable_type, body], dim=-1)
         lambda_term = self.lambda_encoder(combined)
         return lambda_term

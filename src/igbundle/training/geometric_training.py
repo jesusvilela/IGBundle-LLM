@@ -40,6 +40,12 @@ class GeometricTrainingConfig:
     lambda_sheaf: float = 0.001
     lambda_bundle: float = 0.001
     lambda_lambda: float = 0.0001  # Lambda calculus consistency
+    lambda_hamiltonian_energy: float = 0.0
+    lambda_compiler_entropy: float = 0.0
+    lambda_fiber_diversity: float = 0.0
+    lambda_fiber_entropy: float = 0.0
+    lambda_consensus_agreement: float = 0.0
+    strict_geometric_losses: bool = True
 
     # Riemannian optimization parameters
     use_natural_gradients: bool = True
@@ -79,28 +85,31 @@ class RiemannianOptimizer:
                 self.momentum_buffer[param] = torch.zeros_like(param.data)
 
     def update_fisher(self, model: nn.Module, batch: torch.Tensor):
-        """Update Fisher information matrix using current batch."""
-        model.zero_grad()
-
-        # Forward pass
-        output = model(batch)
-        if hasattr(output, 'logits'):
-            output = output.logits
-
-        # Compute log-likelihood (simplified for demonstration)
-        log_likelihood = -F.cross_entropy(output.view(-1, output.size(-1)),
-                                        batch.view(-1), reduction='sum')
-
-        # Compute gradients w.r.t. log-likelihood
-        grads = torch.autograd.grad(log_likelihood, self.parameters, create_graph=False)
-
-        # Update Fisher diagonal (exponential moving average)
-        for param, grad in zip(self.parameters, grads):
-            if param in self.fisher_diag:
-                self.fisher_diag[param] = (
-                    self.momentum * self.fisher_diag[param] +
-                    (1 - self.momentum) * grad.pow(2)
-                )
+        """Update the Fisher diagonal without consuming the task gradient."""
+        saved_grads = {
+            param: None if param.grad is None else param.grad.detach().clone()
+            for param in self.parameters
+        }
+        try:
+            model.zero_grad(set_to_none=True)
+            output = model(batch)
+            if hasattr(output, 'logits'):
+                output = output.logits
+            log_likelihood = -F.cross_entropy(
+                output.view(-1, output.size(-1)), batch.view(-1), reduction='sum'
+            )
+            grads = torch.autograd.grad(
+                log_likelihood, self.parameters, create_graph=False, allow_unused=True
+            )
+            for param, grad in zip(self.parameters, grads):
+                if param in self.fisher_diag and grad is not None:
+                    self.fisher_diag[param] = (
+                        self.momentum * self.fisher_diag[param]
+                        + (1 - self.momentum) * grad.detach().pow(2)
+                    )
+        finally:
+            for param, grad in saved_grads.items():
+                param.grad = grad
 
     def step(self):
         """Perform natural gradient step."""
@@ -136,6 +145,12 @@ class GeometricTrainer:
             for name, module in model.named_modules():
                 if isinstance(module, GeometricIGBundleAdapter):
                     adapter_params.extend(module.parameters())
+
+            if not adapter_params:
+                raise ValueError(
+                    "Natural-gradient training requested, but no "
+                    "GeometricIGBundleAdapter parameters were found."
+                )
 
             self.optimizer = RiemannianOptimizer(
                 adapter_params,
@@ -187,7 +202,7 @@ class GeometricTrainer:
         # Total loss
         total_loss = lm_loss
         for loss_name, loss_value in geometric_losses.items():
-            weight = getattr(self.config, f"lambda_{loss_name}", 0.0)
+            weight = self._loss_weight(loss_name)
             total_loss = total_loss + weight * loss_value
 
         # Backward pass
@@ -262,7 +277,7 @@ class GeometricTrainer:
 
     def _compute_geometric_losses(self) -> Dict[str, torch.Tensor]:
         """Compute all geometric regularization losses."""
-        geometric_losses = {}
+        losses_by_key: Dict[str, List[torch.Tensor]] = {}
 
         # Find all geometric adapters in the model
         for name, module in self.model.named_modules():
@@ -272,12 +287,38 @@ class GeometricTrainer:
                     state = module._last_geometric_state
                     adapter_losses = module.compute_geometric_losses(state)
 
-                    # Prefix with module name
                     for loss_name, loss_value in adapter_losses.items():
-                        full_name = f"{name}_{loss_name}" if name else loss_name
-                        geometric_losses[full_name] = loss_value
+                        losses_by_key.setdefault(loss_name, []).append(loss_value)
 
-        return geometric_losses
+        if not losses_by_key and self.config.strict_geometric_losses:
+            raise RuntimeError(
+                "Geometric training requested, but no adapter geometric losses "
+                "were produced by the forward pass."
+            )
+        return {
+            key: torch.stack(values).mean() if len(values) > 1 else values[0]
+            for key, values in losses_by_key.items()
+        }
+
+    def _loss_weight(self, loss_name: str) -> float:
+        """Resolve canonical operator names to explicit configured weights."""
+        fields = {
+            'curvature': 'lambda_curvature',
+            'local_section_consistency': 'lambda_sheaf',
+            'bundle_local_triviality': 'lambda_bundle',
+            'section_representation_alignment': 'lambda_lambda',
+            'hamiltonian_energy': 'lambda_hamiltonian_energy',
+            'compiler_entropy': 'lambda_compiler_entropy',
+            'fiber_diversity': 'lambda_fiber_diversity',
+            'fiber_entropy': 'lambda_fiber_entropy',
+            'consensus_agreement': 'lambda_consensus_agreement',
+        }
+        field_name = fields.get(loss_name)
+        if field_name is None:
+            if self.config.strict_geometric_losses:
+                raise KeyError(f"No explicit training weight is registered for {loss_name!r}")
+            return 0.0
+        return float(getattr(self.config, field_name))
 
     def _check_bundle_topology(self):
         """Verify that bundle topology is preserved during training."""

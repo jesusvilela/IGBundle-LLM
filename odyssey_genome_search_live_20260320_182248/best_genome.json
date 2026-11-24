@@ -1,0 +1,11 @@
+{
+  "base_lr": 5e-05,
+  "fiber_lr": 0.003,
+  "geo_lambda_max": 0.05,
+  "geo_ramp_steps": 200,
+  "entropy_loss_scale": 7.5,
+  "eos_ce_weight": 2.0,
+  "eos_margin_weight": 1.0,
+  "eos_stop_kl_weight": 0.25,
+  "eos_norm_weight": 0.05
+}

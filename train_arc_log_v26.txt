@@ -1,0 +1,47 @@
+Skipping import of cpp extensions due to incompatible torch version 2.6.0+cu124 for torchao version 0.15.0             Please see https://github.com/pytorch/ao/issues/2919 for more info
+INFO:__main__:Training for 50 steps, saving every 25 steps.
+INFO:__main__:Loading Models...
+The tokenizer you are loading from 'H:/LLM-MANIFOLD/igbundle_qwen7b_cp600' with an incorrect regex pattern: https://huggingface.co/mistralai/Mistral-Small-3.1-24B-Instruct-2503/discussions/84#69121093e8b480e709447d5e. This will lead to incorrect tokenization. You should set the `fix_mistral_regex=True` flag when loading this tokenizer to fix this issue.
+
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]
+Loading checkpoint shards:  25%|##5       | 1/4 [00:09<00:29,  9.77s/it]
+Loading checkpoint shards:  50%|#####     | 2/4 [00:21<00:21, 10.97s/it]
+Loading checkpoint shards:  75%|#######5  | 3/4 [00:30<00:10, 10.07s/it]
+Loading checkpoint shards: 100%|##########| 4/4 [00:32<00:00,  6.91s/it]
+Loading checkpoint shards: 100%|##########| 4/4 [00:32<00:00,  8.16s/it]
+`torch_dtype` is deprecated! Use `dtype` instead!
+INFO:__main__:Injected Geometric Adapter at Layer 12.
+INFO:__main__:Loading ARC-AGI-2 from local repo...
+INFO:__main__:Found 1000 tasks in data\ARC-AGI-2\data\training
+INFO:__main__:Loading task 0/1000...
+INFO:__main__:Loading task 100/1000...
+INFO:__main__:Loading task 200/1000...
+INFO:__main__:Loading task 300/1000...
+INFO:__main__:Loading task 400/1000...
+INFO:__main__:Loading task 500/1000...
+INFO:__main__:Loading task 600/1000...
+INFO:__main__:Loading task 700/1000...
+INFO:__main__:Loading task 800/1000...
+INFO:__main__:Loading task 900/1000...
+INFO:__main__:Loaded 1000 tasks.
+INFO:__main__:Starting ARC Training...
+INFO:__main__:DEBUG: vis_out.dtype=torch.bfloat16
+INFO:__main__:DEBUG: projected_vision.dtype=torch.float32
+INFO:__main__:DEBUG: adapter.param.dtype=torch.float32
+INFO:__main__:Step 4: Loss = 0.0761
+INFO:__main__:Step 8: Loss = 0.0579
+INFO:__main__:Step 12: Loss = 0.2060
+INFO:__main__:Step 16: Loss = 0.6399
+INFO:__main__:Step 20: Loss = 0.1027
+INFO:__main__:Step 24: Loss = 4.0763
+INFO:__main__:Saved checkpoint to trained_arc_adapter\checkpoint-25
+INFO:__main__:Step 28: Loss = 0.1984
+INFO:__main__:Step 32: Loss = 0.0170
+INFO:__main__:Step 36: Loss = 0.3177
+INFO:__main__:Step 40: Loss = 0.0368
+INFO:__main__:Step 44: Loss = 0.2199
+INFO:__main__:Step 48: Loss = 0.0491
+INFO:__main__:Saved checkpoint to trained_arc_adapter\checkpoint-50
+INFO:__main__:ARC Training Complete.
+GeometricIGBundle: D=32, P=4, K=8, D_bot=896
+GeometricIGBundle: Initializing Vision Projector (Epic 5)

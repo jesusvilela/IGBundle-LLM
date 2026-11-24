@@ -1,0 +1,60 @@
+Skipping import of cpp extensions due to incompatible torch version 2.6.0+cu124 for torchao version 0.15.0             Please see https://github.com/pytorch/ao/issues/2919 for more info
+INFO:__main__:Loading Models...
+`torch_dtype` is deprecated! Use `dtype` instead!
+INFO:accelerate.utils.modeling:We will use 90% of the memory on device 0 for storing the model, and 10% for the buffer to avoid OOM. You can set `max_memory` in to a higher value to use more memory (at your own risk).
+`torch_dtype` is deprecated! Use `dtype` instead!
+INFO:accelerate.utils.modeling:We will use 90% of the memory on device 0 for storing the model, and 10% for the buffer to avoid OOM. You can set `max_memory` in to a higher value to use more memory (at your own risk).
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+INFO:__main__:Training on 3 geometric samples...
+INFO:__main__:Sample Loss: 3.8343
+INFO:__main__:Sample Loss: 3.5115
+INFO:__main__:Sample Loss: 4.9614
+INFO:__main__:Training Complete. Weights saved.
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)

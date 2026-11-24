@@ -1,0 +1,549 @@
+.............F.....................F......F............................. [ 60%]
+.......EEEEEEEEEE..............F..FFFF..F......                          [100%]
+=================================== ERRORS ====================================
+________ ERROR at setup of TestNMEMIntegration.test_store_and_retrieve ________
+
+fixturedef = <FixtureDef argname='tmp_path' scope='function' baseid=''>
+request = <SubRequest 'tmp_path' for <Function test_store_and_retrieve>>
+
+    @pytest.hookimpl(wrapper=True)
+    def pytest_fixture_setup(fixturedef: FixtureDef, request) -> object | None:
+        asyncio_mode = _get_asyncio_mode(request.config)
+        if not _is_asyncio_fixture_function(fixturedef.func):
+            if asyncio_mode == Mode.STRICT:
+                # Ignore async fixtures without explicit asyncio mark in strict mode
+                # This applies to pytest_trio fixtures, for example
+>               return (yield)
+                        ^^^^^
+E               PermissionError: [WinError 5] Acceso denegado: 'C:\\Users\\HAL900\\AppData\\Local\\Temp\\pytest-of-HAL900'
+
+unsloth_env\Lib\site-packages\pytest_asyncio\plugin.py:728: PermissionError
+________ ERROR at setup of TestNMEMIntegration.test_attentional_gating ________
+
+fixturedef = <FixtureDef argname='tmp_path' scope='function' baseid=''>
+request = <SubRequest 'tmp_path' for <Function test_attentional_gating>>
+
+    @pytest.hookimpl(wrapper=True)
+    def pytest_fixture_setup(fixturedef: FixtureDef, request) -> object | None:
+        asyncio_mode = _get_asyncio_mode(request.config)
+        if not _is_asyncio_fixture_function(fixturedef.func):
+            if asyncio_mode == Mode.STRICT:
+                # Ignore async fixtures without explicit asyncio mark in strict mode
+                # This applies to pytest_trio fixtures, for example
+>               return (yield)
+                        ^^^^^
+E               PermissionError: [WinError 5] Acceso denegado: 'C:\\Users\\HAL900\\AppData\\Local\\Temp\\pytest-of-HAL900'
+
+unsloth_env\Lib\site-packages\pytest_asyncio\plugin.py:728: PermissionError
+_________ ERROR at setup of TestNMEMIntegration.test_savant_preserved _________
+
+fixturedef = <FixtureDef argname='tmp_path' scope='function' baseid=''>
+request = <SubRequest 'tmp_path' for <Function test_savant_preserved>>
+
+    @pytest.hookimpl(wrapper=True)
+    def pytest_fixture_setup(fixturedef: FixtureDef, request) -> object | None:
+        asyncio_mode = _get_asyncio_mode(request.config)
+        if not _is_asyncio_fixture_function(fixturedef.func):
+            if asyncio_mode == Mode.STRICT:
+                # Ignore async fixtures without explicit asyncio mark in strict mode
+                # This applies to pytest_trio fixtures, for example
+>               return (yield)
+                        ^^^^^
+E               PermissionError: [WinError 5] Acceso denegado: 'C:\\Users\\HAL900\\AppData\\Local\\Temp\\pytest-of-HAL900'
+
+unsloth_env\Lib\site-packages\pytest_asyncio\plugin.py:728: PermissionError
+____ ERROR at setup of TestNMEMIntegration.test_multiple_stores_retrieval _____
+
+fixturedef = <FixtureDef argname='tmp_path' scope='function' baseid=''>
+request = <SubRequest 'tmp_path' for <Function test_multiple_stores_retrieval>>
+
+    @pytest.hookimpl(wrapper=True)
+    def pytest_fixture_setup(fixturedef: FixtureDef, request) -> object | None:
+        asyncio_mode = _get_asyncio_mode(request.config)
+        if not _is_asyncio_fixture_function(fixturedef.func):
+            if asyncio_mode == Mode.STRICT:
+                # Ignore async fixtures without explicit asyncio mark in strict mode
+                # This applies to pytest_trio fixtures, for example
+>               return (yield)
+                        ^^^^^
+E               PermissionError: [WinError 5] Acceso denegado: 'C:\\Users\\HAL900\\AppData\\Local\\Temp\\pytest-of-HAL900'
+
+unsloth_env\Lib\site-packages\pytest_asyncio\plugin.py:728: PermissionError
+_________ ERROR at setup of TestNMEMIntegration.test_ghost_formation __________
+
+fixturedef = <FixtureDef argname='tmp_path' scope='function' baseid=''>
+request = <SubRequest 'tmp_path' for <Function test_ghost_formation>>
+
+    @pytest.hookimpl(wrapper=True)
+    def pytest_fixture_setup(fixturedef: FixtureDef, request) -> object | None:
+        asyncio_mode = _get_asyncio_mode(request.config)
+        if not _is_asyncio_fixture_function(fixturedef.func):
+            if asyncio_mode == Mode.STRICT:
+                # Ignore async fixtures without explicit asyncio mark in strict mode
+                # This applies to pytest_trio fixtures, for example
+>               return (yield)
+                        ^^^^^
+E               PermissionError: [WinError 5] Acceso denegado: 'C:\\Users\\HAL900\\AppData\\Local\\Temp\\pytest-of-HAL900'
+
+unsloth_env\Lib\site-packages\pytest_asyncio\plugin.py:728: PermissionError
+___________ ERROR at setup of TestNMEMIntegration.test_persistence ____________
+
+fixturedef = <FixtureDef argname='tmp_path' scope='function' baseid=''>
+request = <SubRequest 'tmp_path' for <Function test_persistence>>
+
+    @pytest.hookimpl(wrapper=True)
+    def pytest_fixture_setup(fixturedef: FixtureDef, request) -> object | None:
+        asyncio_mode = _get_asyncio_mode(request.config)
+        if not _is_asyncio_fixture_function(fixturedef.func):
+            if asyncio_mode == Mode.STRICT:
+                # Ignore async fixtures without explicit asyncio mark in strict mode
+                # This applies to pytest_trio fixtures, for example
+>               return (yield)
+                        ^^^^^
+E               PermissionError: [WinError 5] Acceso denegado: 'C:\\Users\\HAL900\\AppData\\Local\\Temp\\pytest-of-HAL900'
+
+unsloth_env\Lib\site-packages\pytest_asyncio\plugin.py:728: PermissionError
+_________ ERROR at setup of TestNMEMIntegration.test_reject_patterns __________
+
+fixturedef = <FixtureDef argname='tmp_path' scope='function' baseid=''>
+request = <SubRequest 'tmp_path' for <Function test_reject_patterns>>
+
+    @pytest.hookimpl(wrapper=True)
+    def pytest_fixture_setup(fixturedef: FixtureDef, request) -> object | None:
+        asyncio_mode = _get_asyncio_mode(request.config)
+        if not _is_asyncio_fixture_function(fixturedef.func):
+            if asyncio_mode == Mode.STRICT:
+                # Ignore async fixtures without explicit asyncio mark in strict mode
+                # This applies to pytest_trio fixtures, for example
+>               return (yield)
+                        ^^^^^
+E               PermissionError: [WinError 5] Acceso denegado: 'C:\\Users\\HAL900\\AppData\\Local\\Temp\\pytest-of-HAL900'
+
+unsloth_env\Lib\site-packages\pytest_asyncio\plugin.py:728: PermissionError
+____________ ERROR at setup of TestNMEMIntegration.test_dropin_api ____________
+
+fixturedef = <FixtureDef argname='tmp_path' scope='function' baseid=''>
+request = <SubRequest 'tmp_path' for <Function test_dropin_api>>
+
+    @pytest.hookimpl(wrapper=True)
+    def pytest_fixture_setup(fixturedef: FixtureDef, request) -> object | None:
+        asyncio_mode = _get_asyncio_mode(request.config)
+        if not _is_asyncio_fixture_function(fixturedef.func):
+            if asyncio_mode == Mode.STRICT:
+                # Ignore async fixtures without explicit asyncio mark in strict mode
+                # This applies to pytest_trio fixtures, for example
+>               return (yield)
+                        ^^^^^
+E               PermissionError: [WinError 5] Acceso denegado: 'C:\\Users\\HAL900\\AppData\\Local\\Temp\\pytest-of-HAL900'
+
+unsloth_env\Lib\site-packages\pytest_asyncio\plugin.py:728: PermissionError
+_______ ERROR at setup of TestNMEMIntegration.test_compact_conversation _______
+
+fixturedef = <FixtureDef argname='tmp_path' scope='function' baseid=''>
+request = <SubRequest 'tmp_path' for <Function test_compact_conversation>>
+
+    @pytest.hookimpl(wrapper=True)
+    def pytest_fixture_setup(fixturedef: FixtureDef, request) -> object | None:
+        asyncio_mode = _get_asyncio_mode(request.config)
+        if not _is_asyncio_fixture_function(fixturedef.func):
+            if asyncio_mode == Mode.STRICT:
+                # Ignore async fixtures without explicit asyncio mark in strict mode
+                # This applies to pytest_trio fixtures, for example
+>               return (yield)
+                        ^^^^^
+E               PermissionError: [WinError 5] Acceso denegado: 'C:\\Users\\HAL900\\AppData\\Local\\Temp\\pytest-of-HAL900'
+
+unsloth_env\Lib\site-packages\pytest_asyncio\plugin.py:728: PermissionError
+______________ ERROR at setup of TestNMEMIntegration.test_stats _______________
+
+fixturedef = <FixtureDef argname='tmp_path' scope='function' baseid=''>
+request = <SubRequest 'tmp_path' for <Function test_stats>>
+
+    @pytest.hookimpl(wrapper=True)
+    def pytest_fixture_setup(fixturedef: FixtureDef, request) -> object | None:
+        asyncio_mode = _get_asyncio_mode(request.config)
+        if not _is_asyncio_fixture_function(fixturedef.func):
+            if asyncio_mode == Mode.STRICT:
+                # Ignore async fixtures without explicit asyncio mark in strict mode
+                # This applies to pytest_trio fixtures, for example
+>               return (yield)
+                        ^^^^^
+E               PermissionError: [WinError 5] Acceso denegado: 'C:\\Users\\HAL900\\AppData\\Local\\Temp\\pytest-of-HAL900'
+
+unsloth_env\Lib\site-packages\pytest_asyncio\plugin.py:728: PermissionError
+================================== FAILURES ===================================
+__________ TestDeltaFiberUpdate.test_curvature_modulates_write_gate ___________
+
+self = <test_delta_fiber.TestDeltaFiberUpdate object at 0x0000016352792250>
+
+    def test_curvature_modulates_write_gate(self):
+        """High |K| should increase write gate activity \u2192 larger updates."""
+        joint = torch.randn(1, 4, self.P, self.D + self.K)
+    
+        out_low_K = self.module(joint.clone(), curvature=torch.tensor([0.1]))
+        out_high_K = self.module(joint.clone(), curvature=torch.tensor([5.0]))
+    
+        # Higher curvature should produce different (generally larger) updates
+        norm_low = out_low_K.abs().mean().item()
+        norm_high = out_high_K.abs().mean().item()
+        # They should at least be different (modulation is working)
+>       assert abs(norm_low - norm_high) > 1e-6, \
+            f"Curvature modulation had no effect: low={norm_low:.6f}, high={norm_high:.6f}"
+E       AssertionError: Curvature modulation had no effect: low=0.007545, high=0.007545
+E       assert 2.5331974029541016e-07 > 1e-06
+E        +  where 2.5331974029541016e-07 = abs((0.007544538471847773 - 0.007544791791588068))
+
+tests\test_delta_fiber.py:71: AssertionError
+__________________ TestFiberRefinement.test_refinement_cycle __________________
+
+self = <test_fiber_regression.TestFiberRefinement testMethod=test_refinement_cycle>
+
+    def test_refinement_cycle(self):
+        """Test the refine_latents loop and drift metrics."""
+        # 1. Active Set A = {1, 2}
+        active_indices = torch.tensor([[1, 2]], device=self.device) # (1, 2)
+    
+        # Snapshot
+        self.adapter.fiber_store.snapshot()
+    
+        # Perturb store manually to simulate an "update" (e.g. from optimizer or propagate)
+        with torch.no_grad():
+            self.adapter.fiber_store.s.data += 0.5 # Shift everything
+    
+        # 2. Run Refine (Anchor Off-Locus)
+        # Closure of {1, 2} depth 1 (assuming empty adjacency) is {1, 2}
+        self.adapter.refine_latents(active_indices)
+    
+        # 3. Check Drift
+        executor = self.adapter.fiber_executor
+>       metrics = executor.compute_drift_metrics(allowed_targets={1, 2})
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'FiberExecutor' object has no attribute 'compute_drift_metrics'
+
+tests\test_fiber_regression.py:75: AttributeError
+---------------------------- Captured stdout call -----------------------------
+GeometricIGBundle: D=8, P=12, K=4, D_bot=16
+DEBUG: Initializing HamiltonianSystem. Manifold: PoincareBall() Type: <class 'igbundle.geometry.poincare.PoincareBall'>
+FiberExecutor: Resonant Dynamics Online (N=12)
+FiberExecutor: Equilibrium Propagation Online.
+FiberExecutor: Time-Reversal Retrospection Online.
+____________________ TestPoincareBall.test_dist_positivity ____________________
+
+self = <test_hyperbolic.TestPoincareBall testMethod=test_dist_positivity>
+
+    def test_dist_positivity(self):
+        """Test d(x,y) >= 0 and d(x,x) = 0"""
+        x = torch.randn(10, 5) * 0.5
+        y = torch.randn(10, 5) * 0.5
+    
+        # d(x, x)
+        d_xx = PoincareBall.dist(x, x, self.c)
+>       self.assertTrue(torch.allclose(d_xx, torch.zeros_like(d_xx), atol=1e-4))
+E       AssertionError: False is not true
+
+tests\test_hyperbolic.py:38: AssertionError
+______________________ TestPipeline.test_training_smoke _______________________
+
+self = <test_pipeline.TestPipeline testMethod=test_training_smoke>
+
+    def test_training_smoke(self):
+        """Run train.py in smoke_test mode to verify pipeline integrity."""
+        # Use the same python interpreter
+        cmd = [sys.executable, "train.py", "--smoke_test", "--max_steps", "1"]
+    
+        # Enforce current environment
+        env = os.environ.copy()
+    
+        # Run command
+        result = subprocess.run(
+            cmd,
+            cwd=os.path.join(os.path.dirname(__file__), ".."),
+            capture_output=True,
+            text=True
+        )
+    
+>       self.assertEqual(result.returncode, 0, f"Training Smoke Test Failed:\n{result.stderr}")
+E       AssertionError: 1 != 0 : Training Smoke Test Failed:
+E       Traceback (most recent call last):
+E         File "H:\LLM-MANIFOLD\igbundle-llm\train.py", line 358, in <module>
+E           train()
+E         File "H:\LLM-MANIFOLD\igbundle-llm\train.py", line 164, in train
+E           model = AutoModelForCausalLM.from_pretrained(
+E                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         File "H:\LLM-MANIFOLD\igbundle-llm\unsloth_env\Lib\site-packages\transformers\models\auto\auto_factory.py", line 387, in from_pretrained
+E           return model_class.from_pretrained(
+E                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         File "H:\LLM-MANIFOLD\igbundle-llm\unsloth_env\Lib\site-packages\transformers\modeling_utils.py", line 4132, in from_pretrained
+E           loading_info, disk_offload_index = cls._load_pretrained_model(model, state_dict, checkpoint_files, load_config)
+E                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         File "H:\LLM-MANIFOLD\igbundle-llm\unsloth_env\Lib\site-packages\transformers\modeling_utils.py", line 4212, in _load_pretrained_model
+E           caching_allocator_warmup(model, expanded_device_map, load_config.hf_quantizer)
+E         File "H:\LLM-MANIFOLD\igbundle-llm\unsloth_env\Lib\site-packages\transformers\modeling_utils.py", line 4829, in caching_allocator_warmup
+E           _ = torch.empty(int(byte_count // 2), dtype=torch.float16, device=device, requires_grad=False)
+E               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 5.07 GiB. GPU 0 has a total capacity of 8.00 GiB of which 6.97 GiB is free. Of the allocated memory 0 bytes is allocated by PyTorch, and 0 bytes is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+
+tests\test_pipeline.py:23: AssertionError
+_________________ TestRetrospection.test_conservative_thought _________________
+
+self = <test_retrospection_integration.TestRetrospection testMethod=test_conservative_thought>
+
+    def test_conservative_thought(self):
+        print("Testing Conservative Thought (Valid)...")
+        # 1. Initialize State
+        self.executor.resonator_state = (torch.randn(self.num_fibers)*0.1, torch.randn(self.num_fibers)*0.1)
+    
+        # 2. Run Verify with random drive (simulating a thought)
+        # Assuming FHN is somewhat reversible on short timescales
+        # We might need to relax tolerance if FHN is strongly dissipative
+        valid = self.executor.verify_thought([0, 1])
+    
+        loss, _ = self.executor.retrospector.retrospect(self.executor.resonator_state, torch.zeros(self.num_fibers))
+        print(f"Conservative Loss: {loss.mean().item():.6f}")
+    
+        # We expect this to be largely valid or low loss
+>       self.assertTrue(loss.mean().item() < 1.0, "Conservative thought should have low reconstruction error")
+E       AssertionError: False is not true : Conservative thought should have low reconstruction error
+
+tests\test_retrospection_integration.py:39: AssertionError
+---------------------------- Captured stdout call -----------------------------
+
+--- Setup Retrospection Test ---
+FiberExecutor: Resonant Dynamics Online (N=5)
+FiberExecutor: Equilibrium Propagation Online.
+FiberExecutor: Time-Reversal Retrospection Online.
+Testing Conservative Thought (Valid)...
+FiberExecutor: Retrospection Loss 10.0637. Alert.
+Conservative Loss: 1.855305
+______________ TestRetrospection.test_invalid_thought_detection _______________
+
+self = <test_retrospection_integration.TestRetrospection testMethod=test_invalid_thought_detection>
+
+    def test_invalid_thought_detection(self):
+        print("Testing Invalid Thought (Entropy Injection)...")
+        # 1. Hack the retrospector to simulate information destruction
+        # We will wrap the integrator to add noise during backward pass
+        original_step = self.executor.resonator.step
+    
+        def noisy_step(state, drive):
+            q, p = original_step(state, drive)
+            # Inject Chaos during integration (simulating non-conservative compute)
+            return q + torch.randn_like(q) * 1.0, p
+    
+        # Swap method momentarily (dangerous but effective for test)
+        self.executor.resonator.step = noisy_step
+    
+        # 2. Run Verify
+        # This SHOULD fail because the backward path will diverge/hallucinate
+        valid = self.executor.verify_thought([2, 3])
+    
+        # Restore
+        self.executor.resonator.step = original_step
+    
+        print(f"Invalid Thought Validity: {valid}")
+>       self.assertFalse(valid, "Noisy integrator should fail retrospection check")
+E       AssertionError: (85.66401672363281, False) is not false : Noisy integrator should fail retrospection check
+
+tests\test_retrospection_integration.py:63: AssertionError
+---------------------------- Captured stdout call -----------------------------
+
+--- Setup Retrospection Test ---
+FiberExecutor: Resonant Dynamics Online (N=5)
+FiberExecutor: Equilibrium Propagation Online.
+FiberExecutor: Time-Reversal Retrospection Online.
+Testing Invalid Thought (Entropy Injection)...
+FiberExecutor: Retrospection Loss 85.6640. Alert.
+Invalid Thought Validity: (85.66401672363281, False)
+________________ TestRiemannianAttention.test_attention_focus _________________
+
+self = <test_riemannian_attention.TestRiemannianAttention testMethod=test_attention_focus>
+
+    def test_attention_focus(self):
+        """Test if query attends to closest key."""
+        B, H, T, S, D = 1, 1, 1, 3, 4
+    
+        # q is close to k[0], far from k[1], k[2]
+        q = torch.zeros(B, H, T, D) # Origin
+        k = torch.zeros(B, H, S, D)
+        k[0, 0, 0, :] = torch.tensor([0.1, 0, 0, 0]) # Close
+        k[0, 0, 1, :] = torch.tensor([0.8, 0, 0, 0]) # Far
+        k[0, 0, 2, :] = torch.tensor([0.9, 0, 0, 0]) # Very Far
+    
+        v = torch.eye(3).view(B, H, S, 3) # Indicator values [1,0,0], [0,1,0], ...
+        # Output dim is 3 here just for test
+    
+        # Attention should focus on Index 0
+        # dist(0, 0.1) ~ small
+        # dist(0, 0.8) ~ large (near boundary)
+    
+        # We need to hack V dim to match D or change logic?
+        # The class expects D=head_dim. Here D=4.
+        # But matmul is (..., S) @ (..., S, D_v).
+        # Let's keep V dim = 4.
+        v = torch.zeros(B, H, S, 4)
+        v[0,0,0,0] = 100.0 # Target
+    
+>       out = self.attn(q, k, v)
+              ^^^^^^^^^^^^^^^^^^
+
+tests\test_riemannian_attention.py:60: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+unsloth_env\Lib\site-packages\torch\nn\modules\module.py:1739: in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+unsloth_env\Lib\site-packages\torch\nn\modules\module.py:1750: in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src\igbundle\modules\riemannian_attention.py:59: in forward
+    dist_sq = PoincareBall.pairwise_dist2_fast(q_states, k_states, self.c)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+q = tensor([[[[0., 0., 0., 0.]]]])
+k = tensor([[[[0.2020, 0.0000, 0.0000, 0.0000],
+          [4.4444, 0.0000, 0.0000, 0.0000],
+          [9.4737, 0.0000, 0.0000, 0.0000]]]])
+c = 1.0, eps = 1e-08
+
+    @staticmethod
+    def pairwise_dist2_fast(q: torch.Tensor, k: torch.Tensor, c: float, eps: float = 1e-8) -> torch.Tensor:
+        """
+        Squared hyperbolic distance using a memory-reduced pairwise kernel.
+        q: (B, H, T, D)
+        k: (B, H, S, D)
+        Returns: (B, H, T, S)
+        """
+        B, H, T, D = q.shape
+        S = k.shape[2]
+    
+        q_flat = q.reshape(B * H, T, D)
+        k_flat = k.reshape(B * H, S, D)
+    
+        # Use cdist to avoid explicit (T,S,D) broadcast when possible.
+        dist2 = torch.cdist(q_flat, k_flat, p=2).pow(2)
+        dist2 = dist2.view(B, H, T, S)
+    
+        q2 = torch.sum(q.pow(2), dim=-1, keepdim=True)
+        k2 = torch.sum(k.pow(2), dim=-1, keepdim=True)
+    
+        alpha = (1.0 - c * q2).clamp_min(MIN_NORM)
+        beta = (1.0 - c * k2).clamp_min(MIN_NORM)
+        alpha = alpha.expand(-1, -1, -1, S)
+>       beta = beta.expand(-1, -1, T, -1)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       RuntimeError: The expanded size of the tensor (1) must match the existing size (3) at non-singleton dimension 2.  Target sizes: [-1, -1, 1, -1].  Tensor sizes: [1, 1, 3, 1]
+
+src\igbundle\geometry\hyperbolic.py:135: RuntimeError
+_________________ TestRiemannianAttention.test_forward_shape __________________
+
+self = <test_riemannian_attention.TestRiemannianAttention testMethod=test_forward_shape>
+
+    def test_forward_shape(self):
+        B, H, T, S, D = 1, 4, 2, 5, 16
+        # Queries and Keys on Manifold (Projected)
+        q = torch.randn(B, H, T, D) * 0.1 # Small norm
+        k = torch.randn(B, H, S, D) * 0.1
+        v = torch.randn(B, H, S, D) # Values (Euclidean)
+    
+>       out = self.attn(q, k, v)
+              ^^^^^^^^^^^^^^^^^^
+
+tests\test_riemannian_attention.py:32: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+unsloth_env\Lib\site-packages\torch\nn\modules\module.py:1739: in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+unsloth_env\Lib\site-packages\torch\nn\modules\module.py:1750: in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src\igbundle\modules\riemannian_attention.py:59: in forward
+    dist_sq = PoincareBall.pairwise_dist2_fast(q_states, k_states, self.c)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+q = tensor([[[[ 5.0150e-01,  3.8708e-01,  2.3442e-01, -5.4798e-01,  1.7657e-01,
+           -3.2130e-01, -1.1209e-02, -4.17...3,  5.1432e-02,
+            2.8304e-02,  1.6321e-01,  2.3385e-01,  7.2586e-02,  1.5375e-01,
+            8.7858e-02]]]])
+k = tensor([[[[ 0.4771,  0.2500, -0.3549, -0.2792, -0.0336,  0.4041,  0.1618,
+            0.1423,  0.2820,  0.0046, -0.446...09,  0.1522,
+            0.2375,  0.1571, -0.2989,  0.0086, -0.2664, -0.0235,  0.2708,
+            0.1732, -0.1699]]]])
+c = 1.0, eps = 1e-08
+
+    @staticmethod
+    def pairwise_dist2_fast(q: torch.Tensor, k: torch.Tensor, c: float, eps: float = 1e-8) -> torch.Tensor:
+        """
+        Squared hyperbolic distance using a memory-reduced pairwise kernel.
+        q: (B, H, T, D)
+        k: (B, H, S, D)
+        Returns: (B, H, T, S)
+        """
+        B, H, T, D = q.shape
+        S = k.shape[2]
+    
+        q_flat = q.reshape(B * H, T, D)
+        k_flat = k.reshape(B * H, S, D)
+    
+        # Use cdist to avoid explicit (T,S,D) broadcast when possible.
+        dist2 = torch.cdist(q_flat, k_flat, p=2).pow(2)
+        dist2 = dist2.view(B, H, T, S)
+    
+        q2 = torch.sum(q.pow(2), dim=-1, keepdim=True)
+        k2 = torch.sum(k.pow(2), dim=-1, keepdim=True)
+    
+        alpha = (1.0 - c * q2).clamp_min(MIN_NORM)
+        beta = (1.0 - c * k2).clamp_min(MIN_NORM)
+        alpha = alpha.expand(-1, -1, -1, S)
+>       beta = beta.expand(-1, -1, T, -1)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       RuntimeError: The expanded size of the tensor (2) must match the existing size (5) at non-singleton dimension 2.  Target sizes: [-1, -1, 2, -1].  Tensor sizes: [1, 4, 5, 1]
+
+src\igbundle\geometry\hyperbolic.py:135: RuntimeError
+______________________________ test_hamiltonian _______________________________
+
+    def test_hamiltonian():
+        print("Testing HamiltonianSystem...")
+>       sys = HamiltonianSystem(hidden_dim=64)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: VectorField.__init__() got an unexpected keyword argument 'hidden_dim'
+
+tests\test_v2_components.py:33: TypeError
+---------------------------- Captured stdout call -----------------------------
+Testing HamiltonianSystem...
+============================== warnings summary ===============================
+<frozen importlib._bootstrap>:241
+  <frozen importlib._bootstrap>:241: DeprecationWarning: builtin type SwigPyPacked has no __module__ attribute
+
+<frozen importlib._bootstrap>:241
+  <frozen importlib._bootstrap>:241: DeprecationWarning: builtin type SwigPyObject has no __module__ attribute
+
+tests/test_fhn_dynamics.py::test_fhn_oscillation
+  H:\LLM-MANIFOLD\igbundle-llm\unsloth_env\Lib\site-packages\_pytest\python.py:170: PytestReturnNotNoneWarning: Test functions should return None, but tests/test_fhn_dynamics.py::test_fhn_oscillation returned <class 'torch.Tensor'>.
+  Did you mean to use `assert` instead of `return`?
+  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_delta_fiber.py::TestDeltaFiberUpdate::test_curvature_modulates_write_gate
+FAILED tests/test_fiber_regression.py::TestFiberRefinement::test_refinement_cycle
+FAILED tests/test_hyperbolic.py::TestPoincareBall::test_dist_positivity - Ass...
+FAILED tests/test_pipeline.py::TestPipeline::test_training_smoke - AssertionE...
+FAILED tests/test_retrospection_integration.py::TestRetrospection::test_conservative_thought
+FAILED tests/test_retrospection_integration.py::TestRetrospection::test_invalid_thought_detection
+FAILED tests/test_riemannian_attention.py::TestRiemannianAttention::test_attention_focus
+FAILED tests/test_riemannian_attention.py::TestRiemannianAttention::test_forward_shape
+FAILED tests/test_v2_components.py::test_hamiltonian - TypeError: VectorField...
+ERROR tests/test_nmem.py::TestNMEMIntegration::test_store_and_retrieve - Perm...
+ERROR tests/test_nmem.py::TestNMEMIntegration::test_attentional_gating - Perm...
+ERROR tests/test_nmem.py::TestNMEMIntegration::test_savant_preserved - Permis...
+ERROR tests/test_nmem.py::TestNMEMIntegration::test_multiple_stores_retrieval
+ERROR tests/test_nmem.py::TestNMEMIntegration::test_ghost_formation - Permiss...
+ERROR tests/test_nmem.py::TestNMEMIntegration::test_persistence - PermissionE...
+ERROR tests/test_nmem.py::TestNMEMIntegration::test_reject_patterns - Permiss...
+ERROR tests/test_nmem.py::TestNMEMIntegration::test_dropin_api - PermissionEr...
+ERROR tests/test_nmem.py::TestNMEMIntegration::test_compact_conversation - Pe...
+ERROR tests/test_nmem.py::TestNMEMIntegration::test_stats - PermissionError: ...
+9 failed, 100 passed, 3 warnings, 10 errors in 735.70s (0:12:15)
+sys:1: DeprecationWarning: builtin type swigvarlink has no __module__ attribute

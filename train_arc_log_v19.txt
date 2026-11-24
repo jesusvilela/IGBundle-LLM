@@ -1,0 +1,30 @@
+Skipping import of cpp extensions due to incompatible torch version 2.6.0+cu124 for torchao version 0.15.0             Please see https://github.com/pytorch/ao/issues/2919 for more info
+INFO:__main__:Loading Models...
+`torch_dtype` is deprecated! Use `dtype` instead!
+`torch_dtype` is deprecated! Use `dtype` instead!
+INFO:__main__:Injected Geometric Adapter at Layer 12.
+INFO:__main__:Loading ARC-AGI...
+INFO:__main__:Attempting to load Ardea/arc_agi_v1...
+WARNING:__main__:Loaded Ardea/arc_agi_v1 but structure mismatch: dict_keys(['id', 'list', 'label'])
+INFO:__main__:Attempting to load sahil2801/arc-agi-labelled...
+WARNING:__main__:Loaded sahil2801/arc-agi-labelled but structure mismatch: dict_keys(['text', 'id'])
+WARNING:__main__:All remote datasets failed. Using Synthetic ARC Generator.
+INFO:__main__:Starting ARC Training...
+INFO:__main__:DEBUG: vis_out.dtype=torch.bfloat16
+INFO:__main__:DEBUG: projected_vision.dtype=torch.float32
+INFO:__main__:DEBUG: adapter.param.dtype=torch.float32
+INFO:__main__:Step 4: Loss = 0.2102
+INFO:__main__:Step 8: Loss = 0.0392
+INFO:__main__:Step 12: Loss = 0.0498
+INFO:__main__:Step 16: Loss = 0.0575
+INFO:__main__:Step 20: Loss = 0.1278
+INFO:__main__:Step 24: Loss = 0.1630
+INFO:__main__:Step 28: Loss = 0.0531
+INFO:__main__:Step 32: Loss = 0.0568
+INFO:__main__:Step 36: Loss = 0.1031
+INFO:__main__:Step 40: Loss = 0.0634
+INFO:__main__:Step 44: Loss = 0.0656
+INFO:__main__:Step 48: Loss = 0.0519
+INFO:__main__:ARC Training Complete.
+GeometricIGBundle: D=32, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)

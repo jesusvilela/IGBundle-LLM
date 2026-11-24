@@ -1,43 +1,22 @@
-# ManifoldGL Wiki
+# IGBundle / ManifoldGL research status
 
-## 1. Mathematical Foundations
+IGBundle explores information-geometric operations and fiber-structured adapters as a possible inductive bias for language models. This is a research hypothesis, not a validated improvement. Bundle terminology describes the intended parameterization; it does not demonstrate that a trained model has learned semantic hierarchy or a fiber bundle.
 
-### The Hyperbolic Hypothesis
-Standard LLMs operate in flat Euclidean space ($\mathbb{R}^n$). We hypothesize that abstract concepts naturally inhabit a **hyperbolic geometry** (like the Poincaré disk $\mathbb{B}^n$).
-- **Why?** Trees and hierarchies expand exponentially. Euclidean space expands polynomially. Embedding a tree in Euclidean space causes distortion. Hyperbolic space has "more room" at the edges, perfect for deep taxonomies.
+## What has been measured
 
-### Fiber Bundle Theory ($E \xrightarrow{\pi} M$)
-We model the latent space not as a single vector space, but as a **Fiber Bundle**:
-- **Base Manifold ($M$)**: The "contextual substrate", modeled as a hyperbolic space ($\kappa = -1$).
-- **Fibers ($F_x$)**: At each point $x \in M$, there is a fiber representing the categorical distribution (e.g., token probabilities).
-- **Parallel Transport**: Moving from context A to context B involves "transporting" the fiber along the geodesic connecting them.
+- **October 27, 2026 local subset evaluation:** custom weighted index 61.1 for the base, 60.0 for the merged cp300 checkpoint, and 64.7 for a reconstructed adapter composite. No individual paired benchmark comparison was statistically significant. Subsets ranged from 8 to 98 examples; the composite was not the original trained checkpoint. [Per-benchmark summary](docs/benchmark-results/aa-index-2026-10-27.csv).
+- **Artifact integrity:** the exported cp300 weights in that run did not contain the runtime geometric adapter. The reconstructed arm grafted a surviving base-trained adapter onto cp300 and used a different loading/quantization path; it does not isolate a geometric effect.
+- **Fixed-operator audit:** 6/6 checks passed for the configuration in [`A_faithfulness_audit.json`](experiments/falsification/results/A_faithfulness_audit.json). This verifies only the tested operators.
+- **Curvature:** the default conformal factor is fixed, making the historical readout weight-invariant. Do not describe it as learned curvature; see [`draft_paper_falsification.md`](draft_paper_falsification.md).
+- **Paired token-NLL probe (2026-09-20):** on 24 held-out examples × 64 tokens, mean NLL was 2.3188 for the frozen base, 1.9352 for geometric adapter A, and 0.8187 for vanilla-LoRA control B. B had lower NLL on all 24 examples. [Per-example scores](docs/benchmark-results/matched-token-nll-2026-09-20.csv).
+- **Comparison limits:** A used 4,160,713 trainable parameters and one geometric layer; B used 585,728 parameters and 13 LoRA layers. This probe does not isolate a geometric effect and is not task accuracy.
+- **Historical ARC-Challenge:** zero-shot `acc_norm` was 54.86% for both the adapter and base on 1,172 items each.
+- **Historical ARC-AGI:** 1/100 exact solves; Model-First Reasoning format compliance was 0/100. The latter is a prompt-format metric, not geometric faithfulness. These results have no matched base comparison.
 
-### Sheaf Consistency
-To ensure the "meaning" of a concept is consistent across different contexts, we apply **Sheaf Theory**.
-- **Gluing Condition**: If two local context patches $U$ and $V$ overlap, the information computed in $U$ must agree with the information in $V$ on the intersection $U \cap V$.
-- **Implementation**: We minimize the Jensen-Shannon Divergence between the transported fibers of overlapping patches.
+The previously advertised +131.5% ARC-AGI gain and 94.2% “MFR” figure have no support in the measured artifacts. Older single-model benchmark scores and efficiency claims are not evidence of improvement without suitable matched controls. No general downstream performance advantage is currently established.
 
-## 2. Architecture: The IGBundle Adapter
-The adapter is a lightweight module injected into the Transformer layers.
-- **Input**: Hidden states $h \in \mathbb{R}^d$.
-- **Projection**: Map $h$ to the Poincaré ball using the exponential map $\exp_x(v)$.
-- **Natural Gradient**: Updates are scaled by the inverse Fisher Information Matrix ($G^{-1} \nabla L$), ensuring steps are taken in the statistical manifold, not just parameter space.
+## Research framing
 
-## 3. Benchmarks & Performance
-See [README](../README.md) for latest results.
-<!-- RETRACTED (2026-07 audit): "+131.5% Relative Improvement" and "MFR: 94.2%" are
-     refuted by arc_evaluation_results.json (accuracy 0.01, mfr_compliance 0.0, n=100)
-     and match no measured value. See draft_paper_falsification.md §2.5–§2.7. -->
-- **ARC-Challenge**: 54.86% — identical to base Qwen2.5-7B (no measurable geometric transfer).
-- **Kernel faithfulness**: 100% on fixed Poincaré operations (verifies fixed kernels, not learned geometry).
-- **MFR-compliance** (Model-First Reasoning prompting protocol — distinct metric sharing the acronym): 0.0% on ARC (n=100).
+The approach remains open to falsification. A stronger comparison should match parameter budget and layer placement, hold data and training conditions constant, use multiple seeds, and report task-level results and raw outputs. Fixed-kernel tests, geometry diagnostics, and language-task evaluations answer different questions and must not be conflated.
 
-## 4. Usage Guide
-### Colab Demo
-[Open in Colab](https://colab.research.google.com/drive/1example_placeholder_will_update)
-
-### Hugging Face
-[Model Checkpoint](https://huggingface.co/jesusvilela/igbundle-qwen2.5-7b-riemannian)
-
-### Auto-Compaction
-The system uses Riemannian curvature to compress context. High curvature points (surprisal) are kept; low curvature (linear/redundant) are pruned.
+See the [README](README.md), [site evidence page](docs/wiki.html), [October per-benchmark summary](docs/benchmark-results/aa-index-2026-10-27.csv), [research-to-code ledger](docs/research_to_code_evidence_ledger.md), and [source repository](https://github.com/jesusvilela/IGBundle-LLM).

@@ -1,0 +1,39 @@
+{
+  "config": "A",
+  "checkpoint_dir": "igbundle_phase9_odyssey/checkpoint-3000",
+  "eval_timestamp": "2026-03-26T10:15:24.455506+00:00",
+  "curvature_stability": {
+    "K_mean": -5.630404043197632,
+    "K_std": 0.13148469512983482,
+    "pass": true
+  },
+  "fiber_entropy": {
+    "S_mean": 0.9522516548633575,
+    "S_std": 0.014480200442550282,
+    "S_at_uniform": 2.772588722239781,
+    "frozen": false,
+    "pass": true
+  },
+  "fiber_diversity": {
+    "jsd_mean": 0.42420437932014465,
+    "pass": true
+  },
+  "parallel_transport": {
+    "mean_displacement_ratio": 0.04056224164863428,
+    "is_identity": false,
+    "pass": true
+  },
+  "geodesic_triangle": {
+    "violations": 0,
+    "total_triples": 2970,
+    "satisfaction_rate": 1.0,
+    "pass": true
+  },
+  "generic_energy": {
+    "max_drift_pct": 3.4701977039675044e-06,
+    "mean_drift_pct": 1.0549843822199642e-06,
+    "pass": true
+  },
+  "overall_faithfulness": true,
+  "tests_passed": "6/6"
+}

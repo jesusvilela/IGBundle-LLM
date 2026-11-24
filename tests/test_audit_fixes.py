@@ -126,8 +126,9 @@ class TestCurvatureEstimator(unittest.TestCase):
         # Non-persistent buffer => state_dict unchanged for the default path
         self.assertNotIn("conformal_scale", geo_fixed.state_dict())
 
-    def test_log_map_flat_fast_path(self):
-        geo = RiemannianGeometry(_make_config())
+    def test_log_map_euclidean_fast_path(self):
+        """The straight-line shortcut is restricted to the explicit control."""
+        geo = RiemannianGeometry(_make_config(manifold_type="euclidean"))
         base = torch.randn(1, 1, 2, 8) * 0.2
         target = torch.randn(1, 1, 2, 8) * 0.2
         metric = geo.get_metric(base)

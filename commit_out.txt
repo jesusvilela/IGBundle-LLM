@@ -1,0 +1,5 @@
+[dev-multimodal-physics 579dd7c] audit: 2026-07 external-audit fixes ÔÇö geometry corrections, honest telemetry, falsification paper, kappa invariance reproduction
+ 12 files changed, 879 insertions(+), 346 deletions(-)
+ create mode 100644 draft_paper_falsification.md
+ create mode 100644 scripts/kappa_invariance_test.py
+ create mode 100644 tests/test_audit_fixes.py

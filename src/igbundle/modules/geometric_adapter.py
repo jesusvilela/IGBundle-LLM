@@ -879,17 +879,17 @@ class GeometricIGBundleAdapter(nn.Module):
         else:
              losses['curvature'] = torch.tensor(0.0, device=state.base_coordinates.device)
 
-        # 2. Sheaf consistency loss
+        # 2. Local section consistency surrogate (not a sheaf gluing proof)
         sheaf_loss = self._compute_sheaf_consistency_loss(state)
-        losses['sheaf_consistency'] = sheaf_loss
+        losses['local_section_consistency'] = sheaf_loss
 
         # 3. Bundle structure loss (ensure proper fiber bundle topology)
         bundle_loss = self._compute_bundle_structure_loss(state)
-        losses['bundle_structure'] = bundle_loss
+        losses['bundle_local_triviality'] = bundle_loss
 
-        # 4. Lambda calculus type consistency
+        # 4. Learned section-representation alignment (not lambda-law proof)
         lambda_loss = self._compute_lambda_consistency_loss(state)
-        losses['lambda_consistency'] = lambda_loss
+        losses['section_representation_alignment'] = lambda_loss
         
         # EPIC 1 & 4: Hamiltonian Action / Energy Loss
         # Minimize total energy magnitude (efficiency) or drift (stability)
@@ -957,7 +957,7 @@ class GeometricIGBundleAdapter(nn.Module):
         return losses
 
     def _compute_sheaf_consistency_loss(self, state: GeometricState) -> torch.Tensor:
-        """Compute sheaf-theoretic consistency loss across patches."""
+        """Compute a local section-consistency surrogate across soft patches."""
         B, T, P, K = state.fiber_sections.shape
 
         total_loss = 0.0
@@ -1027,7 +1027,7 @@ class GeometricIGBundleAdapter(nn.Module):
         return total_loss / (P - 1)
 
     def _compute_lambda_consistency_loss(self, state: GeometricState) -> torch.Tensor:
-        """Ensure lambda calculus terms are well-typed."""
+        """Align learned section representations with base and fiber state."""
         # Check that lambda terms have consistent dimensions
         B, T, P, dim = state.lambda_terms.shape
 

@@ -314,7 +314,7 @@ class OdysseyV3Trainer:
         self.stage_cfg: StageConfig = STAGE_CONFIGS[args.stage]
 
         self.config = IGBundleConfig(
-            hidden_size=3584,
+            hidden_size=2560,  # Gemma 4 E4B (was 3584 for Qwen7B)
             num_components=8,
             latent_dim=64,
             num_categories=16,
@@ -664,16 +664,15 @@ class OdysseyV3Trainer:
 
     # --- Adapter hook -----------------------------------------------------
     def _inject_adapter_hook(self):
-        target_layer_idx = 12
-        # Navigate PEFT wrapper / Qwen2 hierarchy to find transformer layers
+        # Navigate model hierarchy to find transformer layers (Gemma4/Qwen2/PeftModel)
         model = self.llm
         layers = None
-        # Try all known paths: vanilla Qwen2, PeftModel, double-wrapped
         for path_fn in [
-            lambda m: m.model.layers,                       # Qwen2ForCausalLM
-            lambda m: m.model.model.layers,                 # PeftModel(Qwen2ForCausalLM)
+            lambda m: m.model.language_model.layers,        # Gemma4ForConditionalGeneration
+            lambda m: m.model.layers,                       # Qwen2/Gemma text-only
+            lambda m: m.model.model.layers,                 # PeftModel wrapping
             lambda m: m.base_model.model.model.layers,      # double-wrapped
-            lambda m: m.layers,                              # already at Qwen2Model
+            lambda m: m.layers,                              # already at inner model
         ]:
             try:
                 candidate = path_fn(model)
@@ -684,12 +683,15 @@ class OdysseyV3Trainer:
                 continue
         if layers is None:
             raise RuntimeError(f"Cannot find transformer layers on {type(model).__name__}")
+        # Hook at model midpoint
+        target_layer_idx = len(layers) // 2
         target_layer = layers[target_layer_idx]
-        original_forward = target_layer.forward
+        print(f"[Hook] Attaching adapter at layer {target_layer_idx}/{len(layers)}")
         self._current_geo_state = None
 
-        def adapter_hook(hidden_states, *args, **kwargs):
-            out = original_forward(hidden_states, *args, **kwargs)
+        # Use register_forward_hook to avoid monkey-patching forward signature
+        # (Gemma4 decoder layers have complex signatures with PLE inputs, position_embeddings, etc.)
+        def adapter_hook(module, input, out):
             h = out[0] if isinstance(out, tuple) else out
             orig_dtype = h.dtype
             h_in = h.to(DEVICE).to(torch.float32)
@@ -708,7 +710,7 @@ class OdysseyV3Trainer:
                 return (adapted,) + out[1:]
             return adapted
 
-        target_layer.forward = adapter_hook
+        self._hook_handle = target_layer.register_forward_hook(adapter_hook)
         logger.info(f"Adapter hook injected at layer {target_layer_idx}")
 
     # --- Checkpoint loading -----------------------------------------------
@@ -1064,13 +1066,28 @@ class OdysseyV3Trainer:
         bnb_config = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_quant_type="nf4",
-            bnb_4bit_compute_dtype=torch.float16,
+            bnb_4bit_compute_dtype=torch.bfloat16,
+            llm_int8_enable_fp32_cpu_offload=True,
         )
+        # Gemma 4 E4B: PLE (5.64GB) on CPU, text layers (4-bit ~3.6GB) on GPU
+        device_map = {}
+        for i in range(42):
+            device_map[f'model.language_model.layers.{i}'] = 0
+        device_map['model.language_model.embed_tokens'] = 0
+        device_map['model.language_model.norm'] = 0
+        device_map['lm_head'] = 0
+        for cpu_mod in ['model.language_model.embed_tokens_per_layer',
+                        'model.language_model.per_layer_model_projection',
+                        'model.language_model.per_layer_projection_norm',
+                        'model.vision_tower', 'model.embed_vision',
+                        'model.audio_tower', 'model.embed_audio']:
+            device_map[cpu_mod] = 'cpu'
         self.llm = AutoModelForCausalLM.from_pretrained(
             model_id,
             quantization_config=bnb_config,
-            device_map="auto",
-            max_memory={0: "5GiB", "cpu": "30GiB"},
+            device_map=device_map,
+            dtype=torch.bfloat16,
+            low_cpu_mem_usage=True,
             trust_remote_code=True,
         )
         self.llm.requires_grad_(False)
@@ -1162,12 +1179,12 @@ class OdysseyV3Trainer:
         
         has_gsp = False
         try:
-            from igbundle.steering.gsp import create_gsp_for_qwen7b
-            gsp, _bridge = create_gsp_for_qwen7b(telemetry_dict={
+            from igbundle.steering.gsp import create_gsp
+            gsp, _bridge = create_gsp(hidden_dim=2560, telemetry_dict={
                 "curvature": -1.0, "entropy": 0.0,
                 "active_fiber": "Bundle-6", "constraint_score": 1.0,
             })
-            gsp.attach(self.llm, range(8, 21))
+            gsp.attach(self.llm, range(10, 28))  # Gemma 4 E4B: 42 layers
             has_gsp = True
             logger.info("GSP attached for evaluation (layers 8-20).")
         except Exception as e:
@@ -1585,8 +1602,8 @@ def parse_args():
     )
     parser.add_argument(
         "--model-id",
-        default="h:/LLM-MANIFOLD/igbundle_qwen7b_cp600",
-        help="Base model path",
+        default="h:/LLM-MANIFOLD/gemma4_e4b_it",
+        help="Base model path (Gemma 4 E4B-it)",
     )
     parser.add_argument(
         "--output-dir",

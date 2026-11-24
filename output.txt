@@ -1,0 +1,8 @@
+Skipping import of cpp extensions due to incompatible torch version 2.6.0+cu124 for torchao version 0.15.0             Please see https://github.com/pytorch/ao/issues/2919 for more info
+Initializing Adapter...
+GeometricIGBundle: D=16, P=4, K=8, D_bot=896
+Adapter initialized.
+Running Forward Pass with use_dynamics=True...
+Forward Pass Successful!
+Output shape: torch.Size([1, 10, 3584])
+State keys: dict_keys(['mixture_state', 'base_coordinates', 'fiber_sections', 'lambda_terms', 'metric', 'op_logits', 'consensus_loss'])

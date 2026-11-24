@@ -1,0 +1,150 @@
+## dev-multimodal-physics
+ M .gitignore
+M  README.md
+M  WIKI.md
+ M app_neural_glass.py
+M  docs/llms.txt
+A  draft_paper_falsification.md
+A  scripts/kappa_invariance_test.py
+M  src/igbundle/core/config.py
+ M src/igbundle/geometry/hyperbolic.py
+M  src/igbundle/geometry/poincare.py
+M  src/igbundle/geometry/riemannian.py
+ M src/igbundle/modules/__init__.py
+M  src/igbundle/modules/geometric_adapter.py
+ M src/igbundle/modules/geometric_cache.py
+M  src/igbundle/modules/ops.py
+ M src/igbundle/modules/riemannian_attention.py
+ M src/igbundle/steering/__init__.py
+ M src/igbundle/steering/gsp.py
+A  tests/test_audit_fixes.py
+ M train_odyssey_v3.py
+ M unsloth_compiled_cache/UnslothBCOTrainer.py
+ M unsloth_compiled_cache/UnslothCPOTrainer.py
+ M unsloth_compiled_cache/UnslothDPOTrainer.py
+ M unsloth_compiled_cache/UnslothGKDTrainer.py
+ M unsloth_compiled_cache/UnslothGRPOTrainer.py
+ M unsloth_compiled_cache/UnslothKTOTrainer.py
+ M unsloth_compiled_cache/UnslothNashMDTrainer.py
+ M unsloth_compiled_cache/UnslothORPOTrainer.py
+ M unsloth_compiled_cache/UnslothOnlineDPOTrainer.py
+ M unsloth_compiled_cache/UnslothPPOTrainer.py
+ M unsloth_compiled_cache/UnslothPRMTrainer.py
+ M unsloth_compiled_cache/UnslothRLOOTrainer.py
+ M unsloth_compiled_cache/UnslothRewardTrainer.py
+ M unsloth_compiled_cache/UnslothSFTTrainer.py
+ M unsloth_compiled_cache/UnslothXPOTrainer.py
+M  validate_geometry.py
+?? .omx/
+?? AUTORESEARCH/
+?? braintop-live/
+?? claude_mem0_store.py
+?? data/multimodal/images/
+?? data/prepare_multimodal.py
+?? debug_sqa_log.txt
+?? debug_warmdown.py
+?? epic_2_entropy_guardrails.md
+?? epic_4_eval_contract.md
+?? eval_results.txt
+?? experiments/
+?? falsification_baseline_quick.json
+?? gemini_assignments.json
+?? gemini_iacs_poll.py
+?? get_latest_claude.py
+?? git_status_audit.txt
+?? iacs/client/offline_client.py
+?? iacs/dashboard/public/style.css
+?? iacs/inbox/
+?? iacs/message_schema.json
+?? iacs/message_to_claude.md
+?? iacs/message_to_gemini.md
+?? iacs/server/file_store.py
+?? iacs/urgent_to_claude_entropy.md
+?? iacs/v2_client.py
+?? iacs_poll_v2.py
+?? imd_memory.py
+?? kappa_test_out.txt
+?? long_poll_iacs.py
+?? manifold_report.html
+?? model_state.py
+?? nmem.py
+?? notify_claude_eval.py
+?? notify_claude_oom.py
+?? odyssey_genome_search_live_20260320_175545/
+?? odyssey_genome_search_live_20260320_175613/
+?? odyssey_genome_search_live_20260320_182248/
+?? output.txt
+?? outputs/
+?? print_last_claude_msg.py
+?? print_last_raw.py
+?? read_claude_proposals.py
+?? read_db.py
+?? recommended_wslconfig.txt
+?? reply_to_claude.py
+?? run_gradio_salvos.py
+?? run_gsp_benchmark.py
+?? run_gsp_smoke_test.py
+?? run_odyssey_genome_search.py
+?? run_salvos_v2.py
+?? salvo_results.md
+?? scot_results_20260405_215656.json
+?? scot_results_20260405_222452.json
+?? scrambling_output.txt
+?? scripts/gpu_epic_smoke.py
+?? server_help.txt
+?? src/igbundle/cognition/__init__.py
+?? src/igbundle/dynamics/__init__.py
+?? src/igbundle/fibers/__init__.py
+?? src/igbundle/telemetry/
+?? staged_check.txt
+?? stream_telemetry.py
+?? test_image.jpg
+?? tests/test_entropy_gradient.py
+?? tests/test_epic_stack.py
+?? tests/test_gsp_dynamic_layers.py
+?? tests/test_manifold_stack.py
+?? tests/test_nmem.py
+?? tests/test_odyssey_genome_search.py
+?? tests/test_package_exports.py
+?? thesis/IGBundle_Thesis_Final_Submission.pdf
+?? thesis/IGBundle_Thesis_V3_GENERIC_Merged_c_Jesus_Vilela_Jato.pdf
+?? thesis/IGBundle_Thesis_v2_Hamiltonians_Refined_c_Jesus_Vilela_Jato.pdf
+?? thesis/Thesis_Current_Reviewed.pdf
+?? thesis/old_versions/IGBundle_Academic_Thesis_old.pdf
+?? "thesis/old_versions/IGBundle_Thesis (1).pdf"
+?? thesis/old_versions/ManifoldGL_Thesis.pdf
+?? train_arc_log.txt
+?? train_arc_log_v10.txt
+?? train_arc_log_v11.txt
+?? train_arc_log_v12.txt
+?? train_arc_log_v13.txt
+?? train_arc_log_v15.txt
+?? train_arc_log_v16.txt
+?? train_arc_log_v18.txt
+?? train_arc_log_v19.txt
+?? train_arc_log_v2.txt
+?? train_arc_log_v20.txt
+?? train_arc_log_v21.txt
+?? train_arc_log_v22.txt
+?? train_arc_log_v23.txt
+?? train_arc_log_v24.txt
+?? train_arc_log_v25.txt
+?? train_arc_log_v26.txt
+?? train_arc_log_v3.txt
+?? train_arc_log_v4.txt
+?? train_arc_log_v5.txt
+?? train_arc_log_v6.txt
+?? train_arc_log_v7.txt
+?? train_arc_log_v8.txt
+?? train_arc_log_v9.txt
+?? train_mm_log.txt
+?? train_mm_log_v2.txt
+?? train_mm_log_v3.txt
+?? train_mm_log_v4.txt
+?? train_mm_log_v5.txt
+?? train_mm_log_v6.txt
+?? train_odyssey_v2.py
+?? train_physics_log.txt
+?? train_scienceqa_log.txt
+?? train_scienceqa_log_v2.txt
+?? write_deliverables.py

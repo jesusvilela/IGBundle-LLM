@@ -20,6 +20,8 @@ class GeometricCacheState:
     key_cache_euclidean: Optional[torch.Tensor] = None # (B, H, S, D)
     value_cache_euclidean: Optional[torch.Tensor] = None # (B, H, S, D)
     key_cache_manifold: Optional[torch.Tensor] = None # (B, H, S, D) - On Manifold
+    key_cache_norm: Optional[torch.Tensor] = None # (B, H, S, 1)
+    key_cache_nmtrix: Optional[torch.Tensor] = None # (B, H, S, D) - normalized kernel coordinates
     # We don't necessarily cache manifold values if we aggregate in tangent space of 0
     # But if we did Einstein Midpoint, we might need value_cache_manifold or just reuse euclidean values mapped?
     # For now, let's assume we map values on the fly or reuse euclidean V.
@@ -29,7 +31,7 @@ class GeometricCacheState:
 class GeometricKVCache(nn.Module):
     def __init__(self, config):
         super().__init__()
-        self.max_length = getattr(config, 'max_position_embeddings', 32768)
+        self.max_length = getattr(config, 'geometric_cache_max_length', 128)
         self.curvature_c = getattr(config, 'manifold_curvature', 1.0)
         self.eviction_policy = getattr(config, 'geometric_eviction', False)
         
@@ -54,12 +56,15 @@ class GeometricKVCache(nn.Module):
             Note: Returns Euclidean K/V for standard attention if this module is used as a wrapper.
             To use Riemannian attention, the caller must access .manifold_cache directly.
         """
-        # Update is handled by the specific attention implementation usually.
-        # But here we provide the storage logic.
-        
-        # This function signature mimics transformers 4.x DynamicCache
-        # But we need to handle the stateful nature differently or subclass DynamicCache.
-        pass
+        if cache_kwargs is None:
+            cache_kwargs = {}
+        new_state = self.update_layer(
+            GeometricCacheState(), key_states, value_states,
+            geometric_projector=geometric_projector,
+            c=self.curvature_c,
+            max_length=self.max_length
+        )
+        return new_state.key_cache_euclidean, new_state.value_cache_euclidean
 
     # We'll implement a functional update for now that takes previous cache and returns new.
     # Because 'transformers' cache API is complex to subclass perfectly without inheritance.
@@ -69,7 +74,8 @@ class GeometricKVCache(nn.Module):
                      new_k: torch.Tensor,
                      new_v: torch.Tensor,
                      geometric_projector: Optional[nn.Module] = None,
-                     c: float = 1.0) -> GeometricCacheState:
+                     c: float = 1.0,
+                     max_length: Optional[int] = None) -> GeometricCacheState:
         """
         Functional update for a single layer.
         """
@@ -93,11 +99,32 @@ class GeometricKVCache(nn.Module):
                 k_mani = new_k_mani
             else:
                 k_mani = torch.cat([k_mani, new_k_mani], dim=2)
-        
+        elif k_mani is None:
+            # If no projector is provided, assume keys are already manifold coordinates.
+            k_mani = new_k
+
+        key_norm = prev_state.key_cache_norm
+        new_norm = torch.sum(new_k.pow(2), dim=-1, keepdim=True)
+        key_norm = new_norm if key_norm is None else torch.cat([key_norm, new_norm], dim=2)
+
+        nmtrix = prev_state.key_cache_nmtrix
+        new_nmtrix = PoincareBall.kernelized_coords(new_k, c)
+        nmtrix = new_nmtrix if nmtrix is None else torch.cat([nmtrix, new_nmtrix], dim=2)
+
+        if max_length is not None and k_eucl.shape[2] > max_length:
+            keep = max_length
+            k_eucl = k_eucl[:, :, -keep:, :]
+            v_eucl = v_eucl[:, :, -keep:, :]
+            k_mani = None if k_mani is None else k_mani[:, :, -keep:, :]
+            key_norm = key_norm[:, :, -keep:, :]
+            nmtrix = nmtrix[:, :, -keep:, :]
+
         return GeometricCacheState(
             key_cache_euclidean=k_eucl,
             value_cache_euclidean=v_eucl,
             key_cache_manifold=k_mani,
+            key_cache_norm=key_norm,
+            key_cache_nmtrix=nmtrix,
             curvature_scores=None # TODO: Update scores
         )
     

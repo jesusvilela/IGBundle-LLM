@@ -1,0 +1,71 @@
+Skipping import of cpp extensions due to incompatible torch version 2.6.0+cu124 for torchao version 0.15.0             Please see https://github.com/pytorch/ao/issues/2919 for more info
+INFO:__main__:Loading Models...
+`torch_dtype` is deprecated! Use `dtype` instead!
+INFO:accelerate.utils.modeling:We will use 90% of the memory on device 0 for storing the model, and 10% for the buffer to avoid OOM. You can set `max_memory` in to a higher value to use more memory (at your own risk).
+`torch_dtype` is deprecated! Use `dtype` instead!
+INFO:accelerate.utils.modeling:We will use 90% of the memory on device 0 for storing the model, and 10% for the buffer to avoid OOM. You can set `max_memory` in to a higher value to use more memory (at your own risk).
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+GeometricIGBundle: D=16, P=4, K=8, D_bot=224
+GeometricIGBundle: Initializing Vision Projector (Epic 5)
+Traceback (most recent call last):
+  File "H:\LLM-MANIFOLD\igbundle-llm\train_multimodal_v1.py", line 133, in <module>
+    train()
+    ~~~~~^^
+  File "H:\LLM-MANIFOLD\igbundle-llm\train_multimodal_v1.py", line 98, in train
+    data = [json.loads(line) for line in f]
+            ~~~~~~~~~~^^^^^^
+  File "C:\Python313\Lib\json\__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "C:\Python313\Lib\json\decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python313\Lib\json\decoder.py", line 363, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 2 column 1 (char 2)
