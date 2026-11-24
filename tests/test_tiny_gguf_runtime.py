@@ -34,7 +34,8 @@ def make_model(*, tied=False):
         vocab_size=259, hidden_size=32, intermediate_size=64,
         num_hidden_layers=1 if tied else 2, num_attention_heads=4,
         num_key_value_heads=1 if tied else 2, max_position_embeddings=32,
-        rope_theta=10000., rms_norm_eps=1e-6, attention_dropout=0.,
+        rope_parameters={"rope_type": "default", "rope_theta": 10000.},
+        rms_norm_eps=1e-6, attention_dropout=0.,
         tie_word_embeddings=tied, bos_token_id=256, eos_token_id=257, pad_token_id=258,
     )
     config._attn_implementation = "eager"
@@ -82,7 +83,7 @@ def gguf_bytes(model, *, bad_shape=None, negate_output=False):
         "qwen2.attention.head_count_kv": config.num_key_value_heads,
         "qwen2.attention.layer_norm_rms_epsilon": config.rms_norm_eps,
         "qwen2.rope.dimension_count": 8,
-        "qwen2.rope.freq_base": config.rope_theta,
+        "qwen2.rope.freq_base": config.rope_parameters["rope_theta"],
         "qwen2.vocab_size": 259,
         "tokenizer.ggml.model": "gpt2",
         "tokenizer.ggml.pre": "qwen2",
