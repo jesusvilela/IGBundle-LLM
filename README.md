@@ -284,6 +284,18 @@ Pinned optional dependencies are in `requirements-test-hf.txt`.
 Run `python -m unittest discover -b -s tests -p test_tiny_hf_integration.py`
 in a compatible CPU environment.
 
+To exercise the training entry point on a tiny, randomly initialized Qwen2,
+install the pinned CPU and Hugging Face test dependencies, then run:
+
+```powershell
+python train.py --smoke_test --max_steps 1
+```
+
+The CPU smoke uses fixed synthetic tokens and reports next-token loss and
+the number of adapter, LoRA, and frozen base tensors updated. It performs
+no downloads and needs no training config or checkpoint. The legacy
+full-model training path is still experimental and incomplete.
+
 ### Declared LoRA restoration
 
 The six public HF load/merge paths now check exact default-LoRA tensor keys,

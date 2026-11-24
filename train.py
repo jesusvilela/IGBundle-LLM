@@ -1,9 +1,32 @@
-# === CRITICAL: Apply compatibility fixes BEFORE any other imports ===
 import sys
 import os as _os
+import argparse
 _src_path = _os.path.join(_os.path.dirname(__file__), "src")
 if _src_path not in sys.path:
     sys.path.insert(0, _src_path)
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config", type=str, default="configs/qwen25_7b_igbundle_lora.yaml",
+                        help="Configuration for the legacy training path")
+    parser.add_argument("--smoke_test", action="store_true",
+                        help="Run a download-free, tiny Qwen2 training check on CPU")
+    parser.add_argument("--max_steps", type=int, default=-1,
+                        help="Override max steps; the CPU smoke defaults to one")
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    cli_args = parse_args()
+    if cli_args.smoke_test:
+        from igbundle.training.cpu_smoke import run
+
+        steps = 1 if cli_args.max_steps == -1 else cli_args.max_steps
+        if steps < 1:
+            raise SystemExit("--max_steps must be positive in smoke mode")
+        run(steps)
+        raise SystemExit(0)
 
 # Disable TorchAO to prevent compatibility issues
 _os.environ['DISABLE_TORCHAO'] = '1'
@@ -16,7 +39,6 @@ from igbundle.utils import triton_fix
 
 # === Now safe to import everything else ===
 import os
-import argparse
 import yaml
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, Trainer, BitsAndBytesConfig, TrainerCallback
@@ -69,12 +91,9 @@ class SlowStepCallback(TrainerCallback):
 
         return (total_loss, outputs) if return_outputs else total_loss
 
-def train():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--config", type=str, default="configs/qwen25_7b_igbundle_lora.yaml")
-    parser.add_argument("--smoke_test", action="store_true")
-    parser.add_argument("--max_steps", type=int, default=-1, help="Override max_steps from config")
-    args = parser.parse_args()
+def train(args=None):
+    if args is None:
+        args = parse_args()
     
     with open(args.config, 'r') as f:
         cfg_dict = yaml.safe_load(f)
@@ -198,16 +217,8 @@ def train():
     from transformers import DataCollatorForLanguageModeling
     from datasets import load_dataset
     
-    if args.smoke_test:
-        print("Smoke test: Using dummy data.")
-        data = load_dataset("text", data_files={"train": ["dummy.txt"]}, split="train") # Hack or just generate memory dataset
-        # Actually simplest memory dataset:
-        from datasets import Dataset
-        data = Dataset.from_dict({"text": ["Hello world " * 10] * 10})
-    else:
-        # Load Alpaca dataset
-        print("Loading yahma/alpaca-cleaned...")
-        data = load_dataset("yahma/alpaca-cleaned", split="train")
+    print("Loading yahma/alpaca-cleaned...")
+    data = load_dataset("yahma/alpaca-cleaned", split="train")
         
     # Format Alpaca into prompt
     def format_alpaca(example):
@@ -296,4 +307,4 @@ def train():
         torch.save(model.state_dict(), os.path.join(cfg.training.output_dir, "full_state_dict.pt"))
 
 if __name__ == "__main__":
-    train()
+    train(cli_args)
