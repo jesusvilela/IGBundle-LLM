@@ -10,8 +10,13 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, default="configs/qwen25_7b_igbundle_lora.yaml",
                         help="Configuration for the legacy training path")
-    parser.add_argument("--smoke_test", action="store_true",
-                        help="Run a download-free, tiny Qwen2 training check on CPU")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--smoke_test", action="store_true",
+                      help="Run a download-free, tiny Qwen2 training check on CPU")
+    mode.add_argument("--local-checkpoint", help="Train adapters on a local Qwen2 checkpoint on CPU")
+    parser.add_argument("--train-jsonl", help="Local JSONL with one text string per record")
+    parser.add_argument("--output-dir", help="New directory for the trained adapters")
+    parser.add_argument("--max-length", type=int, default=128, help="Local training sequence limit")
     parser.add_argument("--max_steps", type=int, default=-1,
                         help="Override max steps; the CPU smoke defaults to one")
     return parser.parse_args()
@@ -26,6 +31,14 @@ if __name__ == "__main__":
         if steps < 1:
             raise SystemExit("--max_steps must be positive in smoke mode")
         run(steps)
+        raise SystemExit(0)
+    if cli_args.local_checkpoint:
+        if not cli_args.train_jsonl or not cli_args.output_dir or cli_args.max_steps < 1:
+            raise SystemExit("Local training requires --train-jsonl, --output-dir and positive --max_steps")
+        from igbundle.training.local_qwen import run
+
+        run(cli_args.local_checkpoint, cli_args.train_jsonl, cli_args.output_dir,
+            cli_args.max_steps, cli_args.max_length)
         raise SystemExit(0)
 
 # Disable TorchAO to prevent compatibility issues

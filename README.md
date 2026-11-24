@@ -296,6 +296,31 @@ the number of adapter, LoRA, and frozen base tensors updated. It performs
 no downloads and needs no training config or checkpoint. The legacy
 full-model training path is still experimental and incomplete.
 
+### Train and reload local Qwen2 adapters
+
+Use the pinned test dependencies above, a local Qwen2 causal model with
+safetensors weights and a tokenizer, and a UTF-8 JSONL dataset. Each
+record has a `text` field, for example `{"text":"The latest value is blue."}`.
+Run from the repository root:
+
+```powershell
+python train.py --local-checkpoint path/to/qwen2 --train-jsonl data.jsonl --output-dir output/local-adapter --max_steps 2
+```
+
+The CPU path trains the public IGBundle adapter and LoRA on shifted
+causal language-model loss. It cycles through records in file order
+and truncates each to `--max-length` tokens (128 by default). It uses
+the local checkpoint and tokenizer without downloads. The output
+directory must be new.
+
+The saved directory contains `adapter_weights.pt`, PEFT files,
+`igbundle_config.json`, and `training_report.json`. Before publishing
+those files, the command reloads both adapters against a fresh copy of
+the base through the public checkpoint loaders and verifies the
+training-probe logits exactly. The generated config points to the
+input base directory. The checkpoint contains inference weights and
+does not include optimizer state.
+
 ### Declared LoRA restoration
 
 The six public HF load/merge paths now check exact default-LoRA tensor keys,
