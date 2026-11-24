@@ -17,21 +17,24 @@ class DeltaFiberUpdate(nn.Module):
     Memory starts at zero on each call and is independent across batches,
     components and heads. Each token erases and writes before it reads:
 
-        M_t = M - alpha * (M k) k^T + beta * v k^T
+        M_t = decay * M - alpha * (M k) k^T + beta * v k^T
         output_t = out_proj(concat_heads(M_t q))
-    Passing erase=False disables the erase term for the additive control.
+    The default decay is one. Passing erase=False disables the erase term.
     """
 
     def __init__(
         self, coord_dim: int, section_dim: int, mem_dim: int = 64,
-        num_heads: int = 4, *, erase: bool = True,
+        num_heads: int = 4, *, erase: bool = True, decay: float = 1.0,
     ):
         super().__init__()
         if min(coord_dim, section_dim, mem_dim, num_heads) <= 0 or mem_dim % num_heads:
             raise ValueError("Dimensions must be positive and mem_dim divisible by num_heads")
         if mem_dim // num_heads < 2:
             raise ValueError("Layer-normalized queries and keys require at least two coordinates per head")
+        if not 0.0 <= decay <= 1.0:
+            raise ValueError("Memory decay must be between zero and one")
         self.erase = erase
+        self.decay = decay
         self.D = coord_dim
         self.K = section_dim
         self.mem_dim = mem_dim
@@ -101,7 +104,7 @@ class DeltaFiberUpdate(nn.Module):
             correction = beta[:, t] * value
             if self.erase:
                 correction = correction - alpha[:, t] * (memory @ key)
-            memory = memory + correction @ key_transpose
+            memory = self.decay * memory + correction @ key_transpose
             reads.append((memory @ query).squeeze(-1))
 
         readout = torch.stack(reads, dim=1).flatten(-2) if reads else v.flatten(-2)

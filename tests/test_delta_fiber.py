@@ -79,6 +79,15 @@ class DeltaFiberTests(unittest.TestCase):
         swapped = torch.cat((inputs[:, 4:8], inputs[:, :4], inputs[:, -1:]), dim=1)
         torch.testing.assert_close(control(inputs)[:, -1], control(swapped)[:, -1])
 
+    def test_decaying_additive_retains_previous_write_with_expected_weight(self):
+        decay = 0.8
+        control = DeltaFiberUpdate(4, 2, mem_dim=8, num_heads=2, erase=False, decay=decay).double()
+        first = self.inputs[:, :1]
+        repeated = first.expand(-1, 2, -1, -1)
+        read_bias = control.out_proj.bias
+        expected = (1 + decay) * (control(first) - read_bias) + read_bias
+        torch.testing.assert_close(control(repeated)[:, 1:], expected)
+
 
 if __name__ == "__main__":
     unittest.main()

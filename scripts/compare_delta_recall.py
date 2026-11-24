@@ -17,6 +17,33 @@ STEPS = 200
 BATCH_SIZE = 32
 EVAL_SIZE = 512
 LEARNING_RATE = 0.01
+DECAY = 0.8
+
+
+def make_qwen_encoder():
+    """Return a frozen, randomly initialized causal backbone."""
+    from transformers import Qwen2Config, Qwen2Model
+
+    torch.manual_seed(31)
+    config = Qwen2Config(
+        vocab_size=KEYS * 3, hidden_size=16, intermediate_size=24,
+        num_hidden_layers=2, num_attention_heads=2, num_key_value_heads=2,
+        max_position_embeddings=32, attention_dropout=0.,
+    )
+    return Qwen2Model(config).eval().requires_grad_(False)
+
+
+@torch.no_grad()
+def encode(inputs, backbone):
+    if backbone is None:
+        return inputs
+    tokens = inputs[:, :, 0]
+    key = tokens[..., :KEYS].argmax(dim=-1)
+    bit = tokens[..., KEYS:]
+    # Each key gets three tokens: write zero, write one, and query.
+    slot = torch.where(bit.sum(dim=-1) == 0, 2, bit.argmax(dim=-1))
+    hidden = backbone(input_ids=3 * key + slot, use_cache=False).last_hidden_state
+    return hidden.unsqueeze(2)
 
 
 def make_batch(generator, size, rounds=1):
@@ -44,14 +71,14 @@ def query_logits(model, inputs, reset):
     return model(sequence)[:, -1, 0]
 
 
-def fit(model, seed, reset, rounds):
+def fit(model, seed, reset, rounds, backbone):
     optimizer = torch.optim.AdamW(model.parameters(), lr=LEARNING_RATE)
     generator = torch.Generator().manual_seed(seed)
     model.train()
     for _ in range(STEPS):
         inputs, labels = make_batch(generator, BATCH_SIZE, rounds)
         optimizer.zero_grad(set_to_none=True)
-        loss = F.cross_entropy(query_logits(model, inputs, reset), labels)
+        loss = F.cross_entropy(query_logits(model, encode(inputs, backbone), reset), labels)
         if not torch.isfinite(loss):
             raise RuntimeError("Non-finite recall training loss")
         loss.backward()
@@ -72,41 +99,52 @@ def evaluate(model, inputs, labels, reset, changed):
 
 
 @torch.no_grad()
-def evaluate_round_order(model, inputs, labels, first_labels, changed):
+def evaluate_round_order(model, original, swapped, labels, first_labels, changed, *, reset):
     """Count pairs where the model follows the latest label in both orders."""
-    swapped = torch.cat((inputs[:, KEYS:2 * KEYS], inputs[:, :KEYS], inputs[:, -1:]), dim=1)
-    original_prediction = query_logits(model.eval(), inputs, False).argmax(dim=-1)
-    swapped_prediction = query_logits(model, swapped, False).argmax(dim=-1)
+    original_prediction = query_logits(model.eval(), original, reset).argmax(dim=-1)
+    swapped_prediction = query_logits(model, swapped, reset).argmax(dim=-1)
     both_correct = (original_prediction == labels) & (swapped_prediction == first_labels)
     return int(both_correct[changed].sum())
 
 
-def run(rounds):
+def run(rounds, encoder="one-hot"):
     torch.set_num_threads(1)
+    backbone = make_qwen_encoder() if encoder == "qwen2" else None
+    input_width = backbone.config.hidden_size if backbone is not None else KEYS + 2
     report = {
         "python": platform.python_version(),
         "torch": str(torch.__version__),
         "device": "cpu",
         "keys": KEYS,
+        "encoder": encoder,
+        "frozen_backbone_parameters": (
+            sum(p.numel() for p in backbone.parameters()) if backbone is not None else 0
+        ),
         "write_rounds": rounds,
         "steps": STEPS,
         "batch_size": BATCH_SIZE,
         "eval_size_per_seed": EVAL_SIZE,
         "learning_rate": LEARNING_RATE,
+        "decaying_additive_retention_per_token": DECAY,
         "runs": [],
     }
     for seed in SEEDS:
         torch.manual_seed(seed)
-        recurrent = DeltaFiberUpdate(KEYS, 2, mem_dim=16, num_heads=2)
+        recurrent = DeltaFiberUpdate(input_width - 2, 2, mem_dim=16, num_heads=2)
         reset = copy.deepcopy(recurrent)
         additive = copy.deepcopy(recurrent)
         additive.erase = False
-        fit(recurrent, seed + 1, reset=False, rounds=rounds)
-        fit(reset, seed + 1, reset=True, rounds=rounds)
-        fit(additive, seed + 1, reset=False, rounds=rounds)
+        decaying = DeltaFiberUpdate(input_width - 2, 2, mem_dim=16, num_heads=2,
+                                   erase=False, decay=DECAY)
+        decaying.load_state_dict(recurrent.state_dict())
+        fit(recurrent, seed + 1, reset=False, rounds=rounds, backbone=backbone)
+        fit(reset, seed + 1, reset=True, rounds=rounds, backbone=backbone)
+        fit(additive, seed + 1, reset=False, rounds=rounds, backbone=backbone)
+        fit(decaying, seed + 1, reset=False, rounds=rounds, backbone=backbone)
         inputs, labels = make_batch(
             torch.Generator().manual_seed(seed + 10_000), EVAL_SIZE, rounds
         )
+        features = encode(inputs, backbone)
         changed = None
         if rounds == 2:
             first = inputs[:, :KEYS, 0]
@@ -119,16 +157,25 @@ def run(rounds):
             "seed": seed,
             "allocated_parameters_per_arm": sum(p.numel() for p in recurrent.parameters()),
             "majority_class_correct": max(int(labels.sum()), EVAL_SIZE - int(labels.sum())),
-            "recurrent": evaluate(recurrent, inputs, labels, False, changed),
-            "additive": evaluate(additive, inputs, labels, False, changed),
-            "reset": evaluate(reset, inputs, labels, True, changed),
-            "recurrent_weights_with_reset": evaluate(recurrent, inputs, labels, True, changed),
+            "recurrent": evaluate(recurrent, features, labels, False, changed),
+            "additive": evaluate(additive, features, labels, False, changed),
+            "decaying_additive": evaluate(decaying, features, labels, False, changed),
+            "reset": evaluate(reset, features, labels, True, changed),
+            "recurrent_weights_with_reset": evaluate(recurrent, features, labels, True, changed),
         }
         if changed is not None:
             result["queries_with_changed_value"] = int(changed.sum())
-            for name, model in (("recurrent", recurrent), ("additive", additive)):
+            swapped = torch.cat((inputs[:, KEYS:2 * KEYS], inputs[:, :KEYS], inputs[:, -1:]), dim=1)
+            swapped_features = encode(swapped, backbone)
+            comparisons = (
+                ("recurrent", recurrent, False), ("additive", additive, False),
+                ("decaying_additive", decaying, False), ("reset", reset, True),
+                ("recurrent_weights_with_reset", recurrent, True),
+            )
+            for name, model, reset_memory in comparisons:
                 result[name]["both_round_orders_correct_when_changed"] = evaluate_round_order(
-                    model, inputs, labels, first_labels, changed
+                    model, features, swapped_features, labels, first_labels, changed,
+                    reset=reset_memory,
                 )
         report["runs"].append(result)
     return report
@@ -140,5 +187,9 @@ if __name__ == "__main__":
         "--write-rounds", type=int, choices=(1, 2), default=1,
         help="Use two rounds to test recall after overwriting every key.",
     )
+    parser.add_argument(
+        "--encoder", choices=("one-hot", "qwen2"), default="one-hot",
+        help="Use a frozen random tiny Qwen2 encoder with the pinned HF dependencies.",
+    )
     args = parser.parse_args()
-    print(json.dumps(run(args.write_rounds), indent=2, allow_nan=False))
+    print(json.dumps(run(args.write_rounds, args.encoder), indent=2, allow_nan=False))

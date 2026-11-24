@@ -9,7 +9,8 @@
 
 The [delta-rule associative recall experiment](docs/delta-recall.md) runs on
 CPU from a fresh checkout. It compares the development branch's recurrence
-with additive and memory-reset controls on synthetic recall and overwrite tasks.
+with additive, decaying additive and memory-reset controls. The overwrite task
+can use one-hot inputs or features from a frozen tiny Qwen2 backbone.
 
 ## Research design
 

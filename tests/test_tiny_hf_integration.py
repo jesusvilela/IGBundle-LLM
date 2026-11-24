@@ -56,6 +56,19 @@ class TinyHFTests(unittest.TestCase):
     def setUp(self):
         self.tokens = torch.tensor([[1, 4, 5, 6]])
 
+    def test_recall_encoder_has_frozen_causal_features(self):
+        from scripts.compare_delta_recall import encode, make_batch, make_qwen_encoder
+
+        backbone = make_qwen_encoder()
+        inputs, _ = make_batch(torch.Generator().manual_seed(41), size=4, rounds=2)
+        features = encode(inputs, backbone)
+        self.assertEqual(features.shape, (4, 9, 1, 16))
+        self.assertFalse(features.requires_grad)
+        self.assertTrue(all(not parameter.requires_grad for parameter in backbone.parameters()))
+        torch.testing.assert_close(features[:, :4], encode(inputs[:, :4], backbone))
+        # Resetting adapter memory retains the contextual backbone's prefix information.
+        self.assertGreater((features[:, -1:] - encode(inputs[:, -1:], backbone)).abs().max(), 1e-6)
+
     def test_identity_wrapper_preserves_real_qwen_logits(self):
         model = base_model()
         self.assertLess(sum(p.numel() for p in model.parameters()), 100_000)

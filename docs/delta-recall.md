@@ -26,13 +26,14 @@ requires no model weights, datasets or GPU.
 
 Each round writes four randomly ordered keys with independent random
 bits. The query supplies a key and no bit, with the last write supplying
-the target. All three training arms start with identical weights, draw
+the target. All four training arms start with identical weights, draw
 the same minibatches and take 200 AdamW steps. Each allocates 386
-parameters. The additive arm disables the erase term and its gate has
-no effect on the output. The reset arm processes only the query with
-zero preceding memory. Another evaluation resets memory on the trained
-delta model using the same weights. Evaluation uses an independent RNG
-stream from the same finite synthetic distribution.
+parameters with one-hot inputs. The additive and decaying additive arms
+disable the erase term. The latter retains 80% of the previous memory at
+every token. The reset arm passes only the query to the memory module.
+Another evaluation resets memory on the trained delta model using the
+same weights. Evaluation uses an independent RNG stream from the same
+finite synthetic distribution.
 
 In the overwrite test, the same query is evaluated with the two write
 rounds in both orders. When its bit changed between rounds, a pair counts
@@ -48,25 +49,61 @@ and mean query negative log likelihood.
 
 **Single write, correct out of 512 per seed**
 
-| Seed | Delta | Additive | Trained with reset | Delta weights with reset |
-| --- | ---: | ---: | ---: | ---: |
-| 11 | 512 | 512 | 256 | 262 |
-| 29 | 512 | 512 | 252 | 252 |
-| 47 | 512 | 512 | 253 | 261 |
+| Seed | Delta | Additive | Decaying additive | Trained with reset | Delta weights with reset |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 11 | 512 | 512 | 512 | 256 | 262 |
+| 29 | 512 | 512 | 512 | 252 | 252 |
+| 47 | 512 | 512 | 512 | 253 | 261 |
 
 **Overwrite, correct in original order and in both orders**
 
-| Seed | Delta / 512 | Additive / 512 | Trained with reset / 512 | Delta weights with reset / 512 | Delta on changed pairs | Additive on changed pairs |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| 11 | 512 | 385 | 258 | 246 | 254/254 | 0/254 |
-| 29 | 512 | 402 | 231 | 238 | 245/245 | 0/245 |
-| 47 | 512 | 404 | 257 | 254 | 231/231 | 0/231 |
+| Seed | Delta / 512 | Additive / 512 | Decaying additive / 512 | Trained with reset / 512 | Delta weights with reset / 512 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 11 | 512 | 385 | 509 | 258 | 246 |
+| 29 | 512 | 402 | 501 | 231 | 238 |
+| 47 | 512 | 404 | 505 | 257 | 254 |
+
+| Seed | Delta on changed pairs | Additive on changed pairs | Decaying additive on changed pairs |
+| --- | ---: | ---: | ---: |
+| 11 | 254/254 | 0/254 | 247/254 |
+| 29 | 245/245 | 0/245 | 224/245 |
+| 47 | 231/231 | 0/231 | 211/231 |
 
 The delta model learned to track the most recent write on this four-key
-task. Curvature and entropy modulation were inactive in training. A
-comparison with another order-sensitive mechanism, such as a decaying
-additive memory, is still open. Scaling to more keys or overwrite rounds
-and transfer to language modeling also remain open.
+task. It scored 730/730 changed pairs. Fixed decay tracked recency on
+682/730 pairs. This comparison uses one retention factor and three
+seeds. Curvature and entropy modulation were inactive in training.
+
+## Frozen tiny Qwen2 features
+
+The optional encoder assigns three token IDs per key, one for each
+write value and one for the query. It produces causal hidden states
+with a randomly initialized two-layer Qwen2 backbone. The backbone uses
+seed 31 and shares the same 4,720 frozen parameters across all arms.
+The memory modules use 906 allocated parameters each and train only on
+the query classification loss.
+
+```sh
+python -m pip install -r requirements-test-hf.txt
+PYTHONPATH=src python scripts/compare_delta_recall.py --write-rounds 2 --encoder qwen2
+```
+
+Both round orders are encoded afresh. Resetting memory still gives the
+classifier the query's contextual backbone state, so the reset baseline
+retains prefix information. Global addition can also respond to order
+because the contextual vectors change when the order changes.
+
+| Seed | Delta on changed pairs | Additive | Decaying additive | Trained with reset | Delta weights with reset |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 11 | 254/254 | 152/254 | 225/254 | 1/254 | 7/254 |
+| 29 | 245/245 | 145/245 | 211/245 | 0/245 | 6/245 |
+| 47 | 231/231 | 143/231 | 202/231 | 6/231 | 6/231 |
+
+The delta head retained its overwrite result when the input came from
+causal transformer features. The decaying additive head solved 638/730
+changed pairs. The experiment trains a classifier on a synthetic token
+vocabulary. It leaves pretrained weights, language-model loss and
+autoregressive generation for a separate experiment.
 
 ## Consolidation scope
 
