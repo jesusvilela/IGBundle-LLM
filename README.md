@@ -7,6 +7,10 @@
 
 > **Evidence status (31 October 2026):** The geometric inductive-bias idea remains an open research hypothesis, but the available experiments do **not** establish a general task-performance advantage, learned hyperbolicity, or training/inference efficiency gains. Previously advertised accuracy, “MFR,” ablation, and efficiency claims are retracted. Recorded-result arithmetic is reproducible offline; historical model runs and graders have not been independently reproduced. See the [correction notice](docs/correction-notice.md), [evidence ledger](docs/research_to_code_evidence_ledger.md), and [verification output](docs/benchmark-results/verification.json).
 
+The [delta-rule associative recall experiment](docs/delta-recall.md) runs on
+CPU from a fresh checkout. It compares the development branch's recurrence
+with additive and memory-reset controls on synthetic recall and overwrite tasks.
+
 ## Research design
 
 IGBundle explores Poincare-ball coordinates, categorical fiber components, and geometric or dynamical operators as a possible structure for adapting language models. These describe the intended parameterization; they are not evidence that a trained model has learned semantic hierarchy, a fiber bundle, sheaf structure, or hyperbolic geometry.
@@ -221,6 +225,11 @@ Only trusted local tensor checkpoints are supported; `weights_only=True` is not
 a general resource-isolation guarantee. This does not restore an adapter or
 certify learned geometry. See the [display contract](docs/export-image-audit.md#projection-display-checkpoint).
 
+For constructed 3D topology examples, see the standalone
+[Braintop example](https://github.com/jesusvilela/braintop/blob/306fcb45a28b1add94e2e98011ff9e9c9ec8464f/examples/basic_example.py).
+The example generates its own graph and sphere nodes. It takes no IGBundle
+checkpoint or recall output as input.
+
 ### GGUF export preflight
 
 `export_gguf.py` requires an explicit converter and `--lora-only` acknowledgement:
@@ -259,8 +268,8 @@ It supplies no hypercomplex hyperbolic metric or GGUF implementation.
 ### Tiny real-backend integration
 
 Hosted CPU checks now exercise a randomly initialized Qwen2 with two layers,
-hidden width 16 and fewer than 100,000 base parameters, using PyTorch 2.6.0,
-Transformers 4.48.3, PEFT 0.14.0 and Accelerate 1.2.1.
+hidden width 16 and fewer than 100,000 base parameters, using
+PyTorch 2.9.1 CPU, Transformers 5.10.1, PEFT 0.14.0 and Accelerate 1.2.1 in CI.
 They check identity wrapping, real PEFT save/reload before wrapper insertion,
 strict adapter restoration, gradients and cached generation.
 
