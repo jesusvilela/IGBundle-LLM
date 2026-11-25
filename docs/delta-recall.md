@@ -181,3 +181,23 @@ training, vision cross-attention, the branch-specific benchmark loader, and
 uncommitted legacy geometry and training changes remain in the development
 checkouts. Their interfaces and evidence need review before they can be used
 with the public adapter.
+
+### Prescribed-distance attention
+
+`igbundle.modules.riemannian_attention.PoincareDistanceAttention` carries
+forward the rectangular query/key attention use case from development
+commit `1b35fad`. It shares the public Poincare distance formula after
+scaling to the unit ball and converts distances back into the original
+metric. It accepts a broadcastable additive attention mask and returns
+zero for a fully masked query. The test compares the scores with exact
+signed radial distances along a ball diameter at curvature magnitude 2.
+
+```powershell
+$env:PYTHONPATH = 'src'
+python -m unittest discover -s tests -p test_riemannian_attention.py
+```
+
+This opt-in operator averages supplied value vectors in their existing
+coordinates. Its score computation is dense. Cache management, kernel
+coordinate preprocessing, checkpoint migration, and adapter wiring
+remain development work.
